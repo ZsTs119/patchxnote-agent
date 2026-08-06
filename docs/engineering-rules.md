@@ -10,7 +10,7 @@ PatchNote Agent has three layers:
    The local runtime for login, account inspection, MCP stdio serving, local cache management, and installer integration.
 
 2. npm installer wrapper
-   A thin package that supports commands such as `npx -y @patchnote/agent install`. It installs or updates the versioned Go binary, then exits.
+   A thin package that supports commands such as `npx -y patchnote-agent install`. It installs or updates the versioned Go binary, then exits.
 
 3. PatchNote server APIs
    The remote source of truth. The agent never bypasses server authorization and never reconstructs server facts from local guesses.

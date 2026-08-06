@@ -21,6 +21,8 @@ type ServerConfig struct {
 	BaseURL string `mapstructure:"base_url" json:"base_url"`
 }
 
+const DefaultServerBaseURL = "https://ws-lab.patch-x.cn/patchnote-test-api"
+
 type AuthConfig struct {
 	InsecureFileKeychain bool `mapstructure:"insecure_file_keychain" json:"insecure_file_keychain"`
 }
@@ -37,7 +39,7 @@ func NewViper() *viper.Viper {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	v.SetDefault("profile", "default")
 	v.SetDefault("output", "plain")
-	v.SetDefault("server.base_url", "")
+	v.SetDefault("server.base_url", DefaultServerBaseURL)
 	v.SetDefault("auth.insecure_file_keychain", false)
 	v.AutomaticEnv()
 	return v

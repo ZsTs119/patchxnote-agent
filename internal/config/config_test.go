@@ -23,8 +23,8 @@ func TestLoadUsesDefaultsWhenConfigIsMissing(t *testing.T) {
 	if cfg.Output != "plain" {
 		t.Fatalf("expected default output, got %q", cfg.Output)
 	}
-	if cfg.Server.BaseURL != "" {
-		t.Fatalf("expected empty server base URL, got %q", cfg.Server.BaseURL)
+	if cfg.Server.BaseURL != DefaultServerBaseURL {
+		t.Fatalf("expected default server base URL, got %q", cfg.Server.BaseURL)
 	}
 }
 

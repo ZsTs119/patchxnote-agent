@@ -5,7 +5,7 @@ PatchNote Agent is the local CLI and MCP bridge for exposing safe PatchNote acco
 Planned user entry after the first npm publish:
 
 ```sh
-npx -y @patchnote/agent@0.1.0 install
+npx -y patchnote-agent@0.1.1 install
 ```
 
 The npm package is only an installer wrapper. The long-lived local runtime is a versioned `patchnote` binary that provides:
@@ -48,17 +48,31 @@ node packages/npm/bin/patchnote-agent.js install --dry-run --print-config
 After a tagged GitHub release and npm publish exist, install the pinned wrapper:
 
 ```sh
-npx -y @patchnote/agent@0.1.0 install --print-config
+npx -y patchnote-agent@0.1.1 install --print-config
 ```
 
 The installer downloads the matching `patchnote` binary from the GitHub release,
 verifies `checksums.txt`, and installs into a user-writable directory. It does
 not write bearer tokens into MCP config.
 
-Configure the server base URL before login:
+The CLI defaults to the PatchNote test API:
+
+```text
+https://ws-lab.patch-x.cn/patchnote-test-api
+```
+
+Override the server base URL only when targeting another environment:
 
 ```sh
 PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL> patchnote login
+```
+
+The first beta build uses an explicit local file credential store until the OS
+keychain adapters are shipped. The installer-generated MCP config includes the
+same non-secret environment setting, and still does not contain bearer tokens.
+
+```sh
+PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true patchnote login
 patchnote auth status
 patchnote mcp serve
 ```
@@ -67,13 +81,13 @@ For rollback, reinstall a previous pinned package version instead of using a
 floating latest version:
 
 ```sh
-npx -y @patchnote/agent@0.1.0 install
+npx -y patchnote-agent@0.1.1 install
 ```
 
 To remove the installed binary:
 
 ```sh
-npx -y @patchnote/agent@0.1.0 uninstall
+npx -y patchnote-agent@0.1.1 uninstall
 ```
 
 ## Release Operator Checklist
@@ -85,8 +99,8 @@ npx -y @patchnote/agent@0.1.0 uninstall
 3. Create and push a tag from a clean commit:
 
    ```sh
-   git tag v0.1.0
-   git push origin v0.1.0
+   git tag v0.1.1
+   git push origin v0.1.1
    ```
 
 4. Wait for the `Release Binaries` workflow to publish:
@@ -95,24 +109,25 @@ npx -y @patchnote/agent@0.1.0 uninstall
 5. Verify the release before npm publish:
 
    ```sh
-   gh release view v0.1.0 --repo ZsTs119/patchnote-agent --json assets
-   gh attestation verify path/to/patchnote_0.1.0_linux_amd64 --repo ZsTs119/patchnote-agent
+   gh release view v0.1.1 --repo ZsTs119/patchnote-agent --json assets
+   gh attestation verify path/to/patchnote_0.1.1_linux_amd64 --repo ZsTs119/patchnote-agent
    ```
 
 6. Publish the npm wrapper only after binary assets exist:
 
    ```sh
-   gh workflow run publish-npm.yml -f version=0.1.0
+   gh workflow run publish-npm.yml -f version=0.1.1
    ```
 
 The npm publish workflow requires `NPM_TOKEN` with publish access to the
-`@patchnote` scope on `https://registry.npmjs.org`.
+`patchnote-agent` package on `https://registry.npmjs.org`.
 
 V1 limitations:
 
 - Agent access is read-only and uses dedicated `/v1/agent/...` server routes.
 - Recorder-card battery, live BLE state, storage, recording status, SK, full MAC, raw audio, and full transcripts are not exposed.
 - `patchnote_search_memories` searches only local authorized metadata cache populated during the MCP session.
+- The first beta uses an explicit `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file credential store. Do not promote it as the final production credential path.
 - Real OS keychain adapters, production Agent route rollout, npm ownership, and cross-machine install validation remain release gates before broad public promotion.
 
 ## Engineering Rules

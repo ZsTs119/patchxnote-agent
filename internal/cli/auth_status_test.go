@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/auth"
+	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/config"
 	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
 )
 
@@ -59,7 +60,12 @@ func TestAuthStatusDoesNotPrintCredentialMaterial(t *testing.T) {
 		t.Fatalf("seed store: %v", err)
 	}
 
-	stdout, stderr, err := executeForTestWithDeps(t, Deps{CredentialStore: store}, "auth", "status")
+	stdout, stderr, err := executeForTestWithDeps(t, Deps{
+		CredentialStore: store,
+		APIFactory: func(cfg config.Config) (agentAPI, error) {
+			return nil, nil
+		},
+	}, "auth", "status")
 	if err != nil {
 		t.Fatalf("auth status: %v", err)
 	}
@@ -86,7 +92,12 @@ func TestLogoutDeletesLocalCredential(t *testing.T) {
 		t.Fatalf("seed store: %v", err)
 	}
 
-	stdout, stderr, err := executeForTestWithDeps(t, Deps{CredentialStore: store}, "logout")
+	stdout, stderr, err := executeForTestWithDeps(t, Deps{
+		CredentialStore: store,
+		APIFactory: func(cfg config.Config) (agentAPI, error) {
+			return nil, nil
+		},
+	}, "logout")
 	if err != nil {
 		t.Fatalf("logout: %v", err)
 	}

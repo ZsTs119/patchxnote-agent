@@ -33,6 +33,8 @@ async function main(argv) {
     arch: target.arch,
     install_dir: installDir,
     install_path: installPath,
+    install_dir_on_path: isInstallDirOnPath(installDir, process.env.PATH || "", target.platform),
+    path_hint: pathHint(installDir, target.platform),
     asset_url: assetURL,
     checksums_url: checksumsURL,
     action: parsed.command,
@@ -69,10 +71,11 @@ async function main(argv) {
   }
 
   console.log(`Installed PatchNote Agent ${version} to ${installPath}`);
+  printPathGuidance(installDir, target.platform);
   if (parsed.options.printConfig) {
     printMCPConfig(installPath);
   } else {
-    console.log("Run: patchnote login");
+    console.log("Run: PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true patchnote login");
     console.log("MCP config: patchnote mcp serve");
   }
 }
@@ -184,10 +187,44 @@ function printMCPConfig(commandPath) {
     mcpServers: {
       patchnote: {
         command: commandPath,
-        args: ["mcp", "serve"]
+        args: ["mcp", "serve"],
+        env: {
+          PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN: "true"
+        }
       }
     }
   }, null, 2));
+}
+
+function isInstallDirOnPath(installDir, pathValue, targetPlatform) {
+  if (!pathValue) {
+    return false;
+  }
+  const delimiter = targetPlatform === "windows" ? ";" : ":";
+  const normalize = targetPlatform === "windows"
+    ? value => path.win32.normalize(value).toLowerCase()
+    : value => path.posix.normalize(value.replace(/\\/g, "/"));
+  const expected = normalize(installDir);
+  return pathValue.split(delimiter).some(entry => entry.trim() && normalize(entry.trim()) === expected);
+}
+
+function pathHint(installDir, targetPlatform) {
+  if (targetPlatform === "windows") {
+    const escaped = installDir.replace(/"/g, '\\"');
+    return `[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";${escaped}", "User")`;
+  }
+  return `export PATH="${installDir.replace(/"/g, '\\"')}:$PATH"`;
+}
+
+function printPathGuidance(installDir, targetPlatform) {
+  if (isInstallDirOnPath(installDir, process.env.PATH || "", targetPlatform)) {
+    return;
+  }
+  console.log("To use patchnote directly from your terminal, add the install directory to PATH:");
+  console.log(pathHint(installDir, targetPlatform));
+  if (targetPlatform === "windows") {
+    console.log("Open a new terminal after updating PATH.");
+  }
 }
 
 function download(url, encoding, redirects = 0) {
@@ -260,6 +297,8 @@ module.exports = {
   parseArgs,
   resolveTarget,
   joinInstallPath,
+  isInstallDirOnPath,
+  pathHint,
   resolveRedirectURL,
   verifyChecksum
 };

@@ -1,6 +1,6 @@
 {
-  "name": "@patchnote/agent",
-  "version": "0.1.0",
+  "name": "patchnote-agent",
+  "version": "0.1.1",
   "description": "Installer wrapper for the PatchNote Agent CLI and local MCP server.",
   "repository": {
     "type": "git",
@@ -19,7 +19,6 @@
     "test": "node ./test/install.test.js"
   },
   "publishConfig": {
-    "access": "public",
     "registry": "https://registry.npmjs.org"
   },
   "engines": {

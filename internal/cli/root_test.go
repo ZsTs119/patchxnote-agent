@@ -40,6 +40,23 @@ func TestRootHelpIncludesCommandAndGlobalFlags(t *testing.T) {
 	}
 }
 
+func TestRootUsesDefaultServerBaseURL(t *testing.T) {
+	var got string
+	_, _, err := executeForTestWithDeps(t, Deps{
+		CredentialStore: nil,
+		APIFactory: func(cfg config.Config) (agentAPI, error) {
+			got = cfg.Server.BaseURL
+			return &fakeAgentAPI{}, nil
+		},
+	}, "auth", "status")
+	if err != nil {
+		t.Fatalf("auth status: %v", err)
+	}
+	if got != config.DefaultServerBaseURL {
+		t.Fatalf("expected default server base URL %q, got %q", config.DefaultServerBaseURL, got)
+	}
+}
+
 func TestVersionPlainOutput(t *testing.T) {
 	stdout, stderr, err := executeForTest(t, "--output", "plain", "version")
 	if err != nil {
