@@ -190,9 +190,29 @@ function printMCPConfig(commandPath) {
   }, null, 2));
 }
 
-function download(url, encoding) {
+function download(url, encoding, redirects = 0) {
   return new Promise((resolve, reject) => {
     https.get(url, response => {
+      if (response.statusCode >= 300 && response.statusCode < 400) {
+        response.resume();
+        if (!response.headers.location) {
+          reject(new Error(`download redirect missing location for ${url}`));
+          return;
+        }
+        if (redirects >= 5) {
+          reject(new Error(`download redirect limit exceeded for ${url}`));
+          return;
+        }
+        let nextURL;
+        try {
+          nextURL = resolveRedirectURL(url, response.headers.location);
+        } catch (error) {
+          reject(error);
+          return;
+        }
+        download(nextURL, encoding, redirects + 1).then(resolve, reject);
+        return;
+      }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         response.resume();
         reject(new Error(`download failed with status ${response.statusCode}`));
@@ -206,6 +226,14 @@ function download(url, encoding) {
       });
     }).on("error", reject);
   });
+}
+
+function resolveRedirectURL(currentURL, location) {
+  const next = new URL(location, currentURL);
+  if (next.protocol !== "https:") {
+    throw new Error(`refusing non-https redirect to ${next.protocol}`);
+  }
+  return next.toString();
 }
 
 function verifyChecksum(binary, assetName, checksumsText) {
@@ -232,5 +260,6 @@ module.exports = {
   parseArgs,
   resolveTarget,
   joinInstallPath,
+  resolveRedirectURL,
   verifyChecksum
 };

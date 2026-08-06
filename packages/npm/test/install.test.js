@@ -4,7 +4,7 @@ const assert = require("assert");
 const crypto = require("crypto");
 const path = require("path");
 const { spawnSync } = require("child_process");
-const { joinInstallPath, resolveTarget, verifyChecksum } = require("../bin/patchnote-agent.js");
+const { joinInstallPath, resolveRedirectURL, resolveTarget, verifyChecksum } = require("../bin/patchnote-agent.js");
 
 const bin = path.resolve(__dirname, "..", "bin", "patchnote-agent.js");
 
@@ -21,6 +21,8 @@ assert.deepStrictEqual(resolveTarget("win32", "arm64"), {
 assert.throws(() => resolveTarget("sunos", "x64"), /unsupported platform/);
 assert.strictEqual(joinInstallPath("/tmp/patchnote-agent-bin", "patchnote", "linux"), "/tmp/patchnote-agent-bin/patchnote");
 assert.strictEqual(joinInstallPath("C:\\PatchNote", "patchnote.exe", "windows"), "C:\\PatchNote\\patchnote.exe");
+assert.strictEqual(resolveRedirectURL("https://github.com/ZsTs119/patchnote-agent/releases/download/v0.1.0/checksums.txt", "/download"), "https://github.com/download");
+assert.throws(() => resolveRedirectURL("https://github.com/a", "http://example.invalid/b"), /non-https redirect/);
 
 const binary = Buffer.from("patchnote-binary-fixture");
 const checksum = crypto.createHash("sha256").update(binary).digest("hex");
