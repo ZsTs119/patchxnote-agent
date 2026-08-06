@@ -1,0 +1,14 @@
+{
+  "id": "mem_fixture_1",
+  "platform": "mobile",
+  "object_type": "event",
+  "client_object_id": "local_event_fixture",
+  "revision_id": "rev_fixture_1",
+  "revision": 3,
+  "schema_id": "patchnote.event.v1",
+  "schema_version": 1,
+  "source_availability": "metadata_only",
+  "payload_plaintext_bytes": 256,
+  "created_at": "2026-08-06T09:00:00Z",
+  "updated_at": "2026-08-06T09:30:00Z"
+}

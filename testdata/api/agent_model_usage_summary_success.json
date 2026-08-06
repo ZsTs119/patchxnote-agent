@@ -1,0 +1,14 @@
+{
+  "period": "current_month",
+  "period_starts_at": "2026-08-01T00:00:00Z",
+  "period_ends_at": "2026-09-01T00:00:00Z",
+  "provider_total_tokens": 30000,
+  "charged_quota_tokens": 15000,
+  "run_count": 12,
+  "attempt_count": 14,
+  "gift_charged_tokens": 5000,
+  "paid_charged_tokens": 10000,
+  "estimated_platform_savings_microunits": 2300,
+  "value_basis": "versioned_reference_price",
+  "calculated_at": "2026-08-06T10:00:00Z"
+}

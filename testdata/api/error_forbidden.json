@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "permission_denied",
+    "message": "permission denied",
+    "retryable": false,
+    "request_id": "req_fixture_forbidden"
+  }
+}

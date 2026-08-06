@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": "auth_required",
+    "message": "authentication required",
+    "retryable": false,
+    "request_id": "req_fixture_unauthorized"
+  }
+}

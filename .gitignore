@@ -5,8 +5,8 @@ Thumbs.db
 bin/
 dist/
 coverage/
+.tmp/
 !packages/npm/bin/
-!packages/npm/bin/install.js
 
 # Local config and secrets
 .env

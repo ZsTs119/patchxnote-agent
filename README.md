@@ -23,6 +23,33 @@ Initial MCP scope is read-only:
 
 The server-side PatchNote API remains the source of truth. This repository owns local distribution, credential storage, MCP tool schema, and desktop agent integration.
 
+## Current MVP Smoke
+
+Local MVP smoke command:
+
+```sh
+scripts/e2e/mvp-smoke.sh
+```
+
+The smoke builds the `patchnote` binary, runs the npm installer wrapper in dry-run mode, logs in against an in-process Agent V1 test server, checks `auth status`, starts `patchnote mcp serve`, calls the seven V1 MCP tools, logs out, and scans smoke evidence for secret-like values.
+
+Useful local commands:
+
+```sh
+go test ./...
+go run ./cmd/patchnote version
+go run ./cmd/patchnote auth status
+go run ./cmd/patchnote mcp serve
+node packages/npm/bin/patchnote-agent.js install --dry-run --print-config
+```
+
+V1 limitations:
+
+- Agent access is read-only and uses dedicated `/v1/agent/...` server routes.
+- Recorder-card battery, live BLE state, storage, recording status, SK, full MAC, raw audio, and full transcripts are not exposed.
+- `patchnote_search_memories` searches only local authorized metadata cache populated during the MCP session.
+- Public npm release, signed binaries, real OS keychain adapters, and cross-machine install validation remain Phase 12 release gates.
+
 ## Engineering Rules
 
 Before changing CLI behavior, installer logic, MCP tools, authentication, local cache, or release configuration, read:

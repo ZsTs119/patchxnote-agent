@@ -4,17 +4,17 @@
   "private": true,
   "description": "Installer wrapper for the PatchNote Agent CLI and local MCP server.",
   "bin": {
-    "patchnote-agent": "./bin/install.js"
+    "patchnote-agent": "./bin/patchnote-agent.js"
   },
   "files": [
     "bin"
   ],
   "scripts": {
-    "install:local": "node ./bin/install.js"
+    "install:local": "node ./bin/patchnote-agent.js install",
+    "test": "node ./test/install.test.js"
   },
   "engines": {
     "node": ">=18"
   },
   "license": "UNLICENSED"
 }
-

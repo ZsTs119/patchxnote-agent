@@ -3,32 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/cli"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		printUsage()
-		return
+	if err := cli.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-
-	switch os.Args[1] {
-	case "setup":
-		fmt.Println("patchnote setup: not implemented yet")
-	case "login":
-		fmt.Println("patchnote login: not implemented yet")
-	case "mcp":
-		fmt.Println("patchnote mcp: not implemented yet")
-	default:
-		printUsage()
-		os.Exit(2)
-	}
-}
-
-func printUsage() {
-	fmt.Println(`PatchNote Agent
-
-Usage:
-  patchnote setup
-  patchnote login
-  patchnote mcp`)
 }
