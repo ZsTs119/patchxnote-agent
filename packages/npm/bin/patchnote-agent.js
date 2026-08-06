@@ -13,8 +13,8 @@ const repo = "ZsTs119/patchnote-agent";
 
 async function main(argv) {
   const parsed = parseArgs(argv);
-  if (parsed.command !== "install") {
-    throw new Error("usage: patchnote-agent install [--dry-run] [--print-config] [--install-dir <path>]");
+  if (!["install", "update", "uninstall"].includes(parsed.command)) {
+    throw new Error("usage: patchnote-agent <install|update|uninstall> [--dry-run] [--print-config] [--install-dir <path>]");
   }
 
   const target = resolveTarget(parsed.options.platform || process.platform, parsed.options.arch || process.arch);
@@ -35,8 +35,14 @@ async function main(argv) {
     install_path: installPath,
     asset_url: assetURL,
     checksums_url: checksumsURL,
+    action: parsed.command,
     dry_run: Boolean(parsed.options.dryRun)
   };
+
+  if (parsed.command === "uninstall") {
+    await uninstall(plan, parsed.options);
+    return;
+  }
 
   if (parsed.options.dryRun) {
     printPlan(plan);
@@ -59,6 +65,7 @@ async function main(argv) {
   await fs.promises.writeFile(installPath, binary, { mode: target.platform === "windows" ? 0o644 : 0o755 });
   if (target.platform !== "windows") {
     await fs.promises.chmod(installPath, 0o755);
+    await assertExecutable(installPath);
   }
 
   console.log(`Installed PatchNote Agent ${version} to ${installPath}`);
@@ -67,6 +74,22 @@ async function main(argv) {
   } else {
     console.log("Run: patchnote login");
     console.log("MCP config: patchnote mcp serve");
+  }
+}
+
+async function uninstall(plan, options) {
+  if (options.dryRun) {
+    printPlan(plan);
+    return;
+  }
+  await fs.promises.rm(plan.install_path, { force: true });
+  console.log(`Removed PatchNote Agent from ${plan.install_path}`);
+}
+
+async function assertExecutable(installPath) {
+  const stat = await fs.promises.stat(installPath);
+  if ((stat.mode & 0o111) === 0) {
+    throw new Error(`installed binary is not executable: ${installPath}`);
   }
 }
 
@@ -86,6 +109,9 @@ function parseArgs(argv) {
         options.installDir = requireValue(rest, ++index, arg);
         break;
       case "--from-local":
+        if (command === "uninstall") {
+          throw new Error("--from-local is not valid for uninstall");
+        }
         options.fromLocal = requireValue(rest, ++index, arg);
         break;
       case "--platform":
@@ -148,7 +174,7 @@ function joinInstallPath(installDir, binaryName, targetPlatform) {
 }
 
 function printPlan(plan) {
-  console.log("PatchNote Agent install dry run:");
+  console.log(`PatchNote Agent ${plan.action} dry run:`);
   console.log(JSON.stringify(plan, null, 2));
 }
 

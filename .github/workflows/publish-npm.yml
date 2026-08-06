@@ -1,0 +1,64 @@
+name: Publish npm Wrapper
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer version to publish, without leading v"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check package version
+        working-directory: packages/npm
+        run: |
+          node -e "const pkg=require('./package.json'); const want=process.env.VERSION; if (pkg.version !== want) { throw new Error(`package version ${pkg.version} does not match ${want}`); } if (pkg.private) { throw new Error('package must not be private'); }"
+        env:
+          VERSION: ${{ inputs.version }}
+
+      - name: Check GitHub release assets exist
+        run: |
+          gh release view "v${VERSION}" --repo "${GITHUB_REPOSITORY}" --json assets \
+            --jq '.assets[].name' > /tmp/patchnote-assets.txt
+          for asset in \
+            "checksums.txt" \
+            "patchnote_${VERSION}_darwin_amd64" \
+            "patchnote_${VERSION}_darwin_arm64" \
+            "patchnote_${VERSION}_linux_amd64" \
+            "patchnote_${VERSION}_linux_arm64" \
+            "patchnote_${VERSION}_windows_amd64.exe" \
+            "patchnote_${VERSION}_windows_arm64.exe"; do
+            grep -Fx "$asset" /tmp/patchnote-assets.txt
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+
+      - name: Test npm wrapper
+        working-directory: packages/npm
+        run: |
+          npm test
+          npm pack --dry-run
+
+      - name: npm publish
+        working-directory: packages/npm
+        run: npm publish --access public --registry https://registry.npmjs.org
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

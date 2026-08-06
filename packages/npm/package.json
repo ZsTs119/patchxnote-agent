@@ -1,8 +1,12 @@
 {
   "name": "@patchnote/agent",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Installer wrapper for the PatchNote Agent CLI and local MCP server.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZsTs119/patchnote-agent.git"
+  },
+  "homepage": "https://github.com/ZsTs119/patchnote-agent#readme",
   "bin": {
     "patchnote-agent": "./bin/patchnote-agent.js"
   },
@@ -11,7 +15,12 @@
   ],
   "scripts": {
     "install:local": "node ./bin/patchnote-agent.js install",
+    "pack:dry-run": "npm pack --dry-run",
     "test": "node ./test/install.test.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "engines": {
     "node": ">=18"

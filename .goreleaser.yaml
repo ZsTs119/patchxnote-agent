@@ -1,0 +1,45 @@
+version: 2
+
+project_name: patchnote
+
+builds:
+  - id: patchnote
+    main: ./cmd/patchnote
+    binary: patchnote
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version.Version={{ .Version }}
+      - -X codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version.Commit={{ .Commit }}
+      - -X codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version.Date={{ .Date }}
+
+archives:
+  - id: direct-binaries
+    ids:
+      - patchnote
+    formats:
+      - binary
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if eq .Os "windows" }}.exe{{ end }}
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
