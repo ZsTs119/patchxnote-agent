@@ -23,3 +23,10 @@ Initial MCP scope is read-only:
 
 The server-side PatchNote API remains the source of truth. This repository owns local distribution, credential storage, MCP tool schema, and desktop agent integration.
 
+## Engineering Rules
+
+Before changing CLI behavior, installer logic, MCP tools, authentication, local cache, or release configuration, read:
+
+- [AGENTS.md](AGENTS.md)
+- [docs/engineering-rules.md](docs/engineering-rules.md)
+- [docs/plans/2026-08-06-agent-v1-mvp.md](docs/plans/2026-08-06-agent-v1-mvp.md)
