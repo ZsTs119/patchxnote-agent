@@ -1,17 +1,31 @@
 # PatchNote Agent
 
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 [![npm version](https://img.shields.io/npm/v/patchnote-agent.svg)](https://www.npmjs.com/package/patchnote-agent)
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchnote-agent)](https://github.com/ZsTs119/patchnote-agent/releases)
+[![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
-PatchNote Agent is the local CLI and MCP bridge that lets desktop agents read safe PatchNote account context: account status, bound recorder cards, quota, model usage, and structured-result metadata.
+PatchNote Agent is the local CLI and MCP bridge for PatchNote. It lets desktop AI agents read safe PatchNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata.
 
-It installs a versioned `patchnote` binary, runs a local stdio MCP server, and talks only to dedicated read-only `/v1/agent/**` PatchNote server APIs. It does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC, or provider payloads.
+Agent V1 is deliberately read-only. It uses dedicated `/v1/agent/**` PatchNote server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, provider payloads, quota purchase flows, or Admin APIs.
 
 ```sh
 npx -y patchnote-agent@0.1.1 install --print-config
 ```
 
-## What You Get
+## At A Glance
+
+| Area | Agent V1 behavior |
+| --- | --- |
+| Runtime | Installs a versioned native `patchnote` binary through an npm wrapper. |
+| Agent protocol | Runs a local stdio MCP server with `patchnote mcp serve`. |
+| Login | Phone OTP login creates an independent Agent session, not a mobile/desktop installation. |
+| Data access | Reads bounded account, recorder-card, quota, usage, and structured-result metadata projections. |
+| Safety boundary | Read-only, masked, platform-scoped, and routed through dedicated Agent server endpoints. |
+| Package status | Public beta `0.1.1`, defaulting to the PatchNote test API. |
+
+## Features
 
 | Capability | Available in `0.1.1` | Notes |
 | --- | --- | --- |
@@ -26,6 +40,15 @@ npx -y patchnote-agent@0.1.1 install --print-config
 | Hardware bind/release/recovery | No | Owned by App/PC and MR20 flows, not Agent V1. |
 | Raw audio/transcripts/downloads | No | Intentionally not exposed. |
 | Model execution | No | Agent V1 is read-only. |
+
+## Requirements
+
+- Node.js `18` or newer for the npm installer wrapper.
+- Windows, macOS, or Linux on `amd64` or `arm64`.
+- A PatchNote account that can receive the phone OTP login code.
+- An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
+
+> `0.1.1` is a beta build. The default server is the PatchNote test API, and OS-native keychain adapters are still pending.
 
 ## Quickstart
 
@@ -47,10 +70,20 @@ The first beta build defaults to the PatchNote test API:
 https://ws-lab.patch-x.cn/patchnote-test-api
 ```
 
-Log in and check your session:
+Log in and check your session.
+
+macOS/Linux:
 
 ```sh
 PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true patchnote login
+patchnote auth status
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN = "true"
+patchnote login
 patchnote auth status
 ```
 
@@ -102,6 +135,14 @@ MCP config never contains access tokens or refresh tokens. The beta `PATCHNOTE_A
 
 Memory tools require an explicit `platform` argument: `mobile` or `desktop`. V1 memory responses are safe metadata only; direct model-run response bodies and old summary text are not reconstructed by the Agent.
 
+Example prompts for your desktop agent:
+
+```text
+Show my PatchNote account and quota status.
+List my PatchNote recorder cards.
+Search my desktop PatchNote memories for roadmap.
+```
+
 ## CLI Commands
 
 ```sh
@@ -129,7 +170,11 @@ npx -y patchnote-agent@0.1.1 update
 npx -y patchnote-agent@0.1.1 uninstall
 ```
 
-## Security Model
+## Security And Risk Notice
+
+PatchNote Agent gives an AI agent access to account metadata that belongs to the logged-in PatchNote user. Treat the MCP host as trusted software and review any prompts, tool calls, or logs that may reveal private account context.
+
+Default safety boundaries:
 
 - Agent auth is separate from App/PC `mobile` and `desktop` installations.
 - Agent calls only dedicated read-only `/v1/agent/**` server routes.
@@ -138,6 +183,8 @@ npx -y patchnote-agent@0.1.1 uninstall
 - Recorder-card identifiers are masked; live BLE state, battery, storage, and recording status are not exposed.
 - Structured content is platform-scoped. The Agent does not merge mobile and desktop content.
 - Tool outputs are bounded and validated before being returned to the MCP client.
+
+Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full MAC values, SK values, raw audio, transcripts, prompts, or provider payloads into public issues. Use the private process in [SECURITY.md](./SECURITY.md) for vulnerability reports.
 
 ## Current Limitations
 
@@ -150,6 +197,17 @@ npx -y patchnote-agent@0.1.1 uninstall
 - Production Agent route rollout is pending.
 - `patchnote_search_memories` searches only metadata cached during the current MCP session.
 - Raw audio, full transcripts, complete model responses, hardware write actions, quota purchase/reward actions, payment, and Admin APIs are out of scope.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| `patchnote` is not found after install | Add the printed install directory to PATH, then open a new terminal. |
+| Login says credential storage is unavailable | For beta testing, set `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`. |
+| MCP host cannot start the server | Use the absolute `command` path printed by `--print-config`. |
+| Memory list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`. |
+| Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
+| Wrong server environment | Set `PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL>`. |
 
 ## Verify The Install
 
@@ -175,9 +233,9 @@ The MVP smoke builds the CLI, runs installer dry-run, logs in against an in-proc
 
 Before changing CLI behavior, installer logic, MCP tools, authentication, local cache, or release configuration, read:
 
-- [AGENTS.md](AGENTS.md)
-- [docs/engineering-rules.md](docs/engineering-rules.md)
-- [docs/plans/2026-08-06-agent-v1-mvp.md](docs/plans/2026-08-06-agent-v1-mvp.md)
+- [AGENTS.md](./AGENTS.md)
+- [docs/engineering-rules.md](./docs/engineering-rules.md)
+- [docs/plans/2026-08-06-agent-v1-mvp.md](./docs/plans/2026-08-06-agent-v1-mvp.md)
 
 ## Release Notes For Operators
 
@@ -192,8 +250,6 @@ Before changing CLI behavior, installer logic, MCP tools, authentication, local 
    - allowed action: `npm publish`
 6. Publish npm only after release assets exist and the trusted publisher is configured.
 7. After a successful trusted publish, revoke the old npm automation token and disallow token-based publishing for this package.
-
-Security reports should use the private process in [SECURITY.md](SECURITY.md).
 
 ## License
 

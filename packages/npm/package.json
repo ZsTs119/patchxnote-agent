@@ -11,7 +11,8 @@
     "patchnote-agent": "bin/patchnote-agent.js"
   },
   "files": [
-    "bin"
+    "bin",
+    "README.md"
   ],
   "scripts": {
     "install:local": "node ./bin/patchnote-agent.js install",
