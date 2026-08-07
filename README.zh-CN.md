@@ -220,7 +220,7 @@ npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.2 install --dry
 patchnote version
 ```
 
-发布二进制应报告版本 `0.1.2`，commit 与 GitHub Release 对应提交一致。
+发布二进制应报告版本 `0.1.2`，commit 为 `af03c697c9a326b12b67659db3af4053d4513093`。
 
 ## 开发
 

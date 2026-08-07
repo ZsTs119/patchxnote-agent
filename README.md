@@ -220,7 +220,7 @@ npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.2 install --dry
 patchnote version
 ```
 
-The release binary should report version `0.1.2` and the commit attached to the GitHub Release.
+The release binary should report version `0.1.2` and commit `af03c697c9a326b12b67659db3af4053d4513093`.
 
 ## Development
 
