@@ -1,10 +1,10 @@
-# PatchNote Agent Engineering Rules
+# PatchXNote Agent Engineering Rules
 
-This document keeps the PatchNote Agent CLI and local MCP bridge from drifting away from the product and security model.
+This document keeps the PatchXNote Agent CLI and local MCP bridge from drifting away from the product and security model.
 
 ## Architecture
 
-PatchNote Agent has three layers:
+PatchXNote Agent has three layers:
 
 1. `patchnote` Go binary
    The local runtime for login, account inspection, MCP stdio serving, local cache management, and installer integration.
@@ -12,13 +12,13 @@ PatchNote Agent has three layers:
 2. npm installer wrapper
    A thin package that supports commands such as `npx -y patchnote-agent install`. It installs or updates the versioned Go binary, then exits.
 
-3. PatchNote server APIs
+3. PatchXNote server APIs
    The remote source of truth. The agent never bypasses server authorization and never reconstructs server facts from local guesses.
 
 The expected runtime shape is:
 
 ```text
-Agent client -> local MCP stdio -> patchnote binary -> PatchNote API
+Agent client -> local MCP stdio -> patchnote binary -> PatchXNote API
 ```
 
 ## Repository Layout
@@ -62,7 +62,7 @@ Package responsibilities:
 - `internal/config`: Viper-backed non-secret config loading, default values, env binding, and config path resolution.
 - `internal/auth`: login session state, token refresh orchestration, scope checks, and logout behavior.
 - `internal/keychain`: OS secure-storage adapter boundary. Keep platform differences behind this package.
-- `internal/api`: PatchNote server client, request/response mapping, retry policy, and stable API error mapping.
+- `internal/api`: PatchXNote server client, request/response mapping, retry policy, and stable API error mapping.
 - `internal/mcp`: MCP stdio server, tool registry, tool schemas, and JSON-RPC error mapping.
 - `internal/cache`: local cache and search index for authorized read-only projections.
 - `internal/output`: table/json/plain renderers. Commands should not hand-roll output formatting.
@@ -76,14 +76,14 @@ The dependency direction is:
 cmd/patchnote -> internal/cli -> internal/{config,auth,api,mcp,cache,output,diag,version}
 internal/auth -> internal/{config,keychain,api}
 internal/mcp -> internal/{auth,api,cache,diag}
-internal/api -> external PatchNote server APIs
+internal/api -> external PatchXNote server APIs
 ```
 
 Avoid reverse dependencies from lower-level packages back into `internal/cli`.
 
 ## Non-Goals For V1
 
-V1 is intentionally not a full PatchNote client.
+V1 is intentionally not a full PatchXNote client.
 
 It does not:
 
@@ -170,17 +170,17 @@ Secret material must never be written to config files. Store it only through `in
 Default config locations:
 
 ```text
-macOS:   ~/Library/Application Support/PatchNote Agent/config.yaml
-Windows: %AppData%\PatchNote Agent\config.yaml
-Linux:   ${XDG_CONFIG_HOME:-~/.config}/patchnote-agent/config.yaml
+macOS:   ~/Library/Application Support/PatchXNote Agent/config.yaml
+Windows: %AppData%\PatchXNote Agent\config.yaml
+Linux:   ${XDG_CONFIG_HOME:-~/.config}/patchxnote-agent/config.yaml
 ```
 
 Default cache locations:
 
 ```text
-macOS:   ~/Library/Caches/PatchNote Agent/
-Windows: %LocalAppData%\PatchNote Agent\Cache\
-Linux:   ${XDG_CACHE_HOME:-~/.cache}/patchnote-agent/
+macOS:   ~/Library/Caches/PatchXNote Agent/
+Windows: %LocalAppData%\PatchXNote Agent\Cache\
+Linux:   ${XDG_CACHE_HOME:-~/.cache}/patchxnote-agent/
 ```
 
 Environment variables must use the `PATCHNOTE_` prefix. For nested config, replace dots and hyphens with underscores, for example `PATCHNOTE_SERVER_BASE_URL`.

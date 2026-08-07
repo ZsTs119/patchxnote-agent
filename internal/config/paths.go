@@ -45,8 +45,8 @@ func ResolvePaths(targetOS string, env PathEnv) (Paths, error) {
 		if env.HomeDir == "" {
 			return Paths{}, fmt.Errorf("resolve config paths: home directory is required for darwin")
 		}
-		configDir := filepath.Join(env.HomeDir, "Library", "Application Support", "PatchNote Agent")
-		cacheDir := filepath.Join(env.HomeDir, "Library", "Caches", "PatchNote Agent")
+		configDir := filepath.Join(env.HomeDir, "Library", "Application Support", "PatchXNote Agent")
+		cacheDir := filepath.Join(env.HomeDir, "Library", "Caches", "PatchXNote Agent")
 		return Paths{
 			ConfigDir:  configDir,
 			ConfigFile: filepath.Join(configDir, "config.yaml"),
@@ -64,8 +64,8 @@ func ResolvePaths(targetOS string, env PathEnv) (Paths, error) {
 		if appData == "" || localAppData == "" {
 			return Paths{}, fmt.Errorf("resolve config paths: APPDATA and LOCALAPPDATA are required for windows")
 		}
-		configDir := filepath.Join(appData, "PatchNote Agent")
-		cacheDir := filepath.Join(localAppData, "PatchNote Agent", "Cache")
+		configDir := filepath.Join(appData, "PatchXNote Agent")
+		cacheDir := filepath.Join(localAppData, "PatchXNote Agent", "Cache")
 		return Paths{
 			ConfigDir:  configDir,
 			ConfigFile: filepath.Join(configDir, "config.yaml"),
@@ -86,8 +86,8 @@ func ResolvePaths(targetOS string, env PathEnv) (Paths, error) {
 			}
 			cacheBase = filepath.Join(env.HomeDir, ".cache")
 		}
-		configDir := filepath.Join(configBase, "patchnote-agent")
-		cacheDir := filepath.Join(cacheBase, "patchnote-agent")
+		configDir := filepath.Join(configBase, "patchxnote-agent")
+		cacheDir := filepath.Join(cacheBase, "patchxnote-agent")
 		return Paths{
 			ConfigDir:  configDir,
 			ConfigFile: filepath.Join(configDir, "config.yaml"),

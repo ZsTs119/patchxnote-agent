@@ -57,7 +57,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:               "patchnote",
-		Short:             "PatchNote Agent CLI and local MCP bridge",
+		Short:             "PatchXNote Agent CLI and local MCP bridge",
 		SilenceUsage:      true,
 		SilenceErrors:     true,
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
@@ -67,7 +67,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 	flags.String("config", "", "Path to a non-secret config file")
 	flags.String("profile", "default", "Config profile name")
 	flags.StringP("output", "o", "plain", "Output format: plain or json")
-	flags.String("server-base-url", "", "PatchNote API base URL; defaults to the PatchNote test API")
+	flags.String("server-base-url", "", "PatchXNote API base URL; defaults to the PatchXNote test API")
 
 	mustBind(state.viper, "config", flags.Lookup("config"))
 	mustBind(state.viper, "profile", flags.Lookup("profile"))

@@ -193,7 +193,7 @@ func (s *Server) accessToken(ctx context.Context, requiredScopes ...string) (str
 	}
 	for _, scope := range requiredScopes {
 		if !hasScope(credential.Scopes, scope) {
-			return "", rpcErr(codeToolError, "permission_denied", "PatchNote Agent does not have permission for this tool")
+			return "", rpcErr(codeToolError, "permission_denied", "PatchXNote Agent does not have permission for this tool")
 		}
 	}
 	return credential.AccessToken, nil
@@ -223,18 +223,18 @@ func mapToolError(err error) *Error {
 func mapAPIError(err *api.Error) *Error {
 	switch err.StatusCode {
 	case 401:
-		return rpcErr(codeAuthRequired, "auth_required", "PatchNote Agent login is required")
+		return rpcErr(codeAuthRequired, "auth_required", "PatchXNote Agent login is required")
 	case 403:
-		return rpcErr(codeToolError, "permission_denied", "PatchNote Agent does not have permission for this tool")
+		return rpcErr(codeToolError, "permission_denied", "PatchXNote Agent does not have permission for this tool")
 	case 404:
-		return rpcErr(codeToolError, "not_found", "PatchNote resource was not found")
+		return rpcErr(codeToolError, "not_found", "PatchXNote resource was not found")
 	case 429:
-		return rpcErr(codeToolError, "rate_limited", "PatchNote API rate limit reached")
+		return rpcErr(codeToolError, "rate_limited", "PatchXNote API rate limit reached")
 	default:
 		if err.Code != "" {
-			return rpcErr(codeToolError, err.Code, "PatchNote API request failed")
+			return rpcErr(codeToolError, err.Code, "PatchXNote API request failed")
 		}
-		return rpcErr(codeToolError, "api_error", "PatchNote API request failed")
+		return rpcErr(codeToolError, "api_error", "PatchXNote API request failed")
 	}
 }
 

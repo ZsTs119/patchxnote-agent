@@ -53,7 +53,7 @@ func (b *fakeNativeBackend) Delete(service, user string) error {
 func TestNativeStorePutGetDelete(t *testing.T) {
 	ctx := context.Background()
 	backend := newFakeNativeBackend()
-	store := newNativeStore(backend, "patchnote-agent-test")
+	store := newNativeStore(backend, "patchxnote-agent-test")
 	expiresAt := time.Date(2026, 8, 7, 12, 30, 0, 123, time.UTC)
 	credential := Credential{
 		AccountID:            "acct_test",
@@ -97,7 +97,7 @@ func TestNativeStorePutGetDelete(t *testing.T) {
 func TestNativeStoreSplitsTokenMaterialFromMetadata(t *testing.T) {
 	ctx := context.Background()
 	backend := newFakeNativeBackend()
-	store := newNativeStore(backend, "patchnote-agent-test")
+	store := newNativeStore(backend, "patchxnote-agent-test")
 	credential := Credential{
 		AccountID:    "acct_test",
 		AccessToken:  strings.Repeat("a", 32),
@@ -109,22 +109,76 @@ func TestNativeStoreSplitsTokenMaterialFromMetadata(t *testing.T) {
 		t.Fatalf("put native credential: %v", err)
 	}
 
-	metadata := backend.values["patchnote-agent-test\x00profile:dev:metadata"]
+	metadata := backend.values["patchxnote-agent-test\x00profile:dev:metadata"]
 	if strings.Contains(metadata, credential.AccessToken) || strings.Contains(metadata, credential.RefreshToken) {
 		t.Fatalf("metadata contains token material: %s", metadata)
 	}
-	if backend.values["patchnote-agent-test\x00profile:dev:access_token"] != credential.AccessToken {
+	if backend.values["patchxnote-agent-test\x00profile:dev:access_token"] != credential.AccessToken {
 		t.Fatal("expected access token to be stored in its own keychain item")
 	}
-	if backend.values["patchnote-agent-test\x00profile:dev:refresh_token"] != credential.RefreshToken {
+	if backend.values["patchxnote-agent-test\x00profile:dev:refresh_token"] != credential.RefreshToken {
 		t.Fatal("expected refresh token to be stored in its own keychain item")
+	}
+}
+
+func TestNativeStoreReadsAndMigratesLegacyService(t *testing.T) {
+	ctx := context.Background()
+	backend := newFakeNativeBackend()
+	legacyStore := newNativeStore(backend, "patchnote-agent-test")
+	credential := Credential{
+		AccountID:    "acct_test",
+		AccessToken:  strings.Repeat("a", 32),
+		RefreshToken: strings.Repeat("r", 32),
+		Scopes:       []string{"agent:account.read"},
+	}
+	if err := legacyStore.Put(ctx, "default", credential); err != nil {
+		t.Fatalf("put legacy native credential: %v", err)
+	}
+
+	store := newNativeStoreWithLegacy(backend, "patchxnote-agent-test", "patchnote-agent-test")
+	got, err := store.Get(ctx, "default")
+	if err != nil {
+		t.Fatalf("get migrated native credential: %v", err)
+	}
+	if got.AccountID != credential.AccountID || got.AccessToken != credential.AccessToken || got.RefreshToken != credential.RefreshToken {
+		t.Fatalf("unexpected migrated credential: %+v", got)
+	}
+	if backend.values["patchxnote-agent-test\x00profile:default:metadata"] == "" {
+		t.Fatal("expected legacy credential to be copied into the PatchXNote keychain service")
+	}
+}
+
+func TestNativeStoreDeleteRemovesLegacyService(t *testing.T) {
+	ctx := context.Background()
+	backend := newFakeNativeBackend()
+	store := newNativeStoreWithLegacy(backend, "patchxnote-agent-test", "patchnote-agent-test")
+	credential := Credential{
+		AccountID:    "acct_test",
+		AccessToken:  strings.Repeat("a", 32),
+		RefreshToken: strings.Repeat("r", 32),
+	}
+	if err := newNativeStore(backend, "patchxnote-agent-test").Put(ctx, "default", credential); err != nil {
+		t.Fatalf("put current native credential: %v", err)
+	}
+	if err := newNativeStore(backend, "patchnote-agent-test").Put(ctx, "default", credential); err != nil {
+		t.Fatalf("put legacy native credential: %v", err)
+	}
+
+	if err := store.Delete(ctx, "default"); err != nil {
+		t.Fatalf("delete current and legacy native credentials: %v", err)
+	}
+	if _, ok := backend.values["patchxnote-agent-test\x00profile:default:metadata"]; ok {
+		t.Fatal("expected current native credential metadata to be deleted")
+	}
+	if _, ok := backend.values["patchnote-agent-test\x00profile:default:metadata"]; ok {
+		t.Fatal("expected legacy native credential metadata to be deleted")
 	}
 }
 
 func TestNativeStoreMapsBackendErrorsToUnavailable(t *testing.T) {
 	backend := newFakeNativeBackend()
 	backend.err = errors.New("backend unavailable")
-	store := newNativeStore(backend, "patchnote-agent-test")
+	store := newNativeStore(backend, "patchxnote-agent-test")
 
 	if _, err := store.Get(context.Background(), "default"); !errors.Is(err, ErrUnavailable) {
 		t.Fatalf("expected unavailable get, got %v", err)
@@ -140,7 +194,7 @@ func TestNativeStoreMapsBackendErrorsToUnavailable(t *testing.T) {
 func TestNativeStoreDetectsIncompleteCredential(t *testing.T) {
 	ctx := context.Background()
 	backend := newFakeNativeBackend()
-	store := newNativeStore(backend, "patchnote-agent-test")
+	store := newNativeStore(backend, "patchxnote-agent-test")
 
 	if err := store.Put(ctx, "default", Credential{
 		AccountID:    "acct_test",
@@ -149,7 +203,7 @@ func TestNativeStoreDetectsIncompleteCredential(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("put native credential: %v", err)
 	}
-	delete(backend.values, "patchnote-agent-test\x00profile:default:access_token")
+	delete(backend.values, "patchxnote-agent-test\x00profile:default:access_token")
 
 	if _, err := store.Get(ctx, "default"); !errors.Is(err, ErrUnavailable) {
 		t.Fatalf("expected unavailable incomplete credential, got %v", err)

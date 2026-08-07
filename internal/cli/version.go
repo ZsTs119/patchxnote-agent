@@ -11,7 +11,7 @@ import (
 func newVersionCommand(state *rootState) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Print PatchNote Agent version information",
+		Short: "Print PatchXNote Agent version information",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			info := version.Current()

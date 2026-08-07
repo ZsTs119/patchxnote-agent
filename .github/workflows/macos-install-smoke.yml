@@ -6,7 +6,7 @@ on:
       version:
         description: "Published npm/GitHub Release version to install, without leading v"
         required: true
-        default: "0.1.2"
+        default: "0.1.3"
         type: string
   pull_request:
     paths:
@@ -50,7 +50,7 @@ jobs:
           "${INSTALL_DIR}/patchnote" version --output json > "${RUNNER_TEMP}/patchnote-version.json"
           node -e "const fs=require('fs'); const got=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/patchnote-version.json', 'utf8')); if (got.version !== process.env.VERSION) { throw new Error('unexpected patchnote version ' + got.version); } if (got.os !== 'darwin') { throw new Error('expected darwin binary, got ' + got.os); }"
         env:
-          VERSION: ${{ github.event.inputs.version || '0.1.2' }}
+          VERSION: ${{ github.event.inputs.version || '0.1.3' }}
 
       - name: MCP stdio initialize smoke
         run: |

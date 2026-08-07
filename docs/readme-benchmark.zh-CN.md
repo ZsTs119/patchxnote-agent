@@ -1,6 +1,6 @@
 # README Benchmark Notes
 
-本文件记录 PatchNote Agent README 的公开仓库参考和后续维护标准，避免后续文档风格漂移。
+本文件记录 PatchXNote Agent README 的公开仓库参考和后续维护标准，避免后续文档风格漂移。
 
 ## 参考仓库
 
@@ -13,13 +13,13 @@
 | [charmbracelet/crush](https://github.com/charmbracelet/crush) | 首屏中英双语定位、安装方式矩阵、平台覆盖说明和功能价值表达。 |
 | [stripe/stripe-cli](https://github.com/stripe/stripe-cli) | 成熟 CLI 的安装/升级矩阵、npx 入口、Docker/手工二进制路径和平台注意事项。 |
 
-## PatchNote Agent README 标准
+## PatchXNote Agent README 标准
 
 首屏必须回答：
 
-- 这是什么：PatchNote 的本地 CLI 和 MCP bridge。
+- 这是什么：PatchXNote 的本地 CLI 和 MCP bridge。
 - 给谁用：桌面 AI Agent / MCP Host。
-- 能做什么：读取安全的 PatchNote 账号上下文。
+- 能做什么：读取安全的 PatchXNote 账号上下文。
 - 不能做什么：不暴露硬件写入、原始音频、完整转写、SK、完整 MAC、支付和 Admin API。
 - 怎么开始：一条可复制的 `npx -y patchnote-agent@<version> install --print-config`。
 
@@ -27,7 +27,7 @@
 
 - 中英文切换入口：`README.md` 和 `README.zh-CN.md`。
 - 徽章：npm version、GitHub release、security policy。
-- 首屏封面图：`docs/assets/patchnote-agent-cover.png`。
+- 首屏封面图：`docs/assets/patchxnote-agent-cover.png`。
 - 关键视觉素材：quickstart、architecture、tools、safety-boundary，用于解释安装、MCP 架构、工具能力和安全边界。
 - 功能表：明确支持和不支持的边界。
 - 环境要求：Node 版本、系统、账号、MCP Host。
@@ -51,6 +51,6 @@
 1. `README.md`
 2. `README.zh-CN.md`
 3. `packages/npm/README.md`
-4. `docs/assets/patchnote-agent-*.png`
+4. `docs/assets/patchxnote-agent-*.png`
 5. `docs/plans/2026-08-06-agent-v1-mvp.md`
 6. 本文件

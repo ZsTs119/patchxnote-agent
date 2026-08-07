@@ -1,4 +1,4 @@
-# PatchNote Agent
+# PatchXNote Agent
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
@@ -6,14 +6,14 @@
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchnote-agent)](https://github.com/ZsTs119/patchnote-agent/releases)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
-![PatchNote Agent 封面](./docs/assets/patchnote-agent-cover.png)
+![PatchXNote Agent 封面](./docs/assets/patchxnote-agent-cover.png)
 
-PatchNote Agent 是 PatchNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。
+PatchXNote Agent 是 PatchXNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchXNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。
 
-Agent V1 明确保持只读。它只调用专用的 `/v1/agent/**` PatchNote 服务端 API，不暴露 App/PC 的硬件写入流程、原始音频、完整转写、SK、完整 MAC、供应商 payload、额度购买流程或 Admin API。
+Agent V1 明确保持只读。它只调用专用的 `/v1/agent/**` PatchXNote 服务端 API，不暴露 App/PC 的硬件写入流程、原始音频、完整转写、SK、完整 MAC、供应商 payload、额度购买流程或 Admin API。
 
 ```sh
-npx -y patchnote-agent@0.1.2 install --print-config
+npx -y patchnote-agent@0.1.3 install --print-config
 ```
 
 ## 快速了解
@@ -25,11 +25,11 @@ npx -y patchnote-agent@0.1.2 install --print-config
 | 登录 | 手机验证码登录，创建独立 Agent 会话，不占用 mobile/desktop 安装位。 |
 | 数据访问 | 读取有边界的账号、录音卡、额度、模型使用和结构化结果元数据投影。 |
 | 安全边界 | 只读、脱敏、按平台隔离，并且只走专用 Agent 服务端接口。 |
-| 包状态 | 公开 beta 版 `0.1.2`，默认连接 PatchNote 测试 API。 |
+| 包状态 | 公开 beta 版 `0.1.3`，默认连接 PatchXNote 测试 API。 |
 
 ## 功能
 
-| 能力 | `0.1.2` 是否支持 | 说明 |
+| 能力 | `0.1.3` 是否支持 | 说明 |
 | --- | --- | --- |
 | 手机验证码 Agent 登录 | 支持 | 使用 Agent 专用登录态，不影响 mobile/desktop 安装位。 |
 | 本地 MCP server | 支持 | 通过 `patchnote mcp serve` 使用 stdio 通信。 |
@@ -47,19 +47,19 @@ npx -y patchnote-agent@0.1.2 install --print-config
 
 - Node.js `18` 或更高版本，用于 npm 安装壳。
 - Windows、macOS 或 Linux，支持 `amd64` 和 `arm64`。
-- 可以接收手机验证码的 PatchNote 账号。
+- 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
 
-> `0.1.2` 是 beta 构建。默认服务端是 PatchNote 测试 API，凭据默认写入系统原生安全钥匙串。
+> `0.1.3` 是 beta 构建。默认服务端是 PatchXNote 测试 API，凭据默认写入系统原生安全钥匙串。
 
 ## 快速开始
 
-![三步接入 PatchNote Agent](./docs/assets/patchnote-agent-quickstart.png)
+![三步接入 PatchXNote Agent](./docs/assets/patchxnote-agent-quickstart.png)
 
 安装 npm 包。它会从 GitHub Releases 下载匹配平台的 `patchnote` 二进制，校验 `checksums.txt`，并安装到用户可写目录。
 
 ```sh
-npx -y patchnote-agent@0.1.2 install --print-config
+npx -y patchnote-agent@0.1.3 install --print-config
 ```
 
 安装器会打印：
@@ -68,7 +68,7 @@ npx -y patchnote-agent@0.1.2 install --print-config
 - 如果 `patchnote` 还不在 PATH 中，会打印 PATH 配置提示
 - 使用绝对二进制路径的 MCP 配置片段
 
-第一个 beta 版本默认连接 PatchNote 测试 API：
+第一个 beta 版本默认连接 PatchXNote 测试 API：
 
 ```text
 https://ws-lab.patch-x.cn/patchnote-test-api
@@ -96,16 +96,16 @@ patchnote auth status
 patchnote mcp serve
 ```
 
-如果要切换到其他 PatchNote 环境：
+如果要切换到其他 PatchXNote 环境：
 
 ```sh
-PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL> \
+PATCHNOTE_SERVER_BASE_URL=<PatchXNote API base URL> \
 patchnote login
 ```
 
 ## MCP 配置
 
-![PatchNote Agent 架构](./docs/assets/patchnote-agent-architecture.png)
+![PatchXNote Agent 架构](./docs/assets/patchxnote-agent-architecture.png)
 
 使用安装器 `--print-config` 打印的配置。典型配置如下：
 
@@ -120,15 +120,15 @@ patchnote login
 }
 ```
 
-MCP 配置中不会保存 access token 或 refresh token。PatchNote Agent 默认把凭据写入 macOS Keychain、Windows Credential Manager 或 Linux Secret Service。显式的 `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` 文件存储仅保留给本地开发和 CI 冒烟。
+MCP 配置中不会保存 access token 或 refresh token。PatchXNote Agent 默认把凭据写入 macOS Keychain、Windows Credential Manager 或 Linux Secret Service。显式的 `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` 文件存储仅保留给本地开发和 CI 冒烟。
 
 ## MCP 工具
 
-![PatchNote Agent 工具能力](./docs/assets/patchnote-agent-tools.png)
+![PatchXNote Agent 工具能力](./docs/assets/patchxnote-agent-tools.png)
 
 | 工具 | 用途 |
 | --- | --- |
-| `patchnote_get_current_user` | 读取当前 PatchNote 账号投影。 |
+| `patchnote_get_current_user` | 读取当前 PatchXNote 账号投影。 |
 | `patchnote_list_recorder_cards` | 读取已绑定录音卡列表，只返回脱敏标识。 |
 | `patchnote_get_quota_summary` | 读取当前账号额度汇总。 |
 | `patchnote_get_model_usage_summary` | 读取当月模型使用汇总。 |
@@ -141,9 +141,9 @@ MCP 配置中不会保存 access token 或 refresh token。PatchNote Agent 默�
 可以在桌面 Agent 中这样询问：
 
 ```text
-查看我的 PatchNote 账号和额度状态。
-列出我的 PatchNote 录音卡。
-搜索 desktop 平台里和 roadmap 相关的 PatchNote 记忆。
+查看我的 PatchXNote 账号和额度状态。
+列出我的 PatchXNote 录音卡。
+搜索 desktop 平台里和 roadmap 相关的 PatchXNote 记忆。
 ```
 
 ## CLI 命令
@@ -159,7 +159,7 @@ patchnote mcp serve
 常用全局参数：
 
 ```sh
---server-base-url <url>   PatchNote API base URL
+--server-base-url <url>   PatchXNote API base URL
 --profile <name>          本地 profile 名称
 --output json             支持时输出机器可读 JSON
 --config <path>           非 secret 配置文件路径
@@ -168,16 +168,16 @@ patchnote mcp serve
 npm 包本身只是安装/更新/卸载壳：
 
 ```sh
-npx -y patchnote-agent@0.1.2 install
-npx -y patchnote-agent@0.1.2 update
-npx -y patchnote-agent@0.1.2 uninstall
+npx -y patchnote-agent@0.1.3 install
+npx -y patchnote-agent@0.1.3 update
+npx -y patchnote-agent@0.1.3 uninstall
 ```
 
 ## 安全与风险提示
 
-![PatchNote Agent 安全边界](./docs/assets/patchnote-agent-safety-boundary.png)
+![PatchXNote Agent 安全边界](./docs/assets/patchxnote-agent-safety-boundary.png)
 
-PatchNote Agent 会让 AI Agent 访问当前登录 PatchNote 用户的账号元数据。请把 MCP Host 视为受信软件，并注意 prompt、工具调用和日志中可能出现的账号上下文。
+PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号元数据。请把 MCP Host 视为受信软件，并注意 prompt、工具调用和日志中可能出现的账号上下文。
 
 默认安全边界：
 
@@ -193,9 +193,9 @@ PatchNote Agent 会让 AI Agent 访问当前登录 PatchNote 用户的账号元�
 
 ## 当前限制
 
-`0.1.2` 是 beta 版本。
+`0.1.3` 是 beta 版本。
 
-- 默认服务端指向 PatchNote 测试 API。
+- 默认服务端指向 PatchXNote 测试 API。
 - Linux 无桌面/headless 环境可能没有 Secret Service；此时仅本地冒烟可显式开启开发文件存储 fallback。
 - 生产 Agent 路由仍待上线。
 - `patchnote_search_memories` 只搜索当前 MCP 会话中已缓存的元数据。
@@ -210,17 +210,17 @@ PatchNote Agent 会让 AI Agent 访问当前登录 PatchNote 用户的账号元�
 | MCP Host 启动失败 | 使用 `--print-config` 打印出的绝对 `command` 路径。 |
 | 记忆列表为空 | 检查是否选择了正确的 `platform`：`mobile` 或 `desktop`。 |
 | checksum 校验失败 | 稍后重试或固定已知版本；安装器会拒绝未校验二进制。 |
-| 连到了错误服务端 | 设置 `PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL>`。 |
+| 连到了错误服务端 | 设置 `PATCHNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`。 |
 
 ## 验证安装
 
 ```sh
-npm view patchnote-agent@0.1.2 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.2 install --dry-run --print-config
+npm view patchnote-agent@0.1.3 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.3 install --dry-run --print-config
 patchnote version
 ```
 
-发布二进制应报告版本 `0.1.2`，commit 为 `af03c697c9a326b12b67659db3af4053d4513093`。
+发布二进制应报告版本 `0.1.3`，commit 应为 GitHub Release `v0.1.3` 对应的提交。
 
 ## 开发
 
@@ -242,9 +242,9 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测
 
 ## 发布维护说明
 
-1. 确认目标 PatchNote GoServer 已暴露所需 `/v1/agent/**` 路由。
+1. 确认目标 PatchXNote GoServer 已暴露所需 `/v1/agent/**` 路由。
 2. 确认 `packages/npm/package.json` 版本与 release tag 一致，tag 不带前缀 `v` 时要匹配包版本。
-3. 推送干净 tag，例如 `v0.1.2`。
+3. 推送干净 tag，例如 `v0.1.3`。
 4. 等待 GitHub Release 产物：`checksums.txt`，以及 Linux/macOS/Windows 的 amd64 和 arm64 二进制。
 5. npm publish 前确认 npm Trusted Publishing 已配置：
    - owner/user：`ZsTs119`
@@ -256,4 +256,4 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测
 
 ## 许可证
 
-当前仓库尚未发布开源许可证。重新分发或嵌入其他产品前，请先联系 PatchNote。
+当前仓库尚未发布开源许可证。重新分发或嵌入其他产品前，请先联系 PatchXNote。

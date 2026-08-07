@@ -70,7 +70,7 @@ async function main(argv) {
     await assertExecutable(installPath);
   }
 
-  console.log(`Installed PatchNote Agent ${version} to ${installPath}`);
+  console.log(`Installed PatchXNote Agent ${version} to ${installPath}`);
   printPathGuidance(installDir, target.platform);
   if (parsed.options.printConfig) {
     printMCPConfig(installPath);
@@ -86,7 +86,7 @@ async function uninstall(plan, options) {
     return;
   }
   await fs.promises.rm(plan.install_path, { force: true });
-  console.log(`Removed PatchNote Agent from ${plan.install_path}`);
+  console.log(`Removed PatchXNote Agent from ${plan.install_path}`);
 }
 
 async function assertExecutable(installPath) {
@@ -164,9 +164,9 @@ function resolveTarget(platform, arch) {
 function defaultInstallDir(platform) {
   if (platform === "win32") {
     const base = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
-    return path.join(base, "PatchNote Agent", "bin");
+    return path.join(base, "PatchXNote Agent", "bin");
   }
-  return path.join(os.homedir(), ".patchnote-agent", "bin");
+  return path.join(os.homedir(), ".patchxnote-agent", "bin");
 }
 
 function joinInstallPath(installDir, binaryName, targetPlatform) {
@@ -177,7 +177,7 @@ function joinInstallPath(installDir, binaryName, targetPlatform) {
 }
 
 function printPlan(plan) {
-  console.log(`PatchNote Agent ${plan.action} dry run:`);
+  console.log(`PatchXNote Agent ${plan.action} dry run:`);
   console.log(JSON.stringify(plan, null, 2));
 }
 

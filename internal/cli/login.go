@@ -23,7 +23,7 @@ func newLoginCommand(state *rootState) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Log in to PatchNote Agent with phone OTP",
+		Short: "Log in to PatchXNote Agent with phone OTP",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			runtime, err := loadRuntime(state)

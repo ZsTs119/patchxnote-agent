@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	nativeServiceName = "patchnote-agent"
-	nativeMetadataKey = "metadata"
-	nativeAccessKey   = "access_token"
-	nativeRefreshKey  = "refresh_token"
+	nativeServiceName       = "patchxnote-agent"
+	legacyNativeServiceName = "patchnote-agent"
+	nativeMetadataKey       = "metadata"
+	nativeAccessKey         = "access_token"
+	nativeRefreshKey        = "refresh_token"
 )
 
 type nativeBackend interface {
@@ -39,8 +40,9 @@ func (keyringBackend) Delete(service, user string) error {
 }
 
 type NativeStore struct {
-	backend nativeBackend
-	service string
+	backend       nativeBackend
+	service       string
+	legacyService string
 }
 
 type nativeMetadata struct {
@@ -52,16 +54,21 @@ type nativeMetadata struct {
 }
 
 func NewNativeStore() *NativeStore {
-	return newNativeStore(keyringBackend{}, nativeServiceName)
+	return newNativeStoreWithLegacy(keyringBackend{}, nativeServiceName, legacyNativeServiceName)
 }
 
 func newNativeStore(backend nativeBackend, service string) *NativeStore {
+	return newNativeStoreWithLegacy(backend, service, "")
+}
+
+func newNativeStoreWithLegacy(backend nativeBackend, service string, legacyService string) *NativeStore {
 	if service == "" {
 		service = nativeServiceName
 	}
 	return &NativeStore{
-		backend: backend,
-		service: service,
+		backend:       backend,
+		service:       service,
+		legacyService: legacyService,
 	}
 }
 
@@ -71,7 +78,20 @@ func (s *NativeStore) Get(ctx context.Context, profile string) (Credential, erro
 	}
 	profile = normalizeProfile(profile)
 
-	metadataSecret, err := s.backend.Get(s.service, nativeAccount(profile, nativeMetadataKey))
+	credential, err := s.getFromService(s.service, profile)
+	if errors.Is(err, ErrNotFound) && s.legacyService != "" && s.legacyService != s.service {
+		legacyCredential, legacyErr := s.getFromService(s.legacyService, profile)
+		if legacyErr != nil {
+			return Credential{}, legacyErr
+		}
+		_ = s.Put(ctx, profile, legacyCredential)
+		return legacyCredential, nil
+	}
+	return credential, err
+}
+
+func (s *NativeStore) getFromService(service string, profile string) (Credential, error) {
+	metadataSecret, err := s.backend.Get(service, nativeAccount(profile, nativeMetadataKey))
 	if err != nil {
 		return Credential{}, mapNativeGetError(err)
 	}
@@ -94,14 +114,14 @@ func (s *NativeStore) Get(ctx context.Context, profile string) (Credential, erro
 	}
 
 	if metadata.HasAccessToken {
-		accessToken, err := s.backend.Get(s.service, nativeAccount(profile, nativeAccessKey))
+		accessToken, err := s.backend.Get(service, nativeAccount(profile, nativeAccessKey))
 		if err != nil {
 			return Credential{}, mapNativeSecretError(err, nativeAccessKey)
 		}
 		credential.AccessToken = accessToken
 	}
 	if metadata.HasRefreshToken {
-		refreshToken, err := s.backend.Get(s.service, nativeAccount(profile, nativeRefreshKey))
+		refreshToken, err := s.backend.Get(service, nativeAccount(profile, nativeRefreshKey))
 		if err != nil {
 			return Credential{}, mapNativeSecretError(err, nativeRefreshKey)
 		}
@@ -152,8 +172,22 @@ func (s *NativeStore) Delete(ctx context.Context, profile string) error {
 	profile = normalizeProfile(profile)
 
 	var firstErr error
+	services := []string{s.service}
+	if s.legacyService != "" && s.legacyService != s.service {
+		services = append(services, s.legacyService)
+	}
+	for _, service := range services {
+		if err := s.deleteService(service, profile); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
+func (s *NativeStore) deleteService(service string, profile string) error {
+	var firstErr error
 	for _, field := range []string{nativeAccessKey, nativeRefreshKey, nativeMetadataKey} {
-		if err := s.backend.Delete(s.service, nativeAccount(profile, field)); err != nil && !errors.Is(err, keyring.ErrNotFound) {
+		if err := s.backend.Delete(service, nativeAccount(profile, field)); err != nil && !errors.Is(err, keyring.ErrNotFound) {
 			if firstErr == nil {
 				firstErr = mapNativeDeleteError(err)
 			}

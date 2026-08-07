@@ -1,4 +1,4 @@
-# PatchNote Agent
+# PatchXNote Agent
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
@@ -6,14 +6,14 @@
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchnote-agent)](https://github.com/ZsTs119/patchnote-agent/releases)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
-![PatchNote Agent hero](./docs/assets/patchnote-agent-cover.png)
+![PatchXNote Agent hero](./docs/assets/patchxnote-agent-cover.png)
 
-PatchNote Agent is the local CLI and MCP bridge for PatchNote. It lets desktop AI agents read safe PatchNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata.
+PatchXNote Agent is the local CLI and MCP bridge for PatchXNote. It lets desktop AI agents read safe PatchXNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata.
 
-Agent V1 is deliberately read-only. It uses dedicated `/v1/agent/**` PatchNote server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, provider payloads, quota purchase flows, or Admin APIs.
+Agent V1 is deliberately read-only. It uses dedicated `/v1/agent/**` PatchXNote server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, provider payloads, quota purchase flows, or Admin APIs.
 
 ```sh
-npx -y patchnote-agent@0.1.2 install --print-config
+npx -y patchnote-agent@0.1.3 install --print-config
 ```
 
 ## At A Glance
@@ -25,11 +25,11 @@ npx -y patchnote-agent@0.1.2 install --print-config
 | Login | Phone OTP login creates an independent Agent session, not a mobile/desktop installation. |
 | Data access | Reads bounded account, recorder-card, quota, usage, and structured-result metadata projections. |
 | Safety boundary | Read-only, masked, platform-scoped, and routed through dedicated Agent server endpoints. |
-| Package status | Public beta `0.1.2`, defaulting to the PatchNote test API. |
+| Package status | Public beta `0.1.3`, defaulting to the PatchXNote test API. |
 
 ## Features
 
-| Capability | Available in `0.1.2` | Notes |
+| Capability | Available in `0.1.3` | Notes |
 | --- | --- | --- |
 | Phone OTP Agent login | Yes | Uses Agent-specific server auth, not mobile/desktop installation slots. |
 | Local MCP server | Yes | `patchnote mcp serve` over stdio. |
@@ -47,19 +47,19 @@ npx -y patchnote-agent@0.1.2 install --print-config
 
 - Node.js `18` or newer for the npm installer wrapper.
 - Windows, macOS, or Linux on `amd64` or `arm64`.
-- A PatchNote account that can receive the phone OTP login code.
+- A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.1.2` is a beta build. The default server is the PatchNote test API. Credentials are stored in the OS-native keychain by default.
+> `0.1.3` is a beta build. The default server is the PatchXNote test API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
-![PatchNote Agent quickstart](./docs/assets/patchnote-agent-quickstart.png)
+![PatchXNote Agent quickstart](./docs/assets/patchxnote-agent-quickstart.png)
 
 Install the npm wrapper. It downloads the matching `patchnote` binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
 ```sh
-npx -y patchnote-agent@0.1.2 install --print-config
+npx -y patchnote-agent@0.1.3 install --print-config
 ```
 
 The installer prints:
@@ -68,7 +68,7 @@ The installer prints:
 - a PATH hint if `patchnote` is not already on your terminal PATH
 - an MCP config snippet using the absolute binary path
 
-The first beta build defaults to the PatchNote test API:
+The first beta build defaults to the PatchXNote test API:
 
 ```text
 https://ws-lab.patch-x.cn/patchnote-test-api
@@ -96,16 +96,16 @@ Start the MCP server:
 patchnote mcp serve
 ```
 
-To target a different PatchNote environment:
+To target a different PatchXNote environment:
 
 ```sh
-PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL> \
+PATCHNOTE_SERVER_BASE_URL=<PatchXNote API base URL> \
 patchnote login
 ```
 
 ## MCP Configuration
 
-![PatchNote Agent architecture](./docs/assets/patchnote-agent-architecture.png)
+![PatchXNote Agent architecture](./docs/assets/patchxnote-agent-architecture.png)
 
 Use the `--print-config` output from the installer. A typical config looks like this:
 
@@ -120,15 +120,15 @@ Use the `--print-config` output from the installer. A typical config looks like 
 }
 ```
 
-MCP config never contains access tokens or refresh tokens. PatchNote Agent stores credential material in macOS Keychain, Windows Credential Manager, or Linux Secret Service when available. The explicit `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file store remains for local development and CI smoke only.
+MCP config never contains access tokens or refresh tokens. PatchXNote Agent stores credential material in macOS Keychain, Windows Credential Manager, or Linux Secret Service when available. The explicit `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file store remains for local development and CI smoke only.
 
 ## MCP Tools
 
-![PatchNote Agent tools](./docs/assets/patchnote-agent-tools.png)
+![PatchXNote Agent tools](./docs/assets/patchxnote-agent-tools.png)
 
 | Tool | Purpose |
 | --- | --- |
-| `patchnote_get_current_user` | Read the current PatchNote account projection. |
+| `patchnote_get_current_user` | Read the current PatchXNote account projection. |
 | `patchnote_list_recorder_cards` | List bound recorder cards with masked identifiers only. |
 | `patchnote_get_quota_summary` | Read the current account quota summary. |
 | `patchnote_get_model_usage_summary` | Read current-month model usage summary. |
@@ -141,9 +141,9 @@ Memory tools require an explicit `platform` argument: `mobile` or `desktop`. V1 
 Example prompts for your desktop agent:
 
 ```text
-Show my PatchNote account and quota status.
-List my PatchNote recorder cards.
-Search my desktop PatchNote memories for roadmap.
+Show my PatchXNote account and quota status.
+List my PatchXNote recorder cards.
+Search my desktop PatchXNote memories for roadmap.
 ```
 
 ## CLI Commands
@@ -159,7 +159,7 @@ patchnote mcp serve
 Useful global flags:
 
 ```sh
---server-base-url <url>   PatchNote API base URL
+--server-base-url <url>   PatchXNote API base URL
 --profile <name>          local profile name
 --output json             machine-readable output where supported
 --config <path>           non-secret config file path
@@ -168,16 +168,16 @@ Useful global flags:
 The npm package itself is only an installer/update wrapper:
 
 ```sh
-npx -y patchnote-agent@0.1.2 install
-npx -y patchnote-agent@0.1.2 update
-npx -y patchnote-agent@0.1.2 uninstall
+npx -y patchnote-agent@0.1.3 install
+npx -y patchnote-agent@0.1.3 update
+npx -y patchnote-agent@0.1.3 uninstall
 ```
 
 ## Security And Risk Notice
 
-![PatchNote Agent safety boundary](./docs/assets/patchnote-agent-safety-boundary.png)
+![PatchXNote Agent safety boundary](./docs/assets/patchxnote-agent-safety-boundary.png)
 
-PatchNote Agent gives an AI agent access to account metadata that belongs to the logged-in PatchNote user. Treat the MCP host as trusted software and review any prompts, tool calls, or logs that may reveal private account context.
+PatchXNote Agent gives an AI agent access to account metadata that belongs to the logged-in PatchXNote user. Treat the MCP host as trusted software and review any prompts, tool calls, or logs that may reveal private account context.
 
 Default safety boundaries:
 
@@ -193,9 +193,9 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.1.2` is a beta release.
+`0.1.3` is a beta release.
 
-- The default server points to the PatchNote test API.
+- The default server points to the PatchXNote test API.
 - Linux headless environments may not have Secret Service available; use the explicit development file-store fallback only for local smoke.
 - Production Agent route rollout is pending.
 - `patchnote_search_memories` searches only metadata cached during the current MCP session.
@@ -210,17 +210,17 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 | MCP host cannot start the server | Use the absolute `command` path printed by `--print-config`. |
 | Memory list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`. |
 | Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
-| Wrong server environment | Set `PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL>`. |
+| Wrong server environment | Set `PATCHNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`. |
 
 ## Verify The Install
 
 ```sh
-npm view patchnote-agent@0.1.2 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.2 install --dry-run --print-config
+npm view patchnote-agent@0.1.3 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.3 install --dry-run --print-config
 patchnote version
 ```
 
-The release binary should report version `0.1.2` and commit `af03c697c9a326b12b67659db3af4053d4513093`.
+The release binary should report version `0.1.3` and the commit attached to the `v0.1.3` GitHub Release.
 
 ## Development
 
@@ -242,9 +242,9 @@ Before changing CLI behavior, installer logic, MCP tools, authentication, local 
 
 ## Release Notes For Operators
 
-1. Confirm the target PatchNote GoServer exposes the required `/v1/agent/**` routes.
+1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.1.2`.
+3. Push a clean tag, for example `v0.1.3`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`
@@ -256,4 +256,4 @@ Before changing CLI behavior, installer logic, MCP tools, authentication, local 
 
 ## License
 
-This repository is currently published without an open-source license. Contact PatchNote before redistributing or embedding it in another product.
+This repository is currently published without an open-source license. Contact PatchXNote before redistributing or embedding it in another product.

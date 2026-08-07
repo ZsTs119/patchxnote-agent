@@ -20,19 +20,19 @@ assert.deepStrictEqual(resolveTarget("win32", "arm64"), {
 });
 assert.throws(() => resolveTarget("sunos", "x64"), /unsupported platform/);
 assert.strictEqual(joinInstallPath("/tmp/patchnote-agent-bin", "patchnote", "linux"), "/tmp/patchnote-agent-bin/patchnote");
-assert.strictEqual(joinInstallPath("C:\\PatchNote", "patchnote.exe", "windows"), "C:\\PatchNote\\patchnote.exe");
-assert.strictEqual(resolveRedirectURL("https://github.com/ZsTs119/patchnote-agent/releases/download/v0.1.2/checksums.txt", "/download"), "https://github.com/download");
+assert.strictEqual(joinInstallPath("C:\\PatchXNote", "patchnote.exe", "windows"), "C:\\PatchXNote\\patchnote.exe");
+assert.strictEqual(resolveRedirectURL("https://github.com/ZsTs119/patchnote-agent/releases/download/v0.1.3/checksums.txt", "/download"), "https://github.com/download");
 assert.throws(() => resolveRedirectURL("https://github.com/a", "http://example.invalid/b"), /non-https redirect/);
 assert.strictEqual(pathHint("/tmp/patchnote-agent-bin", "linux"), "export PATH=\"/tmp/patchnote-agent-bin:$PATH\"");
-assert.match(pathHint("C:\\PatchNote", "windows"), /SetEnvironmentVariable/);
+assert.match(pathHint("C:\\PatchXNote", "windows"), /SetEnvironmentVariable/);
 assert.strictEqual(isInstallDirOnPath("/tmp/patchnote-agent-bin", "/usr/bin:/tmp/patchnote-agent-bin", "linux"), true);
 assert.strictEqual(isInstallDirOnPath("/tmp/patchnote-agent-bin", "/usr/bin:/bin", "linux"), false);
-assert.strictEqual(isInstallDirOnPath("C:\\PatchNote", "C:\\Windows;C:\\PatchNote", "windows"), true);
+assert.strictEqual(isInstallDirOnPath("C:\\PatchXNote", "C:\\Windows;C:\\PatchXNote", "windows"), true);
 
 const binary = Buffer.from("patchnote-binary-fixture");
 const checksum = crypto.createHash("sha256").update(binary).digest("hex");
-assert.doesNotThrow(() => verifyChecksum(binary, "patchnote_0.1.2_linux_amd64", `${checksum}  patchnote_0.1.2_linux_amd64\n`));
-assert.throws(() => verifyChecksum(binary, "patchnote_0.1.2_linux_amd64", `bad  patchnote_0.1.2_linux_amd64\n`), /checksum mismatch/);
+assert.doesNotThrow(() => verifyChecksum(binary, "patchnote_0.1.3_linux_amd64", `${checksum}  patchnote_0.1.3_linux_amd64\n`));
+assert.throws(() => verifyChecksum(binary, "patchnote_0.1.3_linux_amd64", `bad  patchnote_0.1.3_linux_amd64\n`), /checksum mismatch/);
 
 const dryRun = spawnSync(process.execPath, [
   bin,
@@ -48,8 +48,8 @@ const dryRun = spawnSync(process.execPath, [
 ], { encoding: "utf8" });
 
 assert.strictEqual(dryRun.status, 0, dryRun.stderr);
-assert.match(dryRun.stdout, /PatchNote Agent install dry run/);
-assert.match(dryRun.stdout, /patchnote_0.1.2_linux_amd64/);
+assert.match(dryRun.stdout, /PatchXNote Agent install dry run/);
+assert.match(dryRun.stdout, /patchnote_0.1.3_linux_amd64/);
 assert.match(dryRun.stdout, /install_dir_on_path/);
 assert.match(dryRun.stdout, /path_hint/);
 assert.match(dryRun.stdout, /"args": \[\s+"mcp",\s+"serve"\s+\]/);
@@ -57,9 +57,9 @@ assert.doesNotMatch(dryRun.stdout, /access_token|refresh_token|otp|sk_|protocol_
 assert.doesNotMatch(dryRun.stdout, /PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN/);
 
 for (const [platform, arch, asset] of [
-  ["linux", "x64", "patchnote_0.1.2_linux_amd64"],
-  ["darwin", "arm64", "patchnote_0.1.2_darwin_arm64"],
-  ["win32", "x64", "patchnote_0.1.2_windows_amd64.exe"]
+  ["linux", "x64", "patchnote_0.1.3_linux_amd64"],
+  ["darwin", "arm64", "patchnote_0.1.3_darwin_arm64"],
+  ["win32", "x64", "patchnote_0.1.3_windows_amd64.exe"]
 ]) {
   const result = spawnSync(process.execPath, [
     bin,

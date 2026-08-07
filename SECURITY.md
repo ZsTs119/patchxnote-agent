@@ -1,6 +1,6 @@
 # Security Policy
 
-PatchNote Agent is a local CLI and MCP bridge for read-only PatchNote account access. Please report security issues privately so we can validate and fix them before public disclosure.
+PatchXNote Agent is a local CLI and MCP bridge for read-only PatchXNote account access. Please report security issues privately so we can validate and fix them before public disclosure.
 
 ## Supported Versions
 
@@ -35,18 +35,18 @@ Helpful report details:
 
 ## Out Of Scope
 
-- denial-of-service or load testing against PatchNote servers without prior written permission
+- denial-of-service or load testing against PatchXNote servers without prior written permission
 - social engineering, phishing, spam, or physical attacks
 - reports requiring access to another user's account or device
-- vulnerabilities in third-party MCP clients unless PatchNote Agent is the direct cause
+- vulnerabilities in third-party MCP clients unless PatchXNote Agent is the direct cause
 - requests for raw audio, full transcripts, private model responses, payment flows, Admin APIs, or hardware write actions; these are intentionally not exposed by Agent V1
 
 ## Beta Security Notes
 
-The first beta release defaults to the PatchNote test API and requires the explicit file credential fallback flag:
+The beta release defaults to the PatchXNote test API. Credential material is stored in the OS-native keychain when available:
 
-```sh
-PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true
-```
+- macOS Keychain
+- Windows Credential Manager
+- Linux Secret Service
 
-This fallback is temporary. OS-native keychain adapters are planned before broad production promotion.
+The explicit `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file credential fallback is reserved for local development and CI smoke only.

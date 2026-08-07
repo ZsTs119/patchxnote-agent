@@ -16,13 +16,13 @@ func TestResolvePathsLinuxUsesXDGWhenPresent(t *testing.T) {
 		t.Fatalf("resolve linux paths: %v", err)
 	}
 
-	if paths.ConfigDir != filepath.Join("/tmp/config", "patchnote-agent") {
+	if paths.ConfigDir != filepath.Join("/tmp/config", "patchxnote-agent") {
 		t.Fatalf("unexpected config dir: %s", paths.ConfigDir)
 	}
-	if paths.ConfigFile != filepath.Join("/tmp/config", "patchnote-agent", "config.yaml") {
+	if paths.ConfigFile != filepath.Join("/tmp/config", "patchxnote-agent", "config.yaml") {
 		t.Fatalf("unexpected config file: %s", paths.ConfigFile)
 	}
-	if paths.CacheDir != filepath.Join("/tmp/cache", "patchnote-agent") {
+	if paths.CacheDir != filepath.Join("/tmp/cache", "patchxnote-agent") {
 		t.Fatalf("unexpected cache dir: %s", paths.CacheDir)
 	}
 }
@@ -33,10 +33,10 @@ func TestResolvePathsDarwin(t *testing.T) {
 		t.Fatalf("resolve darwin paths: %v", err)
 	}
 
-	if paths.ConfigFile != filepath.Join("/Users/alice", "Library", "Application Support", "PatchNote Agent", "config.yaml") {
+	if paths.ConfigFile != filepath.Join("/Users/alice", "Library", "Application Support", "PatchXNote Agent", "config.yaml") {
 		t.Fatalf("unexpected config file: %s", paths.ConfigFile)
 	}
-	if paths.CacheDir != filepath.Join("/Users/alice", "Library", "Caches", "PatchNote Agent") {
+	if paths.CacheDir != filepath.Join("/Users/alice", "Library", "Caches", "PatchXNote Agent") {
 		t.Fatalf("unexpected cache dir: %s", paths.CacheDir)
 	}
 }
@@ -50,10 +50,10 @@ func TestResolvePathsWindows(t *testing.T) {
 		t.Fatalf("resolve windows paths: %v", err)
 	}
 
-	if !strings.Contains(paths.ConfigFile, "PatchNote Agent") || !strings.HasSuffix(paths.ConfigFile, "config.yaml") {
+	if !strings.Contains(paths.ConfigFile, "PatchXNote Agent") || !strings.HasSuffix(paths.ConfigFile, "config.yaml") {
 		t.Fatalf("unexpected config file: %s", paths.ConfigFile)
 	}
-	if !strings.Contains(paths.CacheDir, "PatchNote Agent") || !strings.HasSuffix(paths.CacheDir, "Cache") {
+	if !strings.Contains(paths.CacheDir, "PatchXNote Agent") || !strings.HasSuffix(paths.CacheDir, "Cache") {
 		t.Fatalf("unexpected cache dir: %s", paths.CacheDir)
 	}
 }

@@ -1,4 +1,4 @@
-# PatchNote Agent Repository Rules
+# PatchXNote Agent Repository Rules
 
 These rules apply to the entire `patchnote-agent` repository.
 
@@ -9,15 +9,15 @@ Before changing code, installers, release configuration, or MCP tool schemas, re
 1. `README.md`
 2. `docs/engineering-rules.md`
 3. `docs/plans/2026-08-06-agent-v1-mvp.md`
-4. The current PatchNote server integration contract in `../patchxNoteGoServer/docs/integrations/apifox/integration-guide.zh-CN.md`
+4. The current PatchXNote server integration contract in `../patchxNoteGoServer/docs/integrations/apifox/integration-guide.zh-CN.md`
 5. Any server contract document directly related to the feature being exposed
 
 If this repository conflicts with the server OpenAPI contract, the server contract wins. Record the conflict before implementing around it.
 
 ## Product Boundary
 
-- This repository owns the local PatchNote CLI, local MCP bridge, installer wrapper, local configuration, credential storage integration, and desktop-agent setup.
-- The PatchNote Go Server remains the source of truth for account, quota, hardware binding, model usage, structured results, and authorization.
+- This repository owns the local PatchXNote CLI, local MCP bridge, installer wrapper, local configuration, credential storage integration, and desktop-agent setup.
+- The PatchXNote Go Server remains the source of truth for account, quota, hardware binding, model usage, structured results, and authorization.
 - Do not copy server domain logic into this repository. Use the public client API or a deliberately designed agent API.
 - First-party App/PC clients continue to own MR20 BLE, local ASR, speaker processing, local raw recordings, complete transcripts, local EventBuilder, and Native secure device workflows.
 

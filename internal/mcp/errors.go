@@ -33,5 +33,5 @@ func rpcErr(rpcCode int, code string, message string) *Error {
 }
 
 func authRequiredError() *Error {
-	return rpcErr(codeAuthRequired, "auth_required", "PatchNote Agent login is required")
+	return rpcErr(codeAuthRequired, "auth_required", "PatchXNote Agent login is required")
 }
