@@ -6,6 +6,8 @@
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchxnote-agent)](https://github.com/ZsTs119/patchxnote-agent/releases)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
+Official documentation: [Public Chinese user guide on Feishu](https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd)
+
 ![PatchXNote Agent hero](./docs/assets/patchxnote-agent-cover.png)
 
 PatchXNote Agent is the local CLI and MCP bridge for PatchXNote. It lets desktop AI agents read safe PatchXNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata.

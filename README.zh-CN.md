@@ -6,6 +6,8 @@
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchxnote-agent)](https://github.com/ZsTs119/patchxnote-agent/releases)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
+官方文档：[PatchXNote Agent 公测使用指南（飞书公开版）](https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd)
+
 ![PatchXNote Agent 封面](./docs/assets/patchxnote-agent-cover.png)
 
 PatchXNote Agent 是 PatchXNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchXNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。
