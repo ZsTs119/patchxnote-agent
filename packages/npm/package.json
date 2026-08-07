@@ -8,7 +8,7 @@
   },
   "homepage": "https://github.com/ZsTs119/patchnote-agent#readme",
   "bin": {
-    "patchnote-agent": "./bin/patchnote-agent.js"
+    "patchnote-agent": "bin/patchnote-agent.js"
   },
   "files": [
     "bin"
