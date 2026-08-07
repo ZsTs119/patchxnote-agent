@@ -37,11 +37,11 @@ npx -y patchxnote-agent install --print-config
 | 登录 | 手机验证码登录，创建独立 Agent 会话，不占用 mobile/desktop 安装位。 |
 | 数据访问 | 读取有边界的账号、录音卡、额度、模型使用和结构化结果元数据投影。 |
 | 安全边界 | 只读、脱敏、按平台隔离，并且只走专用 Agent 服务端接口。 |
-| 包状态 | 公开 beta 版 `0.2.1`，默认连接 PatchXNote 公测 API。 |
+| 包状态 | 公开 beta 版 `0.2.2`，默认连接 PatchXNote 公测 API。 |
 
 ## 功能
 
-| 能力 | `0.2.1` 是否支持 | 说明 |
+| 能力 | `0.2.2` 是否支持 | 说明 |
 | --- | --- | --- |
 | 手机验证码 Agent 登录 | 支持 | 使用 Agent 专用登录态，不影响 mobile/desktop 安装位。 |
 | 本地 MCP server | 支持 | 通过 `patchxnote mcp serve` 使用 stdio 通信。 |
@@ -62,7 +62,7 @@ npx -y patchxnote-agent install --print-config
 - 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
 
-> `0.2.1` 是公测 beta 构建。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
+> `0.2.2` 是公测 beta 构建。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
 
 ## 快速开始
 
@@ -83,7 +83,7 @@ npx -y patchxnote-agent install --print-config
 如果需要固定当前公测版本用于排障或回滚：
 
 ```sh
-npx -y patchxnote-agent@0.2.1 install --print-config
+npx -y patchxnote-agent@0.2.2 install --print-config
 ```
 
 公测版本默认连接 PatchXNote 公测 API：
@@ -186,9 +186,9 @@ patchxnote mcp serve
 npm 包本身只是安装/更新/卸载壳：
 
 ```sh
-npx -y patchxnote-agent@0.2.1 install
-npx -y patchxnote-agent@0.2.1 update
-npx -y patchxnote-agent@0.2.1 uninstall
+npx -y patchxnote-agent@0.2.2 install
+npx -y patchxnote-agent@0.2.2 update
+npx -y patchxnote-agent@0.2.2 uninstall
 ```
 
 ## 安全与风险提示
@@ -211,7 +211,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 ## 当前限制
 
-`0.2.1` 是 beta 版本。
+`0.2.2` 是 beta 版本。
 
 - 默认服务端指向 PatchXNote 公测 API。
 - Linux 无桌面/headless 环境可能没有 Secret Service；此时仅本地冒烟可显式开启开发文件存储 fallback。
@@ -233,12 +233,12 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 ## 验证安装
 
 ```sh
-npm view patchxnote-agent@0.2.1 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.1 install --dry-run --print-config
+npm view patchxnote-agent@0.2.2 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.2 install --dry-run --print-config
 patchxnote version
 ```
 
-发布二进制应报告版本 `0.2.1`，commit 应为 GitHub Release `v0.2.1` 对应的提交。
+发布二进制应报告版本 `0.2.2`，commit 应为 GitHub Release `v0.2.2` 对应的提交。
 
 ## 开发
 
@@ -265,7 +265,7 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测
 
 1. 确认目标 PatchXNote GoServer 已暴露所需 `/v1/agent/**` 路由。
 2. 确认 `packages/npm/package.json` 版本与 release tag 一致，tag 不带前缀 `v` 时要匹配包版本。
-3. 推送干净 tag，例如 `v0.2.1`。
+3. 推送干净 tag，例如 `v0.2.2`。
 4. 等待 GitHub Release 产物：`checksums.txt`，以及 Linux/macOS/Windows 的 amd64 和 arm64 二进制。
 5. npm publish 前确认 npm Trusted Publishing 已配置：
    - owner/user：`ZsTs119`

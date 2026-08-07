@@ -3,6 +3,7 @@ package cli
 import (
 	"github.com/ZsTs119/patchxnote-agent/internal/cache"
 	"github.com/ZsTs119/patchxnote-agent/internal/mcp"
+	"github.com/ZsTs119/patchxnote-agent/internal/version"
 
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,7 @@ func newMCPServeCommand(state *rootState) *cobra.Command {
 				Credentials:   runtime.Auth,
 				API:           runtime.API,
 				MemoryCache:   cache.NewMemoryIndex(),
+				Version:       version.Version,
 			})
 			return server.Serve(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout())
 		},

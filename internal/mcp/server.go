@@ -14,7 +14,10 @@ import (
 	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 )
 
-const protocolVersion = "2025-06-18"
+const (
+	protocolVersion      = "2025-06-18"
+	defaultServerVersion = "0.0.0-dev"
+)
 
 type Authenticator interface {
 	Status(ctx context.Context) (auth.Status, error)
@@ -39,6 +42,7 @@ type Options struct {
 	API           AgentAPI
 	MemoryCache   *cache.MemoryIndex
 	Tools         []Tool
+	Version       string
 }
 
 type Server struct {
@@ -48,15 +52,21 @@ type Server struct {
 	memoryCache   *cache.MemoryIndex
 	tools         map[string]Tool
 	toolList      []Tool
+	version       string
 }
 
 func NewServer(options Options) *Server {
+	serverVersion := options.Version
+	if serverVersion == "" {
+		serverVersion = defaultServerVersion
+	}
 	server := &Server{
 		authenticator: options.Authenticator,
 		credentials:   options.Credentials,
 		api:           options.API,
 		memoryCache:   options.MemoryCache,
 		tools:         make(map[string]Tool),
+		version:       serverVersion,
 	}
 	if server.credentials == nil {
 		if provider, ok := options.Authenticator.(CredentialProvider); ok {
@@ -119,7 +129,7 @@ func (s *Server) handleLine(ctx context.Context, line []byte) (rpcResponse, bool
 			ProtocolVersion: protocolVersion,
 			ServerInfo: serverInfo{
 				Name:    "patchxnote-agent",
-				Version: "0.0.0-dev",
+				Version: s.version,
 			},
 			Capabilities: serverCapabilities{
 				Tools: map[string]any{},

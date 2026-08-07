@@ -35,6 +35,13 @@ func TestInitializeAndToolsList(t *testing.T) {
 	if result["protocolVersion"] != protocolVersion {
 		t.Fatalf("unexpected protocol version: %+v", result["protocolVersion"])
 	}
+	serverInfo := result["serverInfo"].(map[string]any)
+	if serverInfo["name"] != "patchxnote-agent" {
+		t.Fatalf("unexpected server info name: %+v", serverInfo["name"])
+	}
+	if serverInfo["version"] != defaultServerVersion {
+		t.Fatalf("unexpected default server info version: %+v", serverInfo["version"])
+	}
 
 	toolsResult := responses[1]["result"].(map[string]any)
 	tools := toolsResult["tools"].([]any)
@@ -61,6 +68,22 @@ func TestInitializeAndToolsList(t *testing.T) {
 		if !names[want] {
 			t.Fatalf("tool %s missing from tools/list", want)
 		}
+	}
+}
+
+func TestInitializeUsesConfiguredServerVersion(t *testing.T) {
+	responses := serveForTestWithOptions(t,
+		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`,
+		Options{Version: "9.8.7-test"},
+	)
+	if len(responses) != 1 {
+		t.Fatalf("expected one response, got %d", len(responses))
+	}
+
+	result := responses[0]["result"].(map[string]any)
+	serverInfo := result["serverInfo"].(map[string]any)
+	if serverInfo["version"] != "9.8.7-test" {
+		t.Fatalf("expected configured server info version, got %+v", serverInfo["version"])
 	}
 }
 
@@ -104,9 +127,15 @@ func TestNotificationDoesNotRespond(t *testing.T) {
 
 func serveForTest(t *testing.T, input string) []map[string]any {
 	t.Helper()
-	server := NewServer(Options{
-		Authenticator: staticAuthenticator{status: auth.Status{Authenticated: false, Profile: "default"}},
-	})
+	return serveForTestWithOptions(t, input, Options{})
+}
+
+func serveForTestWithOptions(t *testing.T, input string, options Options) []map[string]any {
+	t.Helper()
+	if options.Authenticator == nil {
+		options.Authenticator = staticAuthenticator{status: auth.Status{Authenticated: false, Profile: "default"}}
+	}
+	server := NewServer(options)
 	var stdout strings.Builder
 	if err := server.Serve(context.Background(), strings.NewReader(input+"\n"), &stdout); err != nil {
 		t.Fatalf("serve: %v", err)
