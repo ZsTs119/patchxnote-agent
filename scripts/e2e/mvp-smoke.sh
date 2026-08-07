@@ -18,9 +18,6 @@ NODE_BIN="${PATCHNOTE_E2E_NODE:-}"
 if [ -z "$NODE_BIN" ] && command -v node >/dev/null 2>&1; then
   NODE_BIN="$(command -v node)"
 fi
-if [ -z "$NODE_BIN" ] && [ -x /mnt/c/Users/11979/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe ]; then
-  NODE_BIN="/mnt/c/Users/11979/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe"
-fi
 
 if [ -n "$NODE_BIN" ]; then
   "$NODE_BIN" "$ROOT/packages/npm/bin/patchnote-agent.js" install \
