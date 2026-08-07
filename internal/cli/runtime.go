@@ -67,7 +67,7 @@ func defaultCredentialStore(cfg config.Config) keychain.Store {
 	if cfg.Auth.InsecureFileKeychain {
 		return keychain.NewFileStore(filepath.Join(cfg.Paths.ConfigDir, "credentials.dev.json"))
 	}
-	return keychain.UnavailableStore{Reason: "OS keychain adapter is not configured yet"}
+	return keychain.NewNativeStore()
 }
 
 func defaultAPIFactory(cfg config.Config) (agentAPI, error) {

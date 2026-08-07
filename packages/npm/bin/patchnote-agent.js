@@ -75,7 +75,7 @@ async function main(argv) {
   if (parsed.options.printConfig) {
     printMCPConfig(installPath);
   } else {
-    console.log("Run: PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true patchnote login");
+    console.log("Run: patchnote login");
     console.log("MCP config: patchnote mcp serve");
   }
 }
@@ -187,10 +187,7 @@ function printMCPConfig(commandPath) {
     mcpServers: {
       patchnote: {
         command: commandPath,
-        args: ["mcp", "serve"],
-        env: {
-          PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN: "true"
-        }
+        args: ["mcp", "serve"]
       }
     }
   }, null, 2));

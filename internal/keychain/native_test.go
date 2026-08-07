@@ -1,0 +1,157 @@
+package keychain
+
+import (
+	"context"
+	"errors"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/zalando/go-keyring"
+)
+
+type fakeNativeBackend struct {
+	values map[string]string
+	err    error
+}
+
+func newFakeNativeBackend() *fakeNativeBackend {
+	return &fakeNativeBackend{values: make(map[string]string)}
+}
+
+func (b *fakeNativeBackend) Get(service, user string) (string, error) {
+	if b.err != nil {
+		return "", b.err
+	}
+	value, ok := b.values[service+"\x00"+user]
+	if !ok {
+		return "", keyring.ErrNotFound
+	}
+	return value, nil
+}
+
+func (b *fakeNativeBackend) Set(service, user, secret string) error {
+	if b.err != nil {
+		return b.err
+	}
+	b.values[service+"\x00"+user] = secret
+	return nil
+}
+
+func (b *fakeNativeBackend) Delete(service, user string) error {
+	if b.err != nil {
+		return b.err
+	}
+	key := service + "\x00" + user
+	if _, ok := b.values[key]; !ok {
+		return keyring.ErrNotFound
+	}
+	delete(b.values, key)
+	return nil
+}
+
+func TestNativeStorePutGetDelete(t *testing.T) {
+	ctx := context.Background()
+	backend := newFakeNativeBackend()
+	store := newNativeStore(backend, "patchnote-agent-test")
+	expiresAt := time.Date(2026, 8, 7, 12, 30, 0, 123, time.UTC)
+	credential := Credential{
+		AccountID:            "acct_test",
+		AccessToken:          strings.Repeat("a", 32),
+		RefreshToken:         strings.Repeat("r", 32),
+		AccessTokenExpiresAt: expiresAt,
+		Scopes:               []string{"agent:account.read", "agent:quota.read"},
+	}
+
+	if err := store.Put(ctx, "default", credential); err != nil {
+		t.Fatalf("put native credential: %v", err)
+	}
+
+	got, err := store.Get(ctx, "default")
+	if err != nil {
+		t.Fatalf("get native credential: %v", err)
+	}
+	if got.AccountID != credential.AccountID || got.AccessToken != credential.AccessToken || got.RefreshToken != credential.RefreshToken {
+		t.Fatalf("unexpected credential: %+v", got)
+	}
+	if !got.AccessTokenExpiresAt.Equal(expiresAt) {
+		t.Fatalf("expected expires_at %s, got %s", expiresAt, got.AccessTokenExpiresAt)
+	}
+	got.Scopes[0] = "changed"
+	again, err := store.Get(ctx, "default")
+	if err != nil {
+		t.Fatalf("get native credential again: %v", err)
+	}
+	if again.Scopes[0] != "agent:account.read" {
+		t.Fatal("expected native store to protect stored scope slice from caller mutation")
+	}
+
+	if err := store.Delete(ctx, "default"); err != nil {
+		t.Fatalf("delete native credential: %v", err)
+	}
+	if _, err := store.Get(ctx, "default"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected missing native credential after delete, got %v", err)
+	}
+}
+
+func TestNativeStoreSplitsTokenMaterialFromMetadata(t *testing.T) {
+	ctx := context.Background()
+	backend := newFakeNativeBackend()
+	store := newNativeStore(backend, "patchnote-agent-test")
+	credential := Credential{
+		AccountID:    "acct_test",
+		AccessToken:  strings.Repeat("a", 32),
+		RefreshToken: strings.Repeat("r", 32),
+		Scopes:       []string{"agent:account.read"},
+	}
+
+	if err := store.Put(ctx, "dev", credential); err != nil {
+		t.Fatalf("put native credential: %v", err)
+	}
+
+	metadata := backend.values["patchnote-agent-test\x00profile:dev:metadata"]
+	if strings.Contains(metadata, credential.AccessToken) || strings.Contains(metadata, credential.RefreshToken) {
+		t.Fatalf("metadata contains token material: %s", metadata)
+	}
+	if backend.values["patchnote-agent-test\x00profile:dev:access_token"] != credential.AccessToken {
+		t.Fatal("expected access token to be stored in its own keychain item")
+	}
+	if backend.values["patchnote-agent-test\x00profile:dev:refresh_token"] != credential.RefreshToken {
+		t.Fatal("expected refresh token to be stored in its own keychain item")
+	}
+}
+
+func TestNativeStoreMapsBackendErrorsToUnavailable(t *testing.T) {
+	backend := newFakeNativeBackend()
+	backend.err = errors.New("backend unavailable")
+	store := newNativeStore(backend, "patchnote-agent-test")
+
+	if _, err := store.Get(context.Background(), "default"); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("expected unavailable get, got %v", err)
+	}
+	if err := store.Put(context.Background(), "default", Credential{AccountID: "acct_test"}); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("expected unavailable put, got %v", err)
+	}
+	if err := store.Delete(context.Background(), "default"); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("expected unavailable delete, got %v", err)
+	}
+}
+
+func TestNativeStoreDetectsIncompleteCredential(t *testing.T) {
+	ctx := context.Background()
+	backend := newFakeNativeBackend()
+	store := newNativeStore(backend, "patchnote-agent-test")
+
+	if err := store.Put(ctx, "default", Credential{
+		AccountID:    "acct_test",
+		AccessToken:  strings.Repeat("a", 32),
+		RefreshToken: strings.Repeat("r", 32),
+	}); err != nil {
+		t.Fatalf("put native credential: %v", err)
+	}
+	delete(backend.values, "patchnote-agent-test\x00profile:default:access_token")
+
+	if _, err := store.Get(ctx, "default"); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("expected unavailable incomplete credential, got %v", err)
+	}
+}

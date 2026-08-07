@@ -13,7 +13,7 @@ PatchNote Agent is the local CLI and MCP bridge for PatchNote. It lets desktop A
 Agent V1 is deliberately read-only. It uses dedicated `/v1/agent/**` PatchNote server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, provider payloads, quota purchase flows, or Admin APIs.
 
 ```sh
-npx -y patchnote-agent@0.1.1 install --print-config
+npx -y patchnote-agent@0.1.2 install --print-config
 ```
 
 ## At A Glance
@@ -25,11 +25,11 @@ npx -y patchnote-agent@0.1.1 install --print-config
 | Login | Phone OTP login creates an independent Agent session, not a mobile/desktop installation. |
 | Data access | Reads bounded account, recorder-card, quota, usage, and structured-result metadata projections. |
 | Safety boundary | Read-only, masked, platform-scoped, and routed through dedicated Agent server endpoints. |
-| Package status | Public beta `0.1.1`, defaulting to the PatchNote test API. |
+| Package status | Public beta `0.1.2`, defaulting to the PatchNote test API. |
 
 ## Features
 
-| Capability | Available in `0.1.1` | Notes |
+| Capability | Available in `0.1.2` | Notes |
 | --- | --- | --- |
 | Phone OTP Agent login | Yes | Uses Agent-specific server auth, not mobile/desktop installation slots. |
 | Local MCP server | Yes | `patchnote mcp serve` over stdio. |
@@ -50,7 +50,7 @@ npx -y patchnote-agent@0.1.1 install --print-config
 - A PatchNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.1.1` is a beta build. The default server is the PatchNote test API, and OS-native keychain adapters are still pending.
+> `0.1.2` is a beta build. The default server is the PatchNote test API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
@@ -59,7 +59,7 @@ npx -y patchnote-agent@0.1.1 install --print-config
 Install the npm wrapper. It downloads the matching `patchnote` binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
 ```sh
-npx -y patchnote-agent@0.1.1 install --print-config
+npx -y patchnote-agent@0.1.2 install --print-config
 ```
 
 The installer prints:
@@ -79,14 +79,13 @@ Log in and check your session.
 macOS/Linux:
 
 ```sh
-PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true patchnote login
+patchnote login
 patchnote auth status
 ```
 
 Windows PowerShell:
 
 ```powershell
-$env:PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN = "true"
 patchnote login
 patchnote auth status
 ```
@@ -101,7 +100,6 @@ To target a different PatchNote environment:
 
 ```sh
 PATCHNOTE_SERVER_BASE_URL=<PatchNote API base URL> \
-PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true \
 patchnote login
 ```
 
@@ -116,16 +114,13 @@ Use the `--print-config` output from the installer. A typical config looks like 
   "mcpServers": {
     "patchnote": {
       "command": "/absolute/path/to/patchnote",
-      "args": ["mcp", "serve"],
-      "env": {
-        "PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN": "true"
-      }
+      "args": ["mcp", "serve"]
     }
   }
 }
 ```
 
-MCP config never contains access tokens or refresh tokens. The beta `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` setting is explicit because OS keychain adapters are not shipped yet.
+MCP config never contains access tokens or refresh tokens. PatchNote Agent stores credential material in macOS Keychain, Windows Credential Manager, or Linux Secret Service when available. The explicit `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file store remains for local development and CI smoke only.
 
 ## MCP Tools
 
@@ -173,9 +168,9 @@ Useful global flags:
 The npm package itself is only an installer/update wrapper:
 
 ```sh
-npx -y patchnote-agent@0.1.1 install
-npx -y patchnote-agent@0.1.1 update
-npx -y patchnote-agent@0.1.1 uninstall
+npx -y patchnote-agent@0.1.2 install
+npx -y patchnote-agent@0.1.2 update
+npx -y patchnote-agent@0.1.2 uninstall
 ```
 
 ## Security And Risk Notice
@@ -198,12 +193,10 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.1.1` is a first beta release.
+`0.1.2` is a beta release.
 
 - The default server points to the PatchNote test API.
-- Credential storage uses an explicit beta file-store opt-in: `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`.
-- OS-native keychain adapters are pending.
-- macOS execution smoke is pending.
+- Linux headless environments may not have Secret Service available; use the explicit development file-store fallback only for local smoke.
 - Production Agent route rollout is pending.
 - `patchnote_search_memories` searches only metadata cached during the current MCP session.
 - Raw audio, full transcripts, complete model responses, hardware write actions, quota purchase/reward actions, payment, and Admin APIs are out of scope.
@@ -213,7 +206,7 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 | Problem | What to check |
 | --- | --- |
 | `patchnote` is not found after install | Add the printed install directory to PATH, then open a new terminal. |
-| Login says credential storage is unavailable | For beta testing, set `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`. |
+| Login says credential storage is unavailable | Check that macOS Keychain, Windows Credential Manager, or Linux Secret Service is available and unlocked. For local development only, set `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`. |
 | MCP host cannot start the server | Use the absolute `command` path printed by `--print-config`. |
 | Memory list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`. |
 | Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
@@ -222,12 +215,12 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 ## Verify The Install
 
 ```sh
-npm view patchnote-agent@0.1.1 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.1 install --dry-run --print-config
+npm view patchnote-agent@0.1.2 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchnote-agent@0.1.2 install --dry-run --print-config
 patchnote version
 ```
 
-The release binary should report version `0.1.1` and commit `8c82973d690b7ca58b79ddbab7d57e5a2a82f470`.
+The release binary should report version `0.1.2` and the commit attached to the GitHub Release.
 
 ## Development
 
@@ -251,7 +244,7 @@ Before changing CLI behavior, installer logic, MCP tools, authentication, local 
 
 1. Confirm the target PatchNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.1.1`.
+3. Push a clean tag, for example `v0.1.2`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`

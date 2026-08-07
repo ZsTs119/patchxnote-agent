@@ -35,7 +35,7 @@
 - MCP 配置：绝对路径配置示例，并说明配置里不保存 token。
 - MCP 工具表：列出七个 V1 工具和用途。
 - 安全与风险提示：说明 Agent 会让 AI 访问账号元数据，并列出默认安全边界。
-- 当前限制：beta、测试 API、文件 keychain fallback、macOS/production pending。
+- 当前限制：beta、测试 API、Linux headless keychain 可用性、production pending。
 - Troubleshooting：PATH、credential storage、MCP host、platform、checksum、server URL。
 - 验证安装：`npm view`、installer dry-run、`patchnote version`。
 - 开发和发布维护入口。
@@ -44,7 +44,7 @@
 禁止在 README、npm README、示例和截图中出现：
 
 - access token、refresh token、OTP、原始手机号、完整 MAC、SK、原始音频、完整转写、用户 prompt、provider payload。
-- 未验收的能力承诺，例如生产默认可用、OS keychain 已完成、macOS smoke 已完成、所有 MCP Host 已自动配置。
+- 未验收的能力承诺，例如生产默认可用、macOS smoke 已完成、所有 MCP Host 已自动配置。
 
 当能力发生变化时，优先同步：
 

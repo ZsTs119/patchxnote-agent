@@ -5,7 +5,7 @@
 This npm package is the installer wrapper for PatchNote Agent. It downloads the matching native `patchnote` CLI binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
 ```sh
-npx -y patchnote-agent@0.1.1 install --print-config
+npx -y patchnote-agent@0.1.2 install --print-config
 ```
 
 PatchNote Agent runs a local stdio MCP server:
@@ -14,7 +14,7 @@ PatchNote Agent runs a local stdio MCP server:
 patchnote mcp serve
 ```
 
-Agent V1 is read-only. It exposes safe PatchNote account projections through dedicated `/v1/agent/**` APIs and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
+Agent V1 is read-only. It stores credentials in the OS-native keychain when available, exposes safe PatchNote account projections through dedicated `/v1/agent/**` APIs, and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
 
 For full installation, MCP setup, security notes, and troubleshooting, read the GitHub documentation:
 

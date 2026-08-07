@@ -1,0 +1,63 @@
+name: macOS Install Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Published npm/GitHub Release version to install, without leading v"
+        required: true
+        default: "0.1.1"
+        type: string
+  pull_request:
+    paths:
+      - ".github/workflows/macos-install-smoke.yml"
+      - "packages/npm/**"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: macos-14
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Native keychain integration smoke
+        run: go test ./internal/keychain -run TestNativeStoreIntegration -count=1
+        env:
+          PATCHNOTE_KEYCHAIN_INTEGRATION: "1"
+
+      - name: Install PatchNote Agent from npm
+        run: |
+          set -euo pipefail
+          INSTALL_DIR="${RUNNER_TEMP}/patchnote-agent-bin"
+          npx -y --registry https://registry.npmjs.org "patchnote-agent@${VERSION}" install \
+            --install-dir "${INSTALL_DIR}" \
+            --print-config
+          "${INSTALL_DIR}/patchnote" version --output json > "${RUNNER_TEMP}/patchnote-version.json"
+          node -e "const fs=require('fs'); const got=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/patchnote-version.json', 'utf8')); if (got.version !== process.env.VERSION) { throw new Error('unexpected patchnote version ' + got.version); } if (got.os !== 'darwin') { throw new Error('expected darwin binary, got ' + got.os); }"
+        env:
+          VERSION: ${{ github.event.inputs.version || '0.1.1' }}
+
+      - name: MCP stdio initialize smoke
+        run: |
+          set -euo pipefail
+          INSTALL_DIR="${RUNNER_TEMP}/patchnote-agent-bin"
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+            | "${INSTALL_DIR}/patchnote" mcp serve > "${RUNNER_TEMP}/patchnote-mcp.jsonl"
+          node -e "const fs=require('fs'); const lines=fs.readFileSync(process.env.RUNNER_TEMP + '/patchnote-mcp.jsonl', 'utf8').trim().split(/\n+/).map(JSON.parse); if (lines.length !== 2) { throw new Error('expected 2 MCP responses'); } if (lines.some(line => line.error)) { throw new Error('unexpected MCP error ' + JSON.stringify(lines)); } const tools=lines[1].result.tools || []; if (tools.length !== 7) { throw new Error('expected 7 tools, got ' + tools.length); }"
