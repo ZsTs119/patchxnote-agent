@@ -4,7 +4,7 @@
   "description": "Installer wrapper for the PatchNote Agent CLI and local MCP server.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZsTs119/patchnote-agent.git"
+    "url": "https://github.com/ZsTs119/patchnote-agent"
   },
   "homepage": "https://github.com/ZsTs119/patchnote-agent#readme",
   "bin": {

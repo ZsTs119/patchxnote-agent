@@ -185,8 +185,15 @@ Before changing CLI behavior, installer logic, MCP tools, authentication, local 
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
 3. Push a clean tag, for example `v0.1.1`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
-5. Publish npm only after release assets exist.
-6. Replace the current 90-day `NPM_TOKEN` workflow with npm Trusted Publishing before broad public promotion.
+5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
+   - owner/user: `ZsTs119`
+   - repository: `patchnote-agent`
+   - workflow filename: `publish-npm.yml`
+   - allowed action: `npm publish`
+6. Publish npm only after release assets exist and the trusted publisher is configured.
+7. After a successful trusted publish, revoke the old npm automation token and disallow token-based publishing for this package.
+
+Security reports should use the private process in [SECURITY.md](SECURITY.md).
 
 ## License
 
