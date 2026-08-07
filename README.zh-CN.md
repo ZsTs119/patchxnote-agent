@@ -8,14 +8,24 @@
 
 官方文档：[PatchXNote Agent 公测使用指南（飞书公开版）](https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd)
 
+GitHub 仓库：[https://github.com/ZsTs119/patchxnote-agent](https://github.com/ZsTs119/patchxnote-agent)
+
 ![PatchXNote Agent 封面](./docs/assets/patchxnote-agent-cover.png)
 
 PatchXNote Agent 是 PatchXNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchXNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。
 
 Agent V1 明确保持只读。它只调用专用的 `/v1/agent/**` PatchXNote 服务端 API，不暴露 App/PC 的硬件写入流程、原始音频、完整转写、SK、完整 MAC、供应商 payload、额度购买流程或 Admin API。
 
+将以下一句话发送给支持本地命令执行的 AI 助手即可：
+
+```text
+请按照 PatchXNote Agent 使用指南（https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd）帮我安装并接入 MCP：先执行 npx -y patchxnote-agent install --print-config，然后引导我执行 patchxnote login 登录 PatchXNote 账号，并把安装器打印的 MCP JSON 配置接入当前 AI 助手；过程中不要让我把验证码、access token 或 refresh token 粘贴到对话里；GitHub 仓库是 https://github.com/ZsTs119/patchxnote-agent。
+```
+
+也可以手动执行安装命令：
+
 ```sh
-npx -y patchxnote-agent@0.2.1 install --print-config
+npx -y patchxnote-agent install --print-config
 ```
 
 ## 快速了解
@@ -61,7 +71,7 @@ npx -y patchxnote-agent@0.2.1 install --print-config
 安装 npm 包。它会从 GitHub Releases 下载匹配平台的 `patchxnote` 二进制，校验 `checksums.txt`，并安装到用户可写目录。
 
 ```sh
-npx -y patchxnote-agent@0.2.1 install --print-config
+npx -y patchxnote-agent install --print-config
 ```
 
 安装器会打印：
@@ -69,6 +79,12 @@ npx -y patchxnote-agent@0.2.1 install --print-config
 - 已安装的二进制路径
 - 如果 `patchxnote` 还不在 PATH 中，会打印 PATH 配置提示
 - 使用绝对二进制路径的 MCP 配置片段
+
+如果需要固定当前公测版本用于排障或回滚：
+
+```sh
+npx -y patchxnote-agent@0.2.1 install --print-config
+```
 
 公测版本默认连接 PatchXNote 公测 API：
 

@@ -8,14 +8,24 @@
 
 Official documentation: [Public Chinese user guide on Feishu](https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd)
 
+Repository: [https://github.com/ZsTs119/patchxnote-agent](https://github.com/ZsTs119/patchxnote-agent)
+
 ![PatchXNote Agent hero](./docs/assets/patchxnote-agent-cover.png)
 
 PatchXNote Agent is the local CLI and MCP bridge for PatchXNote. It lets desktop AI agents read safe PatchXNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata.
 
 Agent V1 is deliberately read-only. It uses dedicated `/v1/agent/**` PatchXNote server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, provider payloads, quota purchase flows, or Admin APIs.
 
+Give this one-line prompt to a local-command-capable AI assistant:
+
+```text
+Install and connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent install --print-config, guide me through patchxnote login, and add the printed MCP JSON config to this AI assistant. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+```
+
+Or run the install command manually:
+
 ```sh
-npx -y patchxnote-agent@0.2.1 install --print-config
+npx -y patchxnote-agent install --print-config
 ```
 
 ## At A Glance
@@ -61,7 +71,7 @@ npx -y patchxnote-agent@0.2.1 install --print-config
 Install the npm wrapper. It downloads the matching `patchxnote` binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
 ```sh
-npx -y patchxnote-agent@0.2.1 install --print-config
+npx -y patchxnote-agent install --print-config
 ```
 
 The installer prints:
@@ -69,6 +79,12 @@ The installer prints:
 - the installed binary path
 - a PATH hint if `patchxnote` is not already on your terminal PATH
 - an MCP config snippet using the absolute binary path
+
+To pin the current public beta version for troubleshooting or rollback:
+
+```sh
+npx -y patchxnote-agent@0.2.1 install --print-config
+```
 
 The public beta build defaults to the PatchXNote public beta API:
 

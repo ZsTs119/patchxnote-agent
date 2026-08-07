@@ -4,8 +4,16 @@
 
 This npm package is the installer wrapper for PatchXNote Agent. It downloads the matching native `patchxnote` CLI binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
+Give this one-line prompt to a local-command-capable AI assistant:
+
+```text
+Install and connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent install --print-config, guide me through patchxnote login, and add the printed MCP JSON config to this AI assistant. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+```
+
+Or run the install command manually:
+
 ```sh
-npx -y patchxnote-agent@0.2.1 install --print-config
+npx -y patchxnote-agent install --print-config
 ```
 
 PatchXNote Agent runs a local stdio MCP server:
