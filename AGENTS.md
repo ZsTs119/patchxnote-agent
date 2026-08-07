@@ -8,9 +8,10 @@ Before changing code, installers, release configuration, or MCP tool schemas, re
 
 1. `README.md`
 2. `docs/engineering-rules.md`
-3. `docs/plans/2026-08-06-agent-v1-mvp.md`
-4. The current PatchXNote server integration contract in `../patchxNoteGoServer/docs/integrations/apifox/integration-guide.zh-CN.md`
-5. Any server contract document directly related to the feature being exposed
+3. `docs/release-and-maintenance-runbook.zh-CN.md`
+4. `docs/plans/2026-08-06-agent-v1-mvp.md`
+5. The current PatchXNote server integration contract in `../patchxNoteGoServer/docs/integrations/apifox/integration-guide.zh-CN.md`
+6. Any server contract document directly related to the feature being exposed
 
 If this repository conflicts with the server OpenAPI contract, the server contract wins. Record the conflict before implementing around it.
 

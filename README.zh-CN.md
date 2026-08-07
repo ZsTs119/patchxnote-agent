@@ -240,9 +240,12 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测
 
 - [AGENTS.md](./AGENTS.md)
 - [docs/engineering-rules.md](./docs/engineering-rules.md)
+- [docs/release-and-maintenance-runbook.zh-CN.md](./docs/release-and-maintenance-runbook.zh-CN.md)
 - [docs/plans/2026-08-06-agent-v1-mvp.md](./docs/plans/2026-08-06-agent-v1-mvp.md)
 
 ## 发布维护说明
+
+详细发包和文档同步 checklist 见 [docs/release-and-maintenance-runbook.zh-CN.md](./docs/release-and-maintenance-runbook.zh-CN.md)。
 
 1. 确认目标 PatchXNote GoServer 已暴露所需 `/v1/agent/**` 路由。
 2. 确认 `packages/npm/package.json` 版本与 release tag 一致，tag 不带前缀 `v` 时要匹配包版本。

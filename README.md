@@ -240,9 +240,12 @@ Before changing CLI behavior, installer logic, MCP tools, authentication, local 
 
 - [AGENTS.md](./AGENTS.md)
 - [docs/engineering-rules.md](./docs/engineering-rules.md)
+- [docs/release-and-maintenance-runbook.zh-CN.md](./docs/release-and-maintenance-runbook.zh-CN.md)
 - [docs/plans/2026-08-06-agent-v1-mvp.md](./docs/plans/2026-08-06-agent-v1-mvp.md)
 
 ## Release Notes For Operators
+
+The detailed release and documentation maintenance checklist lives in [docs/release-and-maintenance-runbook.zh-CN.md](./docs/release-and-maintenance-runbook.zh-CN.md).
 
 1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
