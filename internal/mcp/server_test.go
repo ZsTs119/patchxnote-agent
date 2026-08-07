@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/auth"
+	"github.com/ZsTs119/patchxnote-agent/internal/auth"
 )
 
 type staticAuthenticator struct {
@@ -50,13 +50,13 @@ func TestInitializeAndToolsList(t *testing.T) {
 		}
 	}
 	for _, want := range []string{
-		"patchnote_get_current_user",
-		"patchnote_list_recorder_cards",
-		"patchnote_get_quota_summary",
-		"patchnote_get_model_usage_summary",
-		"patchnote_list_memories",
-		"patchnote_search_memories",
-		"patchnote_get_memory",
+		"patchxnote_get_current_user",
+		"patchxnote_list_recorder_cards",
+		"patchxnote_get_quota_summary",
+		"patchxnote_get_model_usage_summary",
+		"patchxnote_list_memories",
+		"patchxnote_search_memories",
+		"patchxnote_get_memory",
 	} {
 		if !names[want] {
 			t.Fatalf("tool %s missing from tools/list", want)
@@ -65,7 +65,7 @@ func TestInitializeAndToolsList(t *testing.T) {
 }
 
 func TestUnauthenticatedToolCallReturnsAuthRequired(t *testing.T) {
-	responses := serveForTest(t, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchnote_get_current_user","arguments":{}}}`)
+	responses := serveForTest(t, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchxnote_get_current_user","arguments":{}}}`)
 	if len(responses) != 1 {
 		t.Fatalf("expected one response, got %d", len(responses))
 	}
@@ -76,7 +76,7 @@ func TestUnauthenticatedToolCallReturnsAuthRequired(t *testing.T) {
 func TestUnknownMethodAndToolAreStableErrors(t *testing.T) {
 	responses := serveForTest(t, strings.Join([]string{
 		`{"jsonrpc":"2.0","id":1,"method":"unknown/method","params":{}}`,
-		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"patchnote_missing","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"patchxnote_missing","arguments":{}}}`,
 	}, "\n"))
 	if len(responses) != 2 {
 		t.Fatalf("expected two responses, got %d", len(responses))
@@ -87,7 +87,7 @@ func TestUnknownMethodAndToolAreStableErrors(t *testing.T) {
 }
 
 func TestToolArgumentValidation(t *testing.T) {
-	responses := serveForTest(t, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchnote_list_memories","arguments":{"platform":"mobile","limit":100}}}`)
+	responses := serveForTest(t, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchxnote_list_memories","arguments":{"platform":"mobile","limit":100}}}`)
 	if len(responses) != 1 {
 		t.Fatalf("expected one response, got %d", len(responses))
 	}

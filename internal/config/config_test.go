@@ -35,8 +35,8 @@ func TestLoadPrecedenceFlagEnvFileDefault(t *testing.T) {
 		t.Fatalf("write config: %v", err)
 	}
 
-	t.Setenv("PATCHNOTE_PROFILE", "env-profile")
-	t.Setenv("PATCHNOTE_SERVER_BASE_URL", "https://env.example")
+	t.Setenv("PATCHXNOTE_PROFILE", "env-profile")
+	t.Setenv("PATCHXNOTE_SERVER_BASE_URL", "https://env.example")
 
 	v := NewViper()
 	flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
@@ -65,6 +65,41 @@ func TestLoadPrecedenceFlagEnvFileDefault(t *testing.T) {
 	}
 	if cfg.Server.BaseURL != "https://env.example" {
 		t.Fatalf("expected env server base URL, got %q", cfg.Server.BaseURL)
+	}
+}
+
+func TestLoadLegacyPatchNoteEnvFallback(t *testing.T) {
+	t.Setenv("PATCHNOTE_PROFILE", "legacy-profile")
+	t.Setenv("PATCHNOTE_SERVER_BASE_URL", "https://legacy.example")
+
+	cfg, err := Load(NewViper(), LoadOptions{
+		GOOS:    "linux",
+		PathEnv: PathEnv{HomeDir: t.TempDir()},
+	})
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+	if cfg.Profile != "legacy-profile" {
+		t.Fatalf("expected legacy env profile fallback, got %q", cfg.Profile)
+	}
+	if cfg.Server.BaseURL != "https://legacy.example" {
+		t.Fatalf("expected legacy env server fallback, got %q", cfg.Server.BaseURL)
+	}
+}
+
+func TestLoadPatchXNoteEnvBeatsLegacyEnv(t *testing.T) {
+	t.Setenv("PATCHNOTE_SERVER_BASE_URL", "https://legacy.example")
+	t.Setenv("PATCHXNOTE_SERVER_BASE_URL", "https://current.example")
+
+	cfg, err := Load(NewViper(), LoadOptions{
+		GOOS:    "linux",
+		PathEnv: PathEnv{HomeDir: t.TempDir()},
+	})
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+	if cfg.Server.BaseURL != "https://current.example" {
+		t.Fatalf("expected current env to win, got %q", cfg.Server.BaseURL)
 	}
 }
 

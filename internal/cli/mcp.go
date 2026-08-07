@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/cache"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/mcp"
+	"github.com/ZsTs119/patchxnote-agent/internal/cache"
+	"github.com/ZsTs119/patchxnote-agent/internal/mcp"
 
 	"github.com/spf13/cobra"
 )

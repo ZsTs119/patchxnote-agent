@@ -35,14 +35,25 @@ type LoadOptions struct {
 
 func NewViper() *viper.Viper {
 	v := viper.New()
-	v.SetEnvPrefix("PATCHNOTE")
+	v.SetEnvPrefix("PATCHXNOTE")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	v.SetDefault("profile", "default")
 	v.SetDefault("output", "plain")
 	v.SetDefault("server.base_url", DefaultServerBaseURL)
 	v.SetDefault("auth.insecure_file_keychain", false)
+	mustBindEnv(v, "config", "PATCHXNOTE_CONFIG", "PATCHNOTE_CONFIG")
+	mustBindEnv(v, "profile", "PATCHXNOTE_PROFILE", "PATCHNOTE_PROFILE")
+	mustBindEnv(v, "output", "PATCHXNOTE_OUTPUT", "PATCHNOTE_OUTPUT")
+	mustBindEnv(v, "server.base_url", "PATCHXNOTE_SERVER_BASE_URL", "PATCHNOTE_SERVER_BASE_URL")
+	mustBindEnv(v, "auth.insecure_file_keychain", "PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN", "PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN")
 	v.AutomaticEnv()
 	return v
+}
+
+func mustBindEnv(v *viper.Viper, key string, names ...string) {
+	if err := v.BindEnv(append([]string{key}, names...)...); err != nil {
+		panic(err)
+	}
 }
 
 func Load(v *viper.Viper, opts LoadOptions) (Config, error) {

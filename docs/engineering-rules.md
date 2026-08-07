@@ -6,11 +6,11 @@ This document keeps the PatchXNote Agent CLI and local MCP bridge from drifting 
 
 PatchXNote Agent has three layers:
 
-1. `patchnote` Go binary
+1. `patchxnote` Go binary
    The local runtime for login, account inspection, MCP stdio serving, local cache management, and installer integration.
 
 2. npm installer wrapper
-   A thin package that supports commands such as `npx -y patchnote-agent install`. It installs or updates the versioned Go binary, then exits.
+   A thin package that supports commands such as `npx -y patchxnote-agent install`. It installs or updates the versioned Go binary, then exits.
 
 3. PatchXNote server APIs
    The remote source of truth. The agent never bypasses server authorization and never reconstructs server facts from local guesses.
@@ -18,7 +18,7 @@ PatchXNote Agent has three layers:
 The expected runtime shape is:
 
 ```text
-Agent client -> local MCP stdio -> patchnote binary -> PatchXNote API
+Agent client -> local MCP stdio -> patchxnote binary -> PatchXNote API
 ```
 
 ## Repository Layout
@@ -26,9 +26,9 @@ Agent client -> local MCP stdio -> patchnote binary -> PatchXNote API
 The repository uses a thin public binary entrypoint plus internal packages. Keep this structure stable unless a design note explains why it must change.
 
 ```text
-patchnote-agent/
+patchxnote-agent/
   cmd/
-    patchnote/
+    patchxnote/
       main.go
 
   internal/
@@ -57,7 +57,7 @@ patchnote-agent/
 
 Package responsibilities:
 
-- `cmd/patchnote`: minimal `package main`; call the CLI package and own only process exit.
+- `cmd/patchxnote`: minimal `package main`; call the CLI package and own only process exit.
 - `internal/cli`: Cobra command tree, flags, command wiring, prompt boundaries, and command tests.
 - `internal/config`: Viper-backed non-secret config loading, default values, env binding, and config path resolution.
 - `internal/auth`: login session state, token refresh orchestration, scope checks, and logout behavior.
@@ -73,7 +73,7 @@ Package responsibilities:
 The dependency direction is:
 
 ```text
-cmd/patchnote -> internal/cli -> internal/{config,auth,api,mcp,cache,output,diag,version}
+cmd/patchxnote -> internal/cli -> internal/{config,auth,api,mcp,cache,output,diag,version}
 internal/auth -> internal/{config,keychain,api}
 internal/mcp -> internal/{auth,api,cache,diag}
 internal/api -> external PatchXNote server APIs
@@ -183,21 +183,21 @@ Windows: %LocalAppData%\PatchXNote Agent\Cache\
 Linux:   ${XDG_CACHE_HOME:-~/.cache}/patchxnote-agent/
 ```
 
-Environment variables must use the `PATCHNOTE_` prefix. For nested config, replace dots and hyphens with underscores, for example `PATCHNOTE_SERVER_BASE_URL`.
+Environment variables must use the `PATCHXNOTE_` prefix. For nested config, replace dots and hyphens with underscores, for example `PATCHXNOTE_SERVER_BASE_URL`.
 
 ## Command Design
 
 The public command surface should stay small:
 
 ```text
-patchnote setup
-patchnote login
-patchnote logout
-patchnote auth status
-patchnote mcp
-patchnote mcp install <client>
-patchnote mcp status
-patchnote version
+patchxnote setup
+patchxnote login
+patchxnote logout
+patchxnote auth status
+patchxnote mcp
+patchxnote mcp install <client>
+patchxnote mcp status
+patchxnote version
 ```
 
 Use predictable CLI conventions:
@@ -230,14 +230,14 @@ internal/cli/
 
 Command rules:
 
-- `cmd/patchnote/main.go` calls `internal/cli.Execute()` and handles final process exit only.
+- `cmd/patchxnote/main.go` calls `internal/cli.Execute()` and handles final process exit only.
 - command handlers use `RunE`
 - root commands set `SilenceUsage` and `SilenceErrors`
 - shared auth/config checks live in root or group-level `PersistentPreRunE`
 - child `PersistentPreRunE` must explicitly call parent setup when both are needed
 - use `cmd.OutOrStdout()` for result output and `cmd.ErrOrStderr()` for diagnostics
 - command tests construct a fresh command tree and set args/out/err per test
-- do not call `os.Exit` outside `cmd/patchnote/main.go`
+- do not call `os.Exit` outside `cmd/patchxnote/main.go`
 - do not use package-level mutable Viper state in tests
 
 ## MCP Tool Design
@@ -245,12 +245,12 @@ Command rules:
 Tool names should be service-scoped to avoid collisions:
 
 ```text
-patchnote_get_current_user
-patchnote_list_recorder_cards
-patchnote_get_quota_summary
-patchnote_get_model_usage_summary
-patchnote_list_memories
-patchnote_search_memories
+patchxnote_get_current_user
+patchxnote_list_recorder_cards
+patchxnote_get_quota_summary
+patchxnote_get_model_usage_summary
+patchxnote_list_memories
+patchxnote_search_memories
 ```
 
 Each tool must define:
@@ -379,7 +379,7 @@ packages/npm/
 Release rules:
 
 - binaries are built from tagged commits
-- archives include the `patchnote` binary and license/readme files only
+- archives include the `patchxnote` binary and license/readme files only
 - checksums are generated for every published artifact
 - the npm wrapper installs a pinned binary version matching the package version
 - rollback means installing a previous pinned version, not resolving floating `latest`

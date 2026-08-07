@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version"
+	"github.com/ZsTs119/patchxnote-agent/internal/version"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +19,7 @@ func newVersionCommand(state *rootState) *cobra.Command {
 			switch format := normalizedOutputFormat(state); format {
 			case "", "plain":
 				_, err := fmt.Fprintf(cmd.OutOrStdout(),
-					"patchnote %s\ncommit %s\ndate %s\ngo %s\nplatform %s/%s\n",
+					"patchxnote %s\ncommit %s\ndate %s\ngo %s\nplatform %s/%s\n",
 					info.Version,
 					info.Commit,
 					info.Date,

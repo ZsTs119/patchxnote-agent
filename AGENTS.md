@@ -1,6 +1,6 @@
 # PatchXNote Agent Repository Rules
 
-These rules apply to the entire `patchnote-agent` repository.
+These rules apply to the entire `patchxnote-agent` repository.
 
 ## Read First
 
@@ -44,8 +44,8 @@ Do not add write tools, hardware connect/release tools, model-run execute tools,
 
 ## CLI Rules
 
-- The core runtime is a versioned Go binary named `patchnote`.
-- The npm package is an installer/update wrapper only. Do not make normal MCP startup depend on `npx @patchnote/agent@latest`.
+- The core runtime is a versioned Go binary named `patchxnote`.
+- The npm package is an installer/update wrapper only. Do not make normal MCP startup depend on `npx patchxnote-agent@latest`.
 - Use Cobra for command structure and Viper for non-secret configuration once command complexity exceeds the initial placeholder.
 - Keep `main.go` thin. Commands should return errors instead of calling `os.Exit` deep inside business logic.
 - Human-facing diagnostics go to stderr. Machine-readable command output goes to stdout.

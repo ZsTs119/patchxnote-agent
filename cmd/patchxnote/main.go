@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/cli"
+	"github.com/ZsTs119/patchxnote-agent/internal/cli"
 )
 
 func main() {

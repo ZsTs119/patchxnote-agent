@@ -9,21 +9,23 @@ const path = require("path");
 
 const packageRoot = path.resolve(__dirname, "..");
 const packageJSON = require(path.join(packageRoot, "package.json"));
-const repo = "ZsTs119/patchnote-agent";
+const repo = "ZsTs119/patchxnote-agent";
 
 async function main(argv) {
   const parsed = parseArgs(argv);
   if (!["install", "update", "uninstall"].includes(parsed.command)) {
-    throw new Error("usage: patchnote-agent <install|update|uninstall> [--dry-run] [--print-config] [--install-dir <path>]");
+    throw new Error("usage: patchxnote-agent <install|update|uninstall> [--dry-run] [--print-config] [--install-dir <path>]");
   }
 
   const target = resolveTarget(parsed.options.platform || process.platform, parsed.options.arch || process.arch);
   const installDir = parsed.options.installDir || defaultInstallDir(process.platform);
-  const binaryName = target.platform === "windows" ? "patchnote.exe" : "patchnote";
+  const binaryName = target.platform === "windows" ? "patchxnote.exe" : "patchxnote";
   const installPath = joinInstallPath(installDir, binaryName, target.platform);
   const version = packageJSON.version;
-  const assetName = `patchnote_${version}_${target.platform}_${target.arch}${target.ext}`;
-  const releaseBaseURL = process.env.PATCHNOTE_AGENT_RELEASE_BASE_URL || `https://github.com/${repo}/releases/download/v${version}`;
+  const assetName = `patchxnote_${version}_${target.platform}_${target.arch}${target.ext}`;
+  const releaseBaseURL = process.env.PATCHXNOTE_AGENT_RELEASE_BASE_URL
+    || process.env.PATCHNOTE_AGENT_RELEASE_BASE_URL
+    || `https://github.com/${repo}/releases/download/v${version}`;
   const assetURL = `${releaseBaseURL}/${assetName}`;
   const checksumsURL = `${releaseBaseURL}/checksums.txt`;
 
@@ -75,8 +77,8 @@ async function main(argv) {
   if (parsed.options.printConfig) {
     printMCPConfig(installPath);
   } else {
-    console.log("Run: patchnote login");
-    console.log("MCP config: patchnote mcp serve");
+    console.log("Run: patchxnote login");
+    console.log("MCP config: patchxnote mcp serve");
   }
 }
 
@@ -185,7 +187,7 @@ function printMCPConfig(commandPath) {
   console.log("MCP config:");
   console.log(JSON.stringify({
     mcpServers: {
-      patchnote: {
+      patchxnote: {
         command: commandPath,
         args: ["mcp", "serve"]
       }
@@ -217,7 +219,7 @@ function printPathGuidance(installDir, targetPlatform) {
   if (isInstallDirOnPath(installDir, process.env.PATH || "", targetPlatform)) {
     return;
   }
-  console.log("To use patchnote directly from your terminal, add the install directory to PATH:");
+  console.log("To use patchxnote directly from your terminal, add the install directory to PATH:");
   console.log(pathHint(installDir, targetPlatform));
   if (targetPlatform === "windows") {
     console.log("Open a new terminal after updating PATH.");

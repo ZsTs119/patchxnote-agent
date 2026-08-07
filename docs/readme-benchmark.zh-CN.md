@@ -21,7 +21,7 @@
 - 给谁用：桌面 AI Agent / MCP Host。
 - 能做什么：读取安全的 PatchXNote 账号上下文。
 - 不能做什么：不暴露硬件写入、原始音频、完整转写、SK、完整 MAC、支付和 Admin API。
-- 怎么开始：一条可复制的 `npx -y patchnote-agent@<version> install --print-config`。
+- 怎么开始：一条可复制的 `npx -y patchxnote-agent@<version> install --print-config`。
 
 公开 README 必须包含：
 
@@ -37,7 +37,7 @@
 - 安全与风险提示：说明 Agent 会让 AI 访问账号元数据，并列出默认安全边界。
 - 当前限制：beta、测试 API、Linux headless keychain 可用性、production pending。
 - Troubleshooting：PATH、credential storage、MCP host、platform、checksum、server URL。
-- 验证安装：`npm view`、installer dry-run、`patchnote version`。
+- 验证安装：`npm view`、installer dry-run、`patchxnote version`。
 - 开发和发布维护入口。
 - 许可证状态。
 

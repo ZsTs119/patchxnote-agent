@@ -22,9 +22,9 @@ func (e *Error) Error() string {
 		return "<nil>"
 	}
 	if e.Code == "" {
-		return fmt.Sprintf("patchnote api error: status=%d request_id=%s retryable=%t", e.StatusCode, e.RequestID, e.Retryable)
+		return fmt.Sprintf("patchxnote api error: status=%d request_id=%s retryable=%t", e.StatusCode, e.RequestID, e.Retryable)
 	}
-	return fmt.Sprintf("patchnote api error: status=%d code=%s request_id=%s retryable=%t", e.StatusCode, e.Code, e.RequestID, e.Retryable)
+	return fmt.Sprintf("patchxnote api error: status=%d code=%s request_id=%s retryable=%t", e.StatusCode, e.Code, e.RequestID, e.Retryable)
 }
 
 type errorEnvelope struct {

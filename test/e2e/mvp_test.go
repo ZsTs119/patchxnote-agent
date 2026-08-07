@@ -15,9 +15,9 @@ import (
 )
 
 func TestMVP(t *testing.T) {
-	binary := os.Getenv("PATCHNOTE_E2E_BINARY")
+	binary := os.Getenv("PATCHXNOTE_E2E_BINARY")
 	if binary == "" {
-		t.Skip("PATCHNOTE_E2E_BINARY is required")
+		t.Skip("PATCHXNOTE_E2E_BINARY is required")
 	}
 
 	credentialMaterial := strings.Repeat("a", 32)
@@ -113,8 +113,8 @@ func TestMVP(t *testing.T) {
 		"HOME="+home,
 		"XDG_CONFIG_HOME="+filepath.Join(home, "config"),
 		"XDG_CACHE_HOME="+filepath.Join(home, "cache"),
-		"PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true",
-		"PATCHNOTE_SERVER_BASE_URL="+server.URL,
+		"PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true",
+		"PATCHXNOTE_SERVER_BASE_URL="+server.URL,
 	)
 
 	runCLI(t, binary, env, "login", "--phone", "+86*******0000", "--code", "000000")
@@ -126,13 +126,13 @@ func TestMVP(t *testing.T) {
 	mcpInput := strings.Join([]string{
 		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`,
 		`{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`,
-		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"patchnote_get_current_user","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"patchnote_list_recorder_cards","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"patchnote_get_quota_summary","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"patchnote_get_model_usage_summary","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"patchnote_list_memories","arguments":{"platform":"mobile","limit":20}}}`,
-		`{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"patchnote_search_memories","arguments":{"platform":"mobile","query":"event","limit":20}}}`,
-		`{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"patchnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"patchxnote_get_current_user","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"patchxnote_list_recorder_cards","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"patchxnote_get_quota_summary","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"patchxnote_get_model_usage_summary","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"patchxnote_list_memories","arguments":{"platform":"mobile","limit":20}}}`,
+		`{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"patchxnote_search_memories","arguments":{"platform":"mobile","query":"event","limit":20}}}`,
+		`{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"patchxnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}}`,
 	}, "\n") + "\n"
 	mcpResult := runCLIWithInput(t, binary, env, mcpInput, "mcp", "serve")
 	assertMCPResponses(t, mcpResult.stdout, 9)
@@ -247,7 +247,7 @@ func writeJSON(t *testing.T, w http.ResponseWriter, status int, value any) {
 
 func writeEvidence(t *testing.T, evidence map[string]any) {
 	t.Helper()
-	path := os.Getenv("PATCHNOTE_E2E_ARTIFACT")
+	path := os.Getenv("PATCHXNOTE_E2E_ARTIFACT")
 	if path == "" {
 		return
 	}
@@ -264,6 +264,6 @@ func writeEvidence(t *testing.T, evidence map[string]any) {
 }
 
 func Example_commandShape() {
-	fmt.Println("patchnote mcp serve")
-	// Output: patchnote mcp serve
+	fmt.Println("patchxnote mcp serve")
+	// Output: patchxnote mcp serve
 }

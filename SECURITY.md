@@ -12,13 +12,13 @@ PatchXNote Agent is a local CLI and MCP bridge for read-only PatchXNote account 
 
 Use GitHub's private vulnerability reporting flow when it is available for this repository:
 
-https://github.com/ZsTs119/patchnote-agent/security/advisories/new
+https://github.com/ZsTs119/patchxnote-agent/security/advisories/new
 
 If private reporting is not available, contact the maintainer through the GitHub repository without posting exploit details, credentials, OTPs, personal data, raw recordings, transcripts, or provider payloads in a public issue.
 
 Helpful report details:
 
-- affected `patchnote-agent` npm version and `patchnote version` output
+- affected `patchxnote-agent` npm version and `patchxnote version` output
 - operating system and CPU architecture
 - install command and MCP client used
 - concise impact description
@@ -27,7 +27,7 @@ Helpful report details:
 ## In Scope
 
 - npm installer wrapper behavior
-- released `patchnote` binaries and checksum verification
+- released `patchxnote` binaries and checksum verification
 - local MCP server behavior
 - Agent login, logout, refresh, and session storage
 - read-only `/v1/agent/**` API client behavior
@@ -49,4 +49,4 @@ The beta release defaults to the PatchXNote test API. Credential material is sto
 - Windows Credential Manager
 - Linux Secret Service
 
-The explicit `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file credential fallback is reserved for local development and CI smoke only.
+The explicit `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` file credential fallback is reserved for local development and CI smoke only.

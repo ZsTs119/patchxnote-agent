@@ -31,23 +31,23 @@ jobs:
       - name: Check package version
         working-directory: packages/npm
         run: |
-          node -e "const pkg=require('./package.json'); const want=process.env.VERSION; if (pkg.name !== 'patchnote-agent') { throw new Error(`unexpected package name ${pkg.name}`); } if (pkg.version !== want) { throw new Error(`package version ${pkg.version} does not match ${want}`); } if (pkg.private) { throw new Error('package must not be private'); }"
+          node -e "const pkg=require('./package.json'); const want=process.env.VERSION; if (pkg.name !== 'patchxnote-agent') { throw new Error(`unexpected package name ${pkg.name}`); } if (pkg.version !== want) { throw new Error(`package version ${pkg.version} does not match ${want}`); } if (pkg.private) { throw new Error('package must not be private'); }"
         env:
           VERSION: ${{ inputs.version }}
 
       - name: Check GitHub release assets exist
         run: |
           gh release view "v${VERSION}" --repo "${GITHUB_REPOSITORY}" --json assets \
-            --jq '.assets[].name' > /tmp/patchnote-assets.txt
+            --jq '.assets[].name' > /tmp/patchxnote-assets.txt
           for asset in \
             "checksums.txt" \
-            "patchnote_${VERSION}_darwin_amd64" \
-            "patchnote_${VERSION}_darwin_arm64" \
-            "patchnote_${VERSION}_linux_amd64" \
-            "patchnote_${VERSION}_linux_arm64" \
-            "patchnote_${VERSION}_windows_amd64.exe" \
-            "patchnote_${VERSION}_windows_arm64.exe"; do
-            grep -Fx "$asset" /tmp/patchnote-assets.txt
+            "patchxnote_${VERSION}_darwin_amd64" \
+            "patchxnote_${VERSION}_darwin_arm64" \
+            "patchxnote_${VERSION}_linux_amd64" \
+            "patchxnote_${VERSION}_linux_arm64" \
+            "patchxnote_${VERSION}_windows_amd64.exe" \
+            "patchxnote_${VERSION}_windows_arm64.exe"; do
+            grep -Fx "$asset" /tmp/patchxnote-assets.txt
           done
         env:
           GH_TOKEN: ${{ github.token }}

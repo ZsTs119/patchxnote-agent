@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 )
 
 func TestStatusUnauthenticatedWhenCredentialMissing(t *testing.T) {

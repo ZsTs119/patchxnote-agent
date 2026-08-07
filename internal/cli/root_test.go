@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/config"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version"
+	"github.com/ZsTs119/patchxnote-agent/internal/config"
+	"github.com/ZsTs119/patchxnote-agent/internal/version"
 )
 
 func TestRootCommandUsesSilentErrorBehavior(t *testing.T) {
@@ -66,7 +66,7 @@ func TestVersionPlainOutput(t *testing.T) {
 		t.Fatalf("expected no stderr, got %q", stderr)
 	}
 
-	for _, want := range []string{"patchnote " + version.Version, "commit " + version.Commit, "date " + version.Date, "platform "} {
+	for _, want := range []string{"patchxnote " + version.Version, "commit " + version.Commit, "date " + version.Date, "platform "} {
 		if !strings.Contains(stdout, want) {
 			t.Fatalf("expected plain version output to contain %q, got:\n%s", want, stdout)
 		}

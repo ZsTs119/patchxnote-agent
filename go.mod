@@ -1,4 +1,4 @@
-module codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent
+module github.com/ZsTs119/patchxnote-agent
 
 go 1.22
 

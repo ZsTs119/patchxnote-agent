@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/api"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/cache"
+	"github.com/ZsTs119/patchxnote-agent/internal/api"
+	"github.com/ZsTs119/patchxnote-agent/internal/cache"
 )
 
 const maxToolOutputBytes = 16 * 1024
@@ -35,7 +35,7 @@ type ToolContent struct {
 func defaultTools(server *Server) []Tool {
 	return []Tool{
 		{
-			Name:        "patchnote_get_current_user",
+			Name:        "patchxnote_get_current_user",
 			Description: "Read the current PatchXNote account projection for the logged-in Agent session.",
 			InputSchema: objectSchema(nil, nil),
 			Annotations: readOnlyAnnotations(),
@@ -43,7 +43,7 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateNoArgs,
 		},
 		{
-			Name:        "patchnote_list_recorder_cards",
+			Name:        "patchxnote_list_recorder_cards",
 			Description: "List recorder cards bound to the current PatchXNote account with masked identifiers only.",
 			InputSchema: objectSchema(nil, nil),
 			Annotations: readOnlyAnnotations(),
@@ -51,7 +51,7 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateNoArgs,
 		},
 		{
-			Name:        "patchnote_get_quota_summary",
+			Name:        "patchxnote_get_quota_summary",
 			Description: "Read the current PatchXNote quota summary for the logged-in account.",
 			InputSchema: objectSchema(nil, nil),
 			Annotations: readOnlyAnnotations(),
@@ -59,7 +59,7 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateNoArgs,
 		},
 		{
-			Name:        "patchnote_get_model_usage_summary",
+			Name:        "patchxnote_get_model_usage_summary",
 			Description: "Read the current-month PatchXNote model usage summary.",
 			InputSchema: objectSchema(nil, nil),
 			Annotations: readOnlyAnnotations(),
@@ -67,7 +67,7 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateNoArgs,
 		},
 		{
-			Name:        "patchnote_list_memories",
+			Name:        "patchxnote_list_memories",
 			Description: "List safe metadata for stored structured results for one selected platform.",
 			InputSchema: objectSchema(map[string]any{
 				"platform": platformProperty(),
@@ -79,7 +79,7 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateListMemoriesArgs,
 		},
 		{
-			Name:        "patchnote_search_memories",
+			Name:        "patchxnote_search_memories",
 			Description: "Search the local authorized PatchXNote memory metadata cache for one selected platform.",
 			InputSchema: objectSchema(map[string]any{
 				"platform": platformProperty(),
@@ -91,7 +91,7 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateSearchMemoriesArgs,
 		},
 		{
-			Name:        "patchnote_get_memory",
+			Name:        "patchxnote_get_memory",
 			Description: "Read safe metadata for one PatchXNote structured result.",
 			InputSchema: objectSchema(map[string]any{
 				"platform":  platformProperty(),

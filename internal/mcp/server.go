@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"io"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/api"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/auth"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/cache"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/api"
+	"github.com/ZsTs119/patchxnote-agent/internal/auth"
+	"github.com/ZsTs119/patchxnote-agent/internal/cache"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 )
 
 const protocolVersion = "2025-06-18"
@@ -118,7 +118,7 @@ func (s *Server) handleLine(ctx context.Context, line []byte) (rpcResponse, bool
 		return resultResponse(request.ID, initializeResult{
 			ProtocolVersion: protocolVersion,
 			ServerInfo: serverInfo{
-				Name:    "patchnote-agent",
+				Name:    "patchxnote-agent",
 				Version: "0.0.0-dev",
 			},
 			Capabilities: serverCapabilities{

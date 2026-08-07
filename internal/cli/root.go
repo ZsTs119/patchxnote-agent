@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/config"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/config"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -56,7 +56,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:               "patchnote",
+		Use:               "patchxnote",
 		Short:             "PatchXNote Agent CLI and local MCP bridge",
 		SilenceUsage:      true,
 		SilenceErrors:     true,

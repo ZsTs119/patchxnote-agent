@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/api"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/api"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -31,7 +31,7 @@ func newLoginCommand(state *rootState) *cobra.Command {
 				return err
 			}
 			if runtime.API == nil {
-				return fmt.Errorf("server base URL is required; set --server-base-url or PATCHNOTE_SERVER_BASE_URL")
+				return fmt.Errorf("server base URL is required; set --server-base-url or PATCHXNOTE_SERVER_BASE_URL")
 			}
 
 			reader := bufio.NewReader(cmd.InOrStdin())

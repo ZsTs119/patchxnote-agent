@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/api"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/auth"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/config"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/api"
+	"github.com/ZsTs119/patchxnote-agent/internal/auth"
+	"github.com/ZsTs119/patchxnote-agent/internal/config"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 )
 
 type fakeAgentAPI struct {

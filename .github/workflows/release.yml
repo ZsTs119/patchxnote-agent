@@ -59,4 +59,4 @@ jobs:
         with:
           subject-path: |
             dist/checksums.txt
-            dist/patchnote_*
+            dist/patchxnote_*

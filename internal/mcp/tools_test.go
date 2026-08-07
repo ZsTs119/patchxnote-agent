@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/api"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/auth"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/cache"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/api"
+	"github.com/ZsTs119/patchxnote-agent/internal/auth"
+	"github.com/ZsTs119/patchxnote-agent/internal/cache"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
 )
 
 type fakeToolAPI struct {
@@ -114,13 +114,13 @@ func TestV1ToolSuccessCallsAPIAndSearchesCache(t *testing.T) {
 	})
 
 	calls := []string{
-		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchnote_get_current_user","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"patchnote_list_recorder_cards","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"patchnote_get_quota_summary","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"patchnote_get_model_usage_summary","arguments":{}}}`,
-		`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"patchnote_list_memories","arguments":{"platform":"mobile","limit":20}}}`,
-		`{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"patchnote_search_memories","arguments":{"platform":"mobile","query":"event","limit":10}}}`,
-		`{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"patchnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}}`,
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchxnote_get_current_user","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"patchxnote_list_recorder_cards","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"patchxnote_get_quota_summary","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"patchxnote_get_model_usage_summary","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"patchxnote_list_memories","arguments":{"platform":"mobile","limit":20}}}`,
+		`{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"patchxnote_search_memories","arguments":{"platform":"mobile","query":"event","limit":10}}}`,
+		`{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"patchxnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}}`,
 	}
 	responses := serveCustomForTest(t, server, strings.Join(calls, "\n"))
 	if len(responses) != len(calls) {
@@ -209,7 +209,7 @@ func TestEveryV1ToolChecksRequiredScope(t *testing.T) {
 		})
 		input := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":` + call + `}`
 		responses := serveCustomForTest(t, server, input)
-		if strings.Contains(call, "patchnote_get_current_user") {
+		if strings.Contains(call, "patchxnote_get_current_user") {
 			if responses[0]["error"] != nil {
 				t.Fatalf("account scope should allow current user, got %+v", responses[0]["error"])
 			}
@@ -221,13 +221,13 @@ func TestEveryV1ToolChecksRequiredScope(t *testing.T) {
 
 func TestEveryV1ToolHasValidationCoverage(t *testing.T) {
 	tests := []string{
-		`{"name":"patchnote_get_current_user","arguments":{"unexpected":true}}`,
-		`{"name":"patchnote_list_recorder_cards","arguments":{"unexpected":true}}`,
-		`{"name":"patchnote_get_quota_summary","arguments":{"unexpected":true}}`,
-		`{"name":"patchnote_get_model_usage_summary","arguments":{"unexpected":true}}`,
-		`{"name":"patchnote_list_memories","arguments":{"platform":"agent"}}`,
-		`{"name":"patchnote_search_memories","arguments":{"platform":"mobile"}}`,
-		`{"name":"patchnote_get_memory","arguments":{"platform":"mobile"}}`,
+		`{"name":"patchxnote_get_current_user","arguments":{"unexpected":true}}`,
+		`{"name":"patchxnote_list_recorder_cards","arguments":{"unexpected":true}}`,
+		`{"name":"patchxnote_get_quota_summary","arguments":{"unexpected":true}}`,
+		`{"name":"patchxnote_get_model_usage_summary","arguments":{"unexpected":true}}`,
+		`{"name":"patchxnote_list_memories","arguments":{"platform":"agent"}}`,
+		`{"name":"patchxnote_search_memories","arguments":{"platform":"mobile"}}`,
+		`{"name":"patchxnote_get_memory","arguments":{"platform":"mobile"}}`,
 	}
 	for _, call := range tests {
 		server := NewServer(Options{
@@ -251,7 +251,7 @@ func TestToolAPIErrorMappingAndOutputLimit(t *testing.T) {
 		}},
 		MemoryCache: cache.NewMemoryIndex(),
 	})
-	responses := serveCustomForTest(t, forbiddenServer, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchnote_get_quota_summary","arguments":{}}}`)
+	responses := serveCustomForTest(t, forbiddenServer, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchxnote_get_quota_summary","arguments":{}}}`)
 	assertRPCError(t, responses[0], codeToolError, "permission_denied")
 
 	largeServer := NewServer(Options{
@@ -259,30 +259,30 @@ func TestToolAPIErrorMappingAndOutputLimit(t *testing.T) {
 		API:           &fakeToolAPI{largeCards: true},
 		MemoryCache:   cache.NewMemoryIndex(),
 	})
-	responses = serveCustomForTest(t, largeServer, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchnote_list_recorder_cards","arguments":{}}}`)
+	responses = serveCustomForTest(t, largeServer, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"patchxnote_list_recorder_cards","arguments":{}}}`)
 	assertRPCError(t, responses[0], codeToolError, "output_too_large")
 }
 
 func validToolCalls() []string {
 	return []string{
-		`{"name":"patchnote_get_current_user","arguments":{}}`,
-		`{"name":"patchnote_list_recorder_cards","arguments":{}}`,
-		`{"name":"patchnote_get_quota_summary","arguments":{}}`,
-		`{"name":"patchnote_get_model_usage_summary","arguments":{}}`,
-		`{"name":"patchnote_list_memories","arguments":{"platform":"mobile"}}`,
-		`{"name":"patchnote_search_memories","arguments":{"platform":"mobile","query":"event"}}`,
-		`{"name":"patchnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}`,
+		`{"name":"patchxnote_get_current_user","arguments":{}}`,
+		`{"name":"patchxnote_list_recorder_cards","arguments":{}}`,
+		`{"name":"patchxnote_get_quota_summary","arguments":{}}`,
+		`{"name":"patchxnote_get_model_usage_summary","arguments":{}}`,
+		`{"name":"patchxnote_list_memories","arguments":{"platform":"mobile"}}`,
+		`{"name":"patchxnote_search_memories","arguments":{"platform":"mobile","query":"event"}}`,
+		`{"name":"patchxnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}`,
 	}
 }
 
 func apiBackedToolCalls() []string {
 	return []string{
-		`{"name":"patchnote_get_current_user","arguments":{}}`,
-		`{"name":"patchnote_list_recorder_cards","arguments":{}}`,
-		`{"name":"patchnote_get_quota_summary","arguments":{}}`,
-		`{"name":"patchnote_get_model_usage_summary","arguments":{}}`,
-		`{"name":"patchnote_list_memories","arguments":{"platform":"mobile"}}`,
-		`{"name":"patchnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}`,
+		`{"name":"patchxnote_get_current_user","arguments":{}}`,
+		`{"name":"patchxnote_list_recorder_cards","arguments":{}}`,
+		`{"name":"patchxnote_get_quota_summary","arguments":{}}`,
+		`{"name":"patchxnote_get_model_usage_summary","arguments":{}}`,
+		`{"name":"patchxnote_list_memories","arguments":{"platform":"mobile"}}`,
+		`{"name":"patchxnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}`,
 	}
 }
 

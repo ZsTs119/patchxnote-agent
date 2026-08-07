@@ -9,8 +9,8 @@ import (
 )
 
 func TestNativeStoreIntegration(t *testing.T) {
-	if os.Getenv("PATCHNOTE_KEYCHAIN_INTEGRATION") != "1" {
-		t.Skip("set PATCHNOTE_KEYCHAIN_INTEGRATION=1 to exercise the OS-native keychain")
+	if os.Getenv("PATCHXNOTE_KEYCHAIN_INTEGRATION") != "1" {
+		t.Skip("set PATCHXNOTE_KEYCHAIN_INTEGRATION=1 to exercise the OS-native keychain")
 	}
 
 	ctx := context.Background()

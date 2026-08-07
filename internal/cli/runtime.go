@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/api"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/auth"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/config"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/keychain"
-	"codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version"
+	"github.com/ZsTs119/patchxnote-agent/internal/api"
+	"github.com/ZsTs119/patchxnote-agent/internal/auth"
+	"github.com/ZsTs119/patchxnote-agent/internal/config"
+	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/version"
 )
 
 type agentAPI interface {
@@ -76,7 +76,7 @@ func defaultAPIFactory(cfg config.Config) (agentAPI, error) {
 	}
 	client, err := api.New(api.Options{
 		BaseURL:   cfg.Server.BaseURL,
-		UserAgent: fmt.Sprintf("patchnote-agent/%s", version.Version),
+		UserAgent: fmt.Sprintf("patchxnote-agent/%s", version.Version),
 	})
 	if err != nil {
 		return nil, err

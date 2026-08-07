@@ -1,11 +1,11 @@
 version: 2
 
-project_name: patchnote
+project_name: patchxnote
 
 builds:
-  - id: patchnote
-    main: ./cmd/patchnote
-    binary: patchnote
+  - id: patchxnote
+    main: ./cmd/patchxnote
+    binary: patchxnote
     env:
       - CGO_ENABLED=0
     goos:
@@ -17,14 +17,14 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version.Version={{ .Version }}
-      - -X codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version.Commit={{ .Commit }}
-      - -X codeup.aliyun.com/689c25f21da8ac0447bef869/patchnote-agent/internal/version.Date={{ .Date }}
+      - -X github.com/ZsTs119/patchxnote-agent/internal/version.Version={{ .Version }}
+      - -X github.com/ZsTs119/patchxnote-agent/internal/version.Commit={{ .Commit }}
+      - -X github.com/ZsTs119/patchxnote-agent/internal/version.Date={{ .Date }}
 
 archives:
   - id: direct-binaries
     ids:
-      - patchnote
+      - patchxnote
     formats:
       - binary
     name_template: >-
