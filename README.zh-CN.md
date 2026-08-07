@@ -6,6 +6,8 @@
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchnote-agent)](https://github.com/ZsTs119/patchnote-agent/releases)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
+![PatchNote Agent 封面](./docs/assets/patchnote-agent-cover.png)
+
 PatchNote Agent 是 PatchNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。
 
 Agent V1 明确保持只读。它只调用专用的 `/v1/agent/**` PatchNote 服务端 API，不暴露 App/PC 的硬件写入流程、原始音频、完整转写、SK、完整 MAC、供应商 payload、额度购买流程或 Admin API。
@@ -51,6 +53,8 @@ npx -y patchnote-agent@0.1.1 install --print-config
 > `0.1.1` 是 beta 构建。默认服务端是 PatchNote 测试 API，系统原生安全钥匙串适配仍在补齐中。
 
 ## 快速开始
+
+![三步接入 PatchNote Agent](./docs/assets/patchnote-agent-quickstart.png)
 
 安装 npm 包。它会从 GitHub Releases 下载匹配平台的 `patchnote` 二进制，校验 `checksums.txt`，并安装到用户可写目录。
 
@@ -103,6 +107,8 @@ patchnote login
 
 ## MCP 配置
 
+![PatchNote Agent 架构](./docs/assets/patchnote-agent-architecture.png)
+
 使用安装器 `--print-config` 打印的配置。典型配置如下：
 
 ```json
@@ -122,6 +128,8 @@ patchnote login
 MCP 配置中不会保存 access token 或 refresh token。beta 阶段的 `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` 是显式开关，因为系统原生安全钥匙串适配还没有发布。
 
 ## MCP 工具
+
+![PatchNote Agent 工具能力](./docs/assets/patchnote-agent-tools.png)
 
 | 工具 | 用途 |
 | --- | --- |
@@ -171,6 +179,8 @@ npx -y patchnote-agent@0.1.1 uninstall
 ```
 
 ## 安全与风险提示
+
+![PatchNote Agent 安全边界](./docs/assets/patchnote-agent-safety-boundary.png)
 
 PatchNote Agent 会让 AI Agent 访问当前登录 PatchNote 用户的账号元数据。请把 MCP Host 视为受信软件，并注意 prompt、工具调用和日志中可能出现的账号上下文。
 

@@ -27,6 +27,8 @@
 
 - 中英文切换入口：`README.md` 和 `README.zh-CN.md`。
 - 徽章：npm version、GitHub release、security policy。
+- 首屏封面图：`docs/assets/patchnote-agent-cover.png`。
+- 关键视觉素材：quickstart、architecture、tools、safety-boundary，用于解释安装、MCP 架构、工具能力和安全边界。
 - 功能表：明确支持和不支持的边界。
 - 环境要求：Node 版本、系统、账号、MCP Host。
 - Quickstart：安装、登录、MCP 启动、切换 base URL。
@@ -49,5 +51,6 @@
 1. `README.md`
 2. `README.zh-CN.md`
 3. `packages/npm/README.md`
-4. `docs/plans/2026-08-06-agent-v1-mvp.md`
-5. 本文件
+4. `docs/assets/patchnote-agent-*.png`
+5. `docs/plans/2026-08-06-agent-v1-mvp.md`
+6. 本文件

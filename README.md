@@ -6,6 +6,8 @@
 [![GitHub release](https://img.shields.io/github/v/release/ZsTs119/patchnote-agent)](https://github.com/ZsTs119/patchnote-agent/releases)
 [![Security policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
 
+![PatchNote Agent hero](./docs/assets/patchnote-agent-cover.png)
+
 PatchNote Agent is the local CLI and MCP bridge for PatchNote. It lets desktop AI agents read safe PatchNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata.
 
 Agent V1 is deliberately read-only. It uses dedicated `/v1/agent/**` PatchNote server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, provider payloads, quota purchase flows, or Admin APIs.
@@ -51,6 +53,8 @@ npx -y patchnote-agent@0.1.1 install --print-config
 > `0.1.1` is a beta build. The default server is the PatchNote test API, and OS-native keychain adapters are still pending.
 
 ## Quickstart
+
+![PatchNote Agent quickstart](./docs/assets/patchnote-agent-quickstart.png)
 
 Install the npm wrapper. It downloads the matching `patchnote` binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
@@ -103,6 +107,8 @@ patchnote login
 
 ## MCP Configuration
 
+![PatchNote Agent architecture](./docs/assets/patchnote-agent-architecture.png)
+
 Use the `--print-config` output from the installer. A typical config looks like this:
 
 ```json
@@ -122,6 +128,8 @@ Use the `--print-config` output from the installer. A typical config looks like 
 MCP config never contains access tokens or refresh tokens. The beta `PATCHNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` setting is explicit because OS keychain adapters are not shipped yet.
 
 ## MCP Tools
+
+![PatchNote Agent tools](./docs/assets/patchnote-agent-tools.png)
 
 | Tool | Purpose |
 | --- | --- |
@@ -171,6 +179,8 @@ npx -y patchnote-agent@0.1.1 uninstall
 ```
 
 ## Security And Risk Notice
+
+![PatchNote Agent safety boundary](./docs/assets/patchnote-agent-safety-boundary.png)
 
 PatchNote Agent gives an AI agent access to account metadata that belongs to the logged-in PatchNote user. Treat the MCP host as trusted software and review any prompts, tool calls, or logs that may reveal private account context.
 
