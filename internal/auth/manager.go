@@ -13,15 +13,16 @@ type Manager struct {
 }
 
 type Status struct {
-	Authenticated        bool      `json:"authenticated"`
-	Profile              string    `json:"profile"`
-	AccountID            string    `json:"account_id,omitempty"`
-	AccountStatus        string    `json:"account_status,omitempty"`
-	RegistrationPlatform string    `json:"registration_platform,omitempty"`
-	PhoneMasked          string    `json:"phone_masked,omitempty"`
-	StateVersion         int64     `json:"state_version,omitempty"`
-	AccessTokenExpiresAt time.Time `json:"access_token_expires_at,omitempty"`
-	Scopes               []string  `json:"scopes,omitempty"`
+	Authenticated         bool      `json:"authenticated"`
+	Profile               string    `json:"profile"`
+	AccountID             string    `json:"account_id,omitempty"`
+	AccountStatus         string    `json:"account_status,omitempty"`
+	RegistrationPlatform  string    `json:"registration_platform,omitempty"`
+	PhoneMasked           string    `json:"phone_masked,omitempty"`
+	StateVersion          int64     `json:"state_version,omitempty"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at,omitempty"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at,omitempty"`
+	Scopes                []string  `json:"scopes,omitempty"`
 }
 
 func NewManager(store keychain.Store, profile string) *Manager {
@@ -72,6 +73,7 @@ func (m *Manager) Status(ctx context.Context) (Status, error) {
 	status.Authenticated = true
 	status.AccountID = credential.AccountID
 	status.AccessTokenExpiresAt = credential.AccessTokenExpiresAt
+	status.RefreshTokenExpiresAt = credential.RefreshTokenExpiresAt
 	status.Scopes = append([]string(nil), credential.Scopes...)
 	return status, nil
 }

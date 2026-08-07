@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ZsTs119/patchxnote-agent/internal/auth"
 	"github.com/ZsTs119/patchxnote-agent/internal/config"
@@ -79,6 +80,52 @@ func TestAuthStatusDoesNotPrintCredentialMaterial(t *testing.T) {
 		if strings.Contains(stdout, disallowed) {
 			t.Fatalf("credential material leaked in auth status output: %q", disallowed)
 		}
+	}
+}
+
+func TestAuthStatusJSONRefreshesExpiredCredentialMetadata(t *testing.T) {
+	before := time.Now()
+	store := keychain.NewMemoryStore()
+	if err := store.Put(context.Background(), "default", keychain.Credential{
+		AccountID:             "acct_cached",
+		AccessToken:           strings.Repeat("x", 32),
+		RefreshToken:          strings.Repeat("y", 43),
+		AccessTokenExpiresAt:  before.Add(-time.Minute),
+		RefreshTokenExpiresAt: before.Add(24 * time.Hour),
+		Scopes:                []string{"agent:account.read"},
+	}); err != nil {
+		t.Fatalf("seed credential: %v", err)
+	}
+	fakeAPI := &fakeAgentAPI{}
+
+	stdout, stderr, err := executeForTestWithDeps(t, Deps{
+		CredentialStore: store,
+		APIFactory: func(cfg config.Config) (agentAPI, error) {
+			return fakeAPI, nil
+		},
+	}, "--output", "json", "auth", "status")
+	if err != nil {
+		t.Fatalf("auth status json: %v", err)
+	}
+	if stderr != "" {
+		t.Fatalf("expected no stderr, got %q", stderr)
+	}
+
+	var got auth.Status
+	if err := json.Unmarshal([]byte(stdout), &got); err != nil {
+		t.Fatalf("expected auth status JSON: %v\n%s", err, stdout)
+	}
+	if fakeAPI.refreshCalls != 1 {
+		t.Fatalf("expected one refresh call, got %d", fakeAPI.refreshCalls)
+	}
+	if !got.Authenticated || got.AccountID != "acct_fixture" {
+		t.Fatalf("unexpected auth status: %+v", got)
+	}
+	if !got.AccessTokenExpiresAt.After(before) {
+		t.Fatalf("expected refreshed access expiry after %s, got %s", before, got.AccessTokenExpiresAt)
+	}
+	if !got.RefreshTokenExpiresAt.After(before.Add(29 * 24 * time.Hour)) {
+		t.Fatalf("expected refreshed refresh expiry near 30 days, got %s", got.RefreshTokenExpiresAt)
 	}
 }
 

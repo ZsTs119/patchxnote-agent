@@ -47,8 +47,10 @@ func TestAgentOTPMethods(t *testing.T) {
 				t.Fatalf("unexpected verify request: %+v", request)
 			}
 			writeJSONResponse(t, w, http.StatusOK, AgentSessionResponse{
-				AccessToken:            strings.Repeat("a", 32),
-				AccessExpiresInSeconds: 3600,
+				AccessToken:             strings.Repeat("a", 32),
+				AccessExpiresInSeconds:  3600,
+				RefreshToken:            strings.Repeat("r", 43),
+				RefreshExpiresInSeconds: 2592000,
 				Account: CurrentAccount{
 					ID:                   "acct_fixture",
 					Status:               "active",
@@ -84,11 +86,56 @@ func TestAgentOTPMethods(t *testing.T) {
 	if err != nil {
 		t.Fatalf("verify otp: %v", err)
 	}
-	if session.Account.ID != "acct_fixture" || len(session.Scopes) != 1 {
-		t.Fatalf("unexpected session response: %+v", session)
+	if session.Account.ID != "acct_fixture" || len(session.Scopes) != 1 || session.RefreshToken == "" {
+		t.Fatalf("unexpected session account=%q scopes=%d has_refresh=%v", session.Account.ID, len(session.Scopes), session.RefreshToken != "")
 	}
 	if requestAttempts != 1 || verifyAttempts != 1 {
 		t.Fatalf("unexpected attempts request=%d verify=%d", requestAttempts, verifyAttempts)
+	}
+}
+
+func TestRefreshAgentSession(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/agent/auth/refresh" || r.Method != http.MethodPost {
+			t.Fatalf("unexpected refresh request %s %s", r.Method, r.URL.Path)
+		}
+		if r.Header.Get("Idempotency-Key") != "idem_refresh_fixture" {
+			t.Fatalf("missing refresh idempotency key: %s", r.Header.Get("Idempotency-Key"))
+		}
+		if r.Header.Get("Authorization") != "" {
+			t.Fatalf("refresh request must not send authorization")
+		}
+		var request AgentRefreshRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatalf("decode refresh request: %v", err)
+		}
+		if request.RefreshToken != strings.Repeat("r", 43) {
+			t.Fatal("unexpected refresh token body")
+		}
+		writeJSONResponse(t, w, http.StatusOK, AgentSessionResponse{
+			AccessToken:             strings.Repeat("a", 32),
+			AccessExpiresInSeconds:  900,
+			RefreshToken:            strings.Repeat("n", 43),
+			RefreshExpiresInSeconds: 2592000,
+			Account: CurrentAccount{
+				ID:                   "acct_fixture",
+				Status:               "active",
+				RegistrationPlatform: "mobile",
+				PhoneMasked:          "+86*******0000",
+				StateVersion:         2,
+			},
+			Scopes: []string{"agent:account.read"},
+		})
+	}))
+	defer server.Close()
+
+	client := newTestClient(t, server.URL, 0)
+	session, err := client.RefreshAgentSession(context.Background(), AgentRefreshRequest{RefreshToken: strings.Repeat("r", 43)}, "idem_refresh_fixture")
+	if err != nil {
+		t.Fatalf("refresh: %v", err)
+	}
+	if session.Account.ID != "acct_fixture" || session.RefreshToken != strings.Repeat("n", 43) {
+		t.Fatalf("unexpected refresh account=%q refresh_rotated=%v", session.Account.ID, session.RefreshToken == strings.Repeat("n", 43))
 	}
 }
 

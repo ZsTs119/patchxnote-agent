@@ -46,11 +46,12 @@ type NativeStore struct {
 }
 
 type nativeMetadata struct {
-	AccountID            string   `json:"account_id,omitempty"`
-	AccessTokenExpiresAt string   `json:"access_token_expires_at,omitempty"`
-	Scopes               []string `json:"scopes,omitempty"`
-	HasAccessToken       bool     `json:"has_access_token,omitempty"`
-	HasRefreshToken      bool     `json:"has_refresh_token,omitempty"`
+	AccountID             string   `json:"account_id,omitempty"`
+	AccessTokenExpiresAt  string   `json:"access_token_expires_at,omitempty"`
+	RefreshTokenExpiresAt string   `json:"refresh_token_expires_at,omitempty"`
+	Scopes                []string `json:"scopes,omitempty"`
+	HasAccessToken        bool     `json:"has_access_token,omitempty"`
+	HasRefreshToken       bool     `json:"has_refresh_token,omitempty"`
 }
 
 func NewNativeStore() *NativeStore {
@@ -112,6 +113,13 @@ func (s *NativeStore) getFromService(service string, profile string) (Credential
 		}
 		credential.AccessTokenExpiresAt = expiresAt
 	}
+	if metadata.RefreshTokenExpiresAt != "" {
+		expiresAt, err := parseNativeTime(metadata.RefreshTokenExpiresAt)
+		if err != nil {
+			return Credential{}, err
+		}
+		credential.RefreshTokenExpiresAt = expiresAt
+	}
 
 	if metadata.HasAccessToken {
 		accessToken, err := s.backend.Get(service, nativeAccount(profile, nativeAccessKey))
@@ -149,11 +157,12 @@ func (s *NativeStore) Put(ctx context.Context, profile string, credential Creden
 	}
 
 	metadata := nativeMetadata{
-		AccountID:            credential.AccountID,
-		Scopes:               append([]string(nil), credential.Scopes...),
-		HasAccessToken:       credential.AccessToken != "",
-		HasRefreshToken:      credential.RefreshToken != "",
-		AccessTokenExpiresAt: formatNativeTime(credential),
+		AccountID:             credential.AccountID,
+		Scopes:                append([]string(nil), credential.Scopes...),
+		HasAccessToken:        credential.AccessToken != "",
+		HasRefreshToken:       credential.RefreshToken != "",
+		AccessTokenExpiresAt:  formatNativeTime(credential.AccessTokenExpiresAt),
+		RefreshTokenExpiresAt: formatNativeTime(credential.RefreshTokenExpiresAt),
 	}
 	body, err := json.Marshal(metadata)
 	if err != nil {
@@ -226,11 +235,11 @@ func nativeAccount(profile string, field string) string {
 	return "profile:" + profile + ":" + field
 }
 
-func formatNativeTime(credential Credential) string {
-	if credential.AccessTokenExpiresAt.IsZero() {
+func formatNativeTime(value time.Time) string {
+	if value.IsZero() {
 		return ""
 	}
-	return credential.AccessTokenExpiresAt.UTC().Format(time.RFC3339Nano)
+	return value.UTC().Format(time.RFC3339Nano)
 }
 
 func parseNativeTime(value string) (time.Time, error) {

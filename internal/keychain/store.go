@@ -13,11 +13,12 @@ var (
 )
 
 type Credential struct {
-	AccountID            string    `json:"account_id"`
-	AccessToken          string    `json:"access_token,omitempty"`
-	RefreshToken         string    `json:"refresh_token,omitempty"`
-	AccessTokenExpiresAt time.Time `json:"access_token_expires_at,omitempty"`
-	Scopes               []string  `json:"scopes,omitempty"`
+	AccountID             string    `json:"account_id"`
+	AccessToken           string    `json:"access_token,omitempty"`
+	RefreshToken          string    `json:"refresh_token,omitempty"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at,omitempty"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at,omitempty"`
+	Scopes                []string  `json:"scopes,omitempty"`
 }
 
 type Store interface {

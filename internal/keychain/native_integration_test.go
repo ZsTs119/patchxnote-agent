@@ -37,7 +37,8 @@ func TestNativeStoreIntegration(t *testing.T) {
 		t.Fatalf("get native keychain credential: %v", err)
 	}
 	if got.AccountID != credential.AccountID || got.AccessToken != credential.AccessToken || got.RefreshToken != credential.RefreshToken {
-		t.Fatalf("unexpected native keychain credential metadata: %+v", got)
+		t.Fatalf("unexpected native keychain credential account=%q has_access=%v has_refresh=%v",
+			got.AccountID, got.AccessToken != "", got.RefreshToken != "")
 	}
 	if len(got.Scopes) != len(credential.Scopes) || got.Scopes[0] != credential.Scopes[0] {
 		t.Fatalf("unexpected native keychain scopes: %+v", got.Scopes)

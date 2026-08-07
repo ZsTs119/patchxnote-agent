@@ -16,6 +16,7 @@ import (
 type fakeAgentAPI struct {
 	requestPhone string
 	verifyCode   string
+	refreshCalls int
 	currentUser  api.CurrentAccount
 	logoutErr    error
 	logoutCalled bool
@@ -45,11 +46,30 @@ func (f *fakeAgentAPI) VerifyAgentOTP(ctx context.Context, request api.AgentOTPV
 		return api.AgentSessionResponse{}, errors.New("unexpected verify idempotency key")
 	}
 	return api.AgentSessionResponse{
-		AccessToken:            strings.Repeat("f", 32),
-		AccessExpiresInSeconds: 3600,
-		RefreshToken:           strings.Repeat("r", 32),
-		Account:                currentFixtureAccount(),
-		Scopes:                 []string{"agent:account.read", "agent:hardware.read"},
+		AccessToken:             strings.Repeat("f", 32),
+		AccessExpiresInSeconds:  3600,
+		RefreshToken:            strings.Repeat("r", 43),
+		RefreshExpiresInSeconds: 2592000,
+		Account:                 currentFixtureAccount(),
+		Scopes:                  []string{"agent:account.read", "agent:hardware.read"},
+	}, nil
+}
+
+func (f *fakeAgentAPI) RefreshAgentSession(ctx context.Context, request api.AgentRefreshRequest, idempotencyKey string) (api.AgentSessionResponse, error) {
+	f.refreshCalls++
+	if request.RefreshToken == "" {
+		return api.AgentSessionResponse{}, errors.New("missing refresh token")
+	}
+	if !strings.HasPrefix(idempotencyKey, "idem_") {
+		return api.AgentSessionResponse{}, errors.New("unexpected refresh idempotency key")
+	}
+	return api.AgentSessionResponse{
+		AccessToken:             strings.Repeat("n", 32),
+		AccessExpiresInSeconds:  900,
+		RefreshToken:            strings.Repeat("m", 43),
+		RefreshExpiresInSeconds: 2592000,
+		Account:                 currentFixtureAccount(),
+		Scopes:                  []string{"agent:account.read", "agent:hardware.read"},
 	}, nil
 }
 
@@ -107,7 +127,7 @@ func TestLoginWithFlagsStoresCredentialAndDoesNotLeakSensitiveInput(t *testing.T
 		"+86*******0000",
 		"000000",
 		strings.Repeat("f", 32),
-		strings.Repeat("r", 32),
+		strings.Repeat("r", 43),
 	} {
 		if strings.Contains(combined, disallowed) {
 			t.Fatalf("login output leaked sensitive value %q\nstdout:\n%s\nstderr:\n%s", disallowed, stdout, stderr)
@@ -119,7 +139,11 @@ func TestLoginWithFlagsStoresCredentialAndDoesNotLeakSensitiveInput(t *testing.T
 		t.Fatalf("stored credential: %v", err)
 	}
 	if credential.AccountID != "acct_fixture" || credential.AccessToken == "" || credential.RefreshToken == "" {
-		t.Fatalf("unexpected stored credential metadata: %+v", credential)
+		t.Fatalf("unexpected stored credential account=%q has_access=%v has_refresh=%v",
+			credential.AccountID, credential.AccessToken != "", credential.RefreshToken != "")
+	}
+	if credential.RefreshTokenExpiresAt.IsZero() {
+		t.Fatal("expected refresh token expiry metadata to be stored")
 	}
 	if fakeAPI.requestPhone != "+86*******0000" || fakeAPI.verifyCode != "000000" {
 		t.Fatalf("fake api did not receive expected inputs")
@@ -154,7 +178,7 @@ func TestAuthStatusJSONUsesCurrentUserProjection(t *testing.T) {
 	if err := store.Put(context.Background(), "default", keychain.Credential{
 		AccountID:    "acct_cached",
 		AccessToken:  strings.Repeat("s", 32),
-		RefreshToken: strings.Repeat("t", 32),
+		RefreshToken: strings.Repeat("t", 43),
 	}); err != nil {
 		t.Fatalf("seed credential: %v", err)
 	}
@@ -186,7 +210,7 @@ func TestLogoutRemovesLocalCredentialWhenServerLogoutFails(t *testing.T) {
 	if err := store.Put(context.Background(), "default", keychain.Credential{
 		AccountID:    "acct_fixture",
 		AccessToken:  strings.Repeat("u", 32),
-		RefreshToken: strings.Repeat("v", 32),
+		RefreshToken: strings.Repeat("v", 43),
 	}); err != nil {
 		t.Fatalf("seed credential: %v", err)
 	}

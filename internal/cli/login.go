@@ -88,11 +88,12 @@ func newLoginCommand(state *rootState) *cobra.Command {
 			}
 
 			credential := keychain.Credential{
-				AccountID:            session.Account.ID,
-				AccessToken:          session.AccessToken,
-				RefreshToken:         session.RefreshToken,
-				AccessTokenExpiresAt: time.Now().Add(time.Duration(session.AccessExpiresInSeconds) * time.Second),
-				Scopes:               session.Scopes,
+				AccountID:             session.Account.ID,
+				AccessToken:           session.AccessToken,
+				RefreshToken:          session.RefreshToken,
+				AccessTokenExpiresAt:  time.Now().Add(time.Duration(session.AccessExpiresInSeconds) * time.Second),
+				RefreshTokenExpiresAt: time.Now().Add(time.Duration(session.RefreshExpiresInSeconds) * time.Second),
+				Scopes:                session.Scopes,
 			}
 			if err := runtime.Auth.Save(cmd.Context(), credential); err != nil {
 				return err

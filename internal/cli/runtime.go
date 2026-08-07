@@ -16,6 +16,7 @@ import (
 type agentAPI interface {
 	RequestAgentOTP(ctx context.Context, request api.AgentOTPRequest, idempotencyKey string) (api.OTPRequestAccepted, error)
 	VerifyAgentOTP(ctx context.Context, request api.AgentOTPVerificationRequest, idempotencyKey string) (api.AgentSessionResponse, error)
+	RefreshAgentSession(ctx context.Context, request api.AgentRefreshRequest, idempotencyKey string) (api.AgentSessionResponse, error)
 	CurrentUser(ctx context.Context, accessToken string) (api.CurrentAccount, error)
 	ListRecorderCards(ctx context.Context, accessToken string) (api.AgentRecorderCardPage, error)
 	GetQuotaSummary(ctx context.Context, accessToken string) (api.AgentQuotaSummary, error)
@@ -28,9 +29,10 @@ type agentAPI interface {
 type apiFactory func(config.Config) (agentAPI, error)
 
 type runtimeState struct {
-	Config config.Config
-	Auth   *auth.Manager
-	API    agentAPI
+	Config      config.Config
+	Auth        *auth.Manager
+	Credentials *sessionCredentialProvider
+	API         agentAPI
 }
 
 func loadRuntime(state *rootState) (runtimeState, error) {
@@ -56,10 +58,12 @@ func loadRuntime(state *rootState) (runtimeState, error) {
 		return runtimeState{}, err
 	}
 
+	authManager := auth.NewManager(store, cfg.Profile)
 	return runtimeState{
-		Config: cfg,
-		Auth:   auth.NewManager(store, cfg.Profile),
-		API:    agentClient,
+		Config:      cfg,
+		Auth:        authManager,
+		Credentials: newSessionCredentialProvider(authManager, agentClient, cfg),
+		API:         agentClient,
 	}, nil
 }
 

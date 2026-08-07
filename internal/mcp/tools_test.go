@@ -197,7 +197,7 @@ func TestEveryV1ToolChecksRequiredScope(t *testing.T) {
 		if err := store.Put(context.Background(), "default", keychain.Credential{
 			AccountID:    "acct_fixture",
 			AccessToken:  strings.Repeat("z", 32),
-			RefreshToken: strings.Repeat("y", 32),
+			RefreshToken: strings.Repeat("y", 43),
 			Scopes:       []string{"agent:account.read"},
 		}); err != nil {
 			t.Fatalf("seed credential: %v", err)
@@ -292,7 +292,7 @@ func authenticatedManager(t *testing.T) *auth.Manager {
 	if err := store.Put(context.Background(), "default", keychain.Credential{
 		AccountID:    "acct_fixture",
 		AccessToken:  strings.Repeat("z", 32),
-		RefreshToken: strings.Repeat("y", 32),
+		RefreshToken: strings.Repeat("y", 43),
 		Scopes: []string{
 			"agent:account.read",
 			"agent:hardware.read",

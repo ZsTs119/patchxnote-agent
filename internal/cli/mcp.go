@@ -29,7 +29,7 @@ func newMCPServeCommand(state *rootState) *cobra.Command {
 			}
 			server := mcp.NewServer(mcp.Options{
 				Authenticator: runtime.Auth,
-				Credentials:   runtime.Auth,
+				Credentials:   runtime.Credentials,
 				API:           runtime.API,
 				MemoryCache:   cache.NewMemoryIndex(),
 				Version:       version.Version,

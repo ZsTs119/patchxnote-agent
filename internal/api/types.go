@@ -13,6 +13,10 @@ type AgentOTPVerificationRequest struct {
 	ClientInstance string `json:"client_instance"`
 }
 
+type AgentRefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 type OTPRequestAccepted struct {
 	RequestID       string `json:"request_id"`
 	Status          string `json:"status"`

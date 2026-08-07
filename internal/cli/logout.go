@@ -17,9 +17,10 @@ func newLogoutCommand(state *rootState) *cobra.Command {
 				return err
 			}
 
-			credential, ok, err := runtime.Auth.Credential(cmd.Context())
+			credential, ok, err := runtime.Credentials.Credential(cmd.Context())
 			if err != nil {
-				return err
+				fmt.Fprintln(cmd.ErrOrStderr(), "warning: server logout failed; local credentials will still be removed")
+				ok = false
 			}
 			if ok && runtime.API != nil && credential.AccessToken != "" {
 				if err := runtime.API.Logout(cmd.Context(), credential.AccessToken); err != nil {

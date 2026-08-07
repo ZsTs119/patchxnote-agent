@@ -37,13 +37,14 @@ npx -y patchxnote-agent install --print-config
 | Login | Phone OTP login creates an independent Agent session, not a mobile/desktop installation. |
 | Data access | Reads bounded account, recorder-card, quota, usage, and structured-result metadata projections. |
 | Safety boundary | Read-only, masked, platform-scoped, and routed through dedicated Agent server endpoints. |
-| Package status | Public beta `0.2.2`, defaulting to the PatchXNote public beta API. |
+| Package status | Public beta `0.2.3`, defaulting to the PatchXNote public beta API. |
 
 ## Features
 
-| Capability | Available in `0.2.2` | Notes |
+| Capability | Available in `0.2.3` | Notes |
 | --- | --- | --- |
 | Phone OTP Agent login | Yes | Uses Agent-specific server auth, not mobile/desktop installation slots. |
+| Agent session refresh | Yes | Automatically rotates Agent access and refresh tokens from the local keychain. |
 | Local MCP server | Yes | `patchxnote mcp serve` over stdio. |
 | Current account projection | Yes | Status, masked phone, registration platform, state version. |
 | Recorder-card list | Yes | Read-only projection with masked identifiers. |
@@ -62,7 +63,7 @@ npx -y patchxnote-agent install --print-config
 - A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.2.2` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
+> `0.2.3` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
@@ -83,7 +84,7 @@ The installer prints:
 To pin the current public beta version for troubleshooting or rollback:
 
 ```sh
-npx -y patchxnote-agent@0.2.2 install --print-config
+npx -y patchxnote-agent@0.2.3 install --print-config
 ```
 
 The public beta build defaults to the PatchXNote public beta API:
@@ -186,9 +187,9 @@ Useful global flags:
 The npm package itself is only an installer/update wrapper:
 
 ```sh
-npx -y patchxnote-agent@0.2.2 install
-npx -y patchxnote-agent@0.2.2 update
-npx -y patchxnote-agent@0.2.2 uninstall
+npx -y patchxnote-agent@0.2.3 install
+npx -y patchxnote-agent@0.2.3 update
+npx -y patchxnote-agent@0.2.3 uninstall
 ```
 
 ## Security And Risk Notice
@@ -211,7 +212,7 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.2.2` is a beta release.
+`0.2.3` is a beta release.
 
 - The default server points to the PatchXNote public beta API.
 - Linux headless environments may not have Secret Service available; use the explicit development file-store fallback only for local smoke.
@@ -233,12 +234,12 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 ## Verify The Install
 
 ```sh
-npm view patchxnote-agent@0.2.2 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.2 install --dry-run --print-config
+npm view patchxnote-agent@0.2.3 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.3 install --dry-run --print-config
 patchxnote version
 ```
 
-The release binary should report version `0.2.2` and the commit attached to the `v0.2.2` GitHub Release.
+The release binary should report version `0.2.3` and the commit attached to the `v0.2.3` GitHub Release.
 
 ## Development
 
@@ -265,7 +266,7 @@ The detailed release and documentation maintenance checklist lives in [docs/rele
 
 1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.2.2`.
+3. Push a clean tag, for example `v0.2.3`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`

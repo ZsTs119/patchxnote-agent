@@ -55,12 +55,14 @@ func TestNativeStorePutGetDelete(t *testing.T) {
 	backend := newFakeNativeBackend()
 	store := newNativeStore(backend, "patchxnote-agent-test")
 	expiresAt := time.Date(2026, 8, 7, 12, 30, 0, 123, time.UTC)
+	refreshExpiresAt := expiresAt.Add(30 * 24 * time.Hour)
 	credential := Credential{
-		AccountID:            "acct_test",
-		AccessToken:          strings.Repeat("a", 32),
-		RefreshToken:         strings.Repeat("r", 32),
-		AccessTokenExpiresAt: expiresAt,
-		Scopes:               []string{"agent:account.read", "agent:quota.read"},
+		AccountID:             "acct_test",
+		AccessToken:           strings.Repeat("a", 32),
+		RefreshToken:          strings.Repeat("r", 43),
+		AccessTokenExpiresAt:  expiresAt,
+		RefreshTokenExpiresAt: refreshExpiresAt,
+		Scopes:                []string{"agent:account.read", "agent:quota.read"},
 	}
 
 	if err := store.Put(ctx, "default", credential); err != nil {
@@ -72,10 +74,14 @@ func TestNativeStorePutGetDelete(t *testing.T) {
 		t.Fatalf("get native credential: %v", err)
 	}
 	if got.AccountID != credential.AccountID || got.AccessToken != credential.AccessToken || got.RefreshToken != credential.RefreshToken {
-		t.Fatalf("unexpected credential: %+v", got)
+		t.Fatalf("unexpected credential account=%q has_access=%v has_refresh=%v",
+			got.AccountID, got.AccessToken != "", got.RefreshToken != "")
 	}
 	if !got.AccessTokenExpiresAt.Equal(expiresAt) {
 		t.Fatalf("expected expires_at %s, got %s", expiresAt, got.AccessTokenExpiresAt)
+	}
+	if !got.RefreshTokenExpiresAt.Equal(refreshExpiresAt) {
+		t.Fatalf("expected refresh_expires_at %s, got %s", refreshExpiresAt, got.RefreshTokenExpiresAt)
 	}
 	got.Scopes[0] = "changed"
 	again, err := store.Get(ctx, "default")
@@ -101,7 +107,7 @@ func TestNativeStoreSplitsTokenMaterialFromMetadata(t *testing.T) {
 	credential := Credential{
 		AccountID:    "acct_test",
 		AccessToken:  strings.Repeat("a", 32),
-		RefreshToken: strings.Repeat("r", 32),
+		RefreshToken: strings.Repeat("r", 43),
 		Scopes:       []string{"agent:account.read"},
 	}
 
@@ -128,7 +134,7 @@ func TestNativeStoreReadsAndMigratesLegacyService(t *testing.T) {
 	credential := Credential{
 		AccountID:    "acct_test",
 		AccessToken:  strings.Repeat("a", 32),
-		RefreshToken: strings.Repeat("r", 32),
+		RefreshToken: strings.Repeat("r", 43),
 		Scopes:       []string{"agent:account.read"},
 	}
 	if err := legacyStore.Put(ctx, "default", credential); err != nil {
@@ -141,7 +147,8 @@ func TestNativeStoreReadsAndMigratesLegacyService(t *testing.T) {
 		t.Fatalf("get migrated native credential: %v", err)
 	}
 	if got.AccountID != credential.AccountID || got.AccessToken != credential.AccessToken || got.RefreshToken != credential.RefreshToken {
-		t.Fatalf("unexpected migrated credential: %+v", got)
+		t.Fatalf("unexpected migrated credential account=%q has_access=%v has_refresh=%v",
+			got.AccountID, got.AccessToken != "", got.RefreshToken != "")
 	}
 	if backend.values["patchxnote-agent-test\x00profile:default:metadata"] == "" {
 		t.Fatal("expected legacy credential to be copied into the PatchXNote keychain service")
@@ -155,7 +162,7 @@ func TestNativeStoreDeleteRemovesLegacyService(t *testing.T) {
 	credential := Credential{
 		AccountID:    "acct_test",
 		AccessToken:  strings.Repeat("a", 32),
-		RefreshToken: strings.Repeat("r", 32),
+		RefreshToken: strings.Repeat("r", 43),
 	}
 	if err := newNativeStore(backend, "patchxnote-agent-test").Put(ctx, "default", credential); err != nil {
 		t.Fatalf("put current native credential: %v", err)
@@ -199,7 +206,7 @@ func TestNativeStoreDetectsIncompleteCredential(t *testing.T) {
 	if err := store.Put(ctx, "default", Credential{
 		AccountID:    "acct_test",
 		AccessToken:  strings.Repeat("a", 32),
-		RefreshToken: strings.Repeat("r", 32),
+		RefreshToken: strings.Repeat("r", 43),
 	}); err != nil {
 		t.Fatalf("put native credential: %v", err)
 	}

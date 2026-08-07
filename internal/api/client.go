@@ -95,6 +95,15 @@ func (c *Client) VerifyAgentOTP(ctx context.Context, request AgentOTPVerificatio
 	return response, err
 }
 
+func (c *Client) RefreshAgentSession(ctx context.Context, request AgentRefreshRequest, idempotencyKey string) (AgentSessionResponse, error) {
+	if strings.TrimSpace(idempotencyKey) == "" {
+		return AgentSessionResponse{}, fmt.Errorf("idempotency key is required")
+	}
+	var response AgentSessionResponse
+	err := c.doJSON(ctx, http.MethodPost, "/v1/agent/auth/refresh", nil, "", idempotencyKey, request, &response, false, http.StatusOK)
+	return response, err
+}
+
 func (c *Client) CurrentUser(ctx context.Context, accessToken string) (CurrentAccount, error) {
 	var response CurrentAccount
 	err := c.doJSON(ctx, http.MethodGet, "/v1/agent/me", nil, accessToken, "", nil, &response, true, http.StatusOK)

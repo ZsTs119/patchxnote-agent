@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -32,11 +33,16 @@ func newAuthStatusCommand(state *rootState) *cobra.Command {
 				return err
 			}
 			if status.Authenticated && runtime.API != nil {
-				credential, ok, err := runtime.Auth.Credential(cmd.Context())
+				credential, ok, err := runtime.Credentials.Credential(cmd.Context())
 				if err != nil {
 					return err
 				}
 				if ok && credential.AccessToken != "" {
+					status.AccountID = credential.AccountID
+					status.AccessTokenExpiresAt = credential.AccessTokenExpiresAt
+					status.RefreshTokenExpiresAt = credential.RefreshTokenExpiresAt
+					status.Scopes = append([]string(nil), credential.Scopes...)
+
 					account, err := runtime.API.CurrentUser(cmd.Context(), credential.AccessToken)
 					if err != nil {
 						return err
@@ -46,6 +52,16 @@ func newAuthStatusCommand(state *rootState) *cobra.Command {
 					status.RegistrationPlatform = account.RegistrationPlatform
 					status.PhoneMasked = account.PhoneMasked
 					status.StateVersion = account.StateVersion
+				} else {
+					status.Authenticated = false
+					status.AccountID = ""
+					status.AccountStatus = ""
+					status.RegistrationPlatform = ""
+					status.PhoneMasked = ""
+					status.StateVersion = 0
+					status.AccessTokenExpiresAt = time.Time{}
+					status.RefreshTokenExpiresAt = time.Time{}
+					status.Scopes = nil
 				}
 			}
 
