@@ -5,7 +5,7 @@
 This npm package is the installer wrapper for PatchXNote Agent. It downloads the matching native `patchxnote` CLI binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
 ```sh
-npx -y patchxnote-agent@0.2.0 install --print-config
+npx -y patchxnote-agent@0.2.1 install --print-config
 ```
 
 PatchXNote Agent runs a local stdio MCP server:

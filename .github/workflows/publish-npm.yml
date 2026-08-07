@@ -59,8 +59,6 @@ jobs:
           npm test
           npm pack --dry-run
 
-      - name: npm publish
+      - name: npm publish with Trusted Publishing
         working-directory: packages/npm
         run: npm publish --registry https://registry.npmjs.org --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
