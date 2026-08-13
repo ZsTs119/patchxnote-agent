@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "request_id": "mrun_fixture_trace_1",
+      "platform": "mobile",
+      "api_contract_version": "1.0.0",
+      "task_type": "daily_digest",
+      "state": "completed",
+      "safe_error_code": null,
+      "recording_id": "rec_fixture_1",
+      "business_id": "business-fixture-1",
+      "created_at": "2026-08-13T08:00:00Z",
+      "updated_at": "2026-08-13T08:00:03Z",
+      "completed_at": "2026-08-13T08:00:03Z",
+      "source_text_availability": "available",
+      "field_status": {
+        "client_request_json": "available",
+        "provider_request_json": "available",
+        "provider_response_json": "available",
+        "parsed_result_json": "available",
+        "packaged_result_json": "available",
+        "provider_attempts_json": "available"
+      },
+      "field_bytes": {
+        "client_request_json": 320,
+        "provider_request_json": 128,
+        "provider_response_json": 256,
+        "parsed_result_json": 96,
+        "packaged_result_json": 128,
+        "provider_attempts_json": 2
+      },
+      "memory": {
+        "id": "mem_fixture_1",
+        "platform": "mobile",
+        "object_type": "daily_digest",
+        "client_object_id": "client-memory-1",
+        "revision_id": "rev_fixture_1",
+        "revision": 1,
+        "schema_id": "patchnote.daily-digest",
+        "schema_version": 1,
+        "source_availability": "text_only"
+      }
+    },
+    {
+      "request_id": "mrun_fixture_trace_2",
+      "platform": "mobile",
+      "api_contract_version": "1.0.0",
+      "task_type": "summary_template_draft",
+      "state": "completed",
+      "safe_error_code": null,
+      "created_at": "2026-08-13T07:00:00Z",
+      "updated_at": "2026-08-13T07:00:01Z",
+      "completed_at": "2026-08-13T07:00:01Z",
+      "source_text_availability": "not_applicable",
+      "field_status": {
+        "client_request_json": "missing",
+        "provider_request_json": "available",
+        "provider_response_json": "available",
+        "parsed_result_json": "available",
+        "packaged_result_json": "missing",
+        "provider_attempts_json": "available"
+      },
+      "field_bytes": {
+        "client_request_json": 0,
+        "provider_request_json": 128,
+        "provider_response_json": 256,
+        "parsed_result_json": 96,
+        "packaged_result_json": 0,
+        "provider_attempts_json": 2
+      }
+    }
+  ],
+  "next_cursor": "cursor_trace_page_2"
+}

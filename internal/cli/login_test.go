@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ZsTs119/patchxnote-agent/internal/api"
 	"github.com/ZsTs119/patchxnote-agent/internal/auth"
@@ -20,6 +21,8 @@ type fakeAgentAPI struct {
 	currentUser  api.CurrentAccount
 	delivery     api.AgentDeliveryDocument
 	modelIO      api.AgentModelIOExport
+	tracePage    api.AgentModelIOTracePage
+	traceParams  api.ListModelIOTracesParams
 	logoutErr    error
 	logoutCalled bool
 }
@@ -152,9 +155,39 @@ func (f *fakeAgentAPI) GetModelRunIOTrace(ctx context.Context, accessToken strin
 	}, nil
 }
 
+func (f *fakeAgentAPI) ListModelIOTraces(ctx context.Context, accessToken string, params api.ListModelIOTracesParams) (api.AgentModelIOTracePage, error) {
+	f.traceParams = params
+	if len(f.tracePage.Items) > 0 || f.tracePage.NextCursor != "" {
+		return f.tracePage, nil
+	}
+	return api.AgentModelIOTracePage{Items: []api.AgentModelIOTraceSummary{
+		{
+			RequestID:              "mrun_fixture_trace_1",
+			Platform:               params.Platform,
+			APIContractVersion:     "1.0.0",
+			TaskType:               "daily_digest",
+			State:                  "completed",
+			CreatedAt:              fixedCLITime(),
+			UpdatedAt:              fixedCLITime(),
+			SourceTextAvailability: "available",
+			FieldStatus: api.AgentModelIOFieldStatus{
+				ProviderResponseJSON: "available",
+				ParsedResultJSON:     "available",
+				PackagedResultJSON:   "available",
+			},
+			FieldBytes: api.AgentModelIOFieldBytes{ProviderResponseJSON: 256, ParsedResultJSON: 96, PackagedResultJSON: 128},
+			Memory:     &api.AgentDeliveryMemory{ID: "mem_fixture_1", Platform: params.Platform},
+		},
+	}}, nil
+}
+
 func (f *fakeAgentAPI) Logout(ctx context.Context, accessToken string) error {
 	f.logoutCalled = true
 	return f.logoutErr
+}
+
+func fixedCLITime() time.Time {
+	return time.Date(2026, 8, 13, 8, 0, 0, 0, time.UTC)
 }
 
 func TestLoginWithFlagsStoresCredentialAndDoesNotLeakSensitiveInput(t *testing.T) {

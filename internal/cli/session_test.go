@@ -192,6 +192,10 @@ func (f *refreshErrorAPI) GetModelRunIOTrace(context.Context, string, string, st
 	return api.AgentModelIOExport{}, nil
 }
 
+func (f *refreshErrorAPI) ListModelIOTraces(context.Context, string, api.ListModelIOTracesParams) (api.AgentModelIOTracePage, error) {
+	return api.AgentModelIOTracePage{}, nil
+}
+
 func (f *refreshErrorAPI) Logout(context.Context, string) error {
 	return nil
 }

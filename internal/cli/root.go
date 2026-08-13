@@ -79,6 +79,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 		newLoginCommand(state),
 		newLogoutCommand(state),
 		newMCPCommand(state),
+		newModelIOCommand(state),
 		newVersionCommand(state),
 		newWebhookCommand(state),
 	)

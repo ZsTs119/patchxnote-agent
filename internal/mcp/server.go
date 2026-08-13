@@ -11,7 +11,9 @@ import (
 	"github.com/ZsTs119/patchxnote-agent/internal/api"
 	"github.com/ZsTs119/patchxnote-agent/internal/auth"
 	"github.com/ZsTs119/patchxnote-agent/internal/cache"
+	"github.com/ZsTs119/patchxnote-agent/internal/config"
 	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/webhook"
 )
 
 const (
@@ -27,6 +29,11 @@ type CredentialProvider interface {
 	Credential(ctx context.Context) (keychain.Credential, bool, error)
 }
 
+type RefreshingCredentialProvider interface {
+	CredentialProvider
+	RefreshNow(ctx context.Context) (keychain.Credential, bool, error)
+}
+
 type AgentAPI interface {
 	CurrentUser(ctx context.Context, accessToken string) (api.CurrentAccount, error)
 	ListRecorderCards(ctx context.Context, accessToken string) (api.AgentRecorderCardPage, error)
@@ -34,6 +41,10 @@ type AgentAPI interface {
 	GetModelUsageSummary(ctx context.Context, accessToken string) (api.AgentModelUsageSummary, error)
 	ListMemories(ctx context.Context, accessToken string, params api.ListMemoriesParams) (api.AgentMemoryPage, error)
 	GetMemory(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentMemory, error)
+	GetMemoryDeliveryDocument(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentDeliveryDocument, error)
+	GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentModelIOExport, error)
+	GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (api.AgentModelIOExport, error)
+	ListModelIOTraces(ctx context.Context, accessToken string, params api.ListModelIOTracesParams) (api.AgentModelIOTracePage, error)
 }
 
 type Options struct {
@@ -41,6 +52,8 @@ type Options struct {
 	Credentials   CredentialProvider
 	API           AgentAPI
 	MemoryCache   *cache.MemoryIndex
+	Config        config.Config
+	Secrets       keychain.SecretStore
 	Tools         []Tool
 	Version       string
 }
@@ -50,6 +63,8 @@ type Server struct {
 	credentials   CredentialProvider
 	api           AgentAPI
 	memoryCache   *cache.MemoryIndex
+	config        config.Config
+	secrets       keychain.SecretStore
 	tools         map[string]Tool
 	toolList      []Tool
 	version       string
@@ -65,6 +80,8 @@ func NewServer(options Options) *Server {
 		credentials:   options.Credentials,
 		api:           options.API,
 		memoryCache:   options.MemoryCache,
+		config:        options.Config,
+		secrets:       options.Secrets,
 		tools:         make(map[string]Tool),
 		version:       serverVersion,
 	}
@@ -75,6 +92,12 @@ func NewServer(options Options) *Server {
 	}
 	if server.memoryCache == nil {
 		server.memoryCache = cache.NewMemoryIndex()
+	}
+	if server.config.Profile == "" {
+		server.config.Profile = "default"
+	}
+	if server.secrets == nil {
+		server.secrets = keychain.UnavailableStore{}
 	}
 	tools := options.Tools
 	if len(tools) == 0 {
@@ -226,6 +249,15 @@ func mapToolError(err error) *Error {
 	var apiErr *api.Error
 	if errors.As(err, &apiErr) {
 		return mapAPIError(apiErr)
+	}
+	if errors.Is(err, webhook.ErrTargetNotFound) {
+		return rpcErr(codeToolError, "webhook_target_not_found", "Webhook target was not found")
+	}
+	if errors.Is(err, webhook.ErrWebhookSecretMissing) {
+		return rpcErr(codeToolError, "webhook_secret_missing", "Webhook URL is missing; configure the target again")
+	}
+	if isUserFacingToolError(err) {
+		return rpcErr(codeToolError, "tool_error", err.Error())
 	}
 	return rpcErr(codeInternalError, "internal_error", "internal MCP server error")
 }

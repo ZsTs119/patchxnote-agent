@@ -59,7 +59,7 @@
 - MR20 BLE、本地录音、原始音频、完整转写、声纹、SK
 - 支付、购买额度、每日奖励、Admin
 
-新增能力如果依赖服务端字段，先改 GoServer Agent 只读 projection，再改 CLI/MCP。
+新增能力如果依赖服务端字段，先改 GoServer Agent 只读 projection，再改 CLI/MCP。本地 webhook 配置和手动发送属于 Agent 本机能力，不代表 GoServer 开放写入主流程。
 
 ## 新功能开发流程
 
@@ -73,7 +73,7 @@
 - 是否会影响 App/PC 登录、绑定、解绑、额度、支付、模型执行主流程？
 - 是否需要新增 MCP tool，还是扩展现有 tool 的字段？
 
-V1 公测默认只允许只读能力。写能力必须先有服务端设计和授权矩阵。
+V1 公测的服务端数据访问默认只允许只读能力。写能力必须先有服务端设计和授权矩阵；本地 webhook 目标配置和用户手动触发的外部 webhook 发送按已接受的 MCP webhook 设计单独处理，不能扩大到 App/PC/Admin 主流程。
 
 ### 2. 先锁定服务端合同
 
@@ -95,6 +95,8 @@ V1 公测默认只允许只读能力。写能力必须先有服务端设计和�
 - API client：`internal/api/*.go`
 - webhook 目标、payload、发送器：`internal/webhook/*.go`
 - webhook 文档渲染和模板：`internal/renderdoc/*.go`
+- model IO 字段选择和文件输出：`internal/modelio/*.go`
+- 本地安全文件写入：`internal/localfile/*.go`
 - MCP tools：`internal/mcp/tools.go`
 - 本地缓存/search：`internal/cache/*.go`
 - keychain：`internal/keychain/*.go`
@@ -111,13 +113,23 @@ V1 公测默认只允许只读能力。写能力必须先有服务端设计和�
 - 输出大小上限
 - secret / 敏感字段测试
 
-新增 CLI-only webhook 能力时：
+新增 CLI/MCP webhook 能力时：
 
 - webhook URL 和签名密钥必须只写入 `internal/keychain` 安全存储边界。
 - 普通配置文件只能保存 alias、type、enabled、masked URL、template 等非密信息。
-- 默认不新增 MCP webhook 工具；MCP tool 列表仍应保持 7 个，除非有单独接受的 MCP 写工具设计。
+- MCP webhook 工具必须复用 CLI 的 `internal/webhook`、`internal/renderdoc`、`internal/config` 和 `internal/keychain` 边界，不要另写一套发送或密钥存储逻辑。
+- 当前 MCP tool 列表为 19 个：7 个基础服务端只读工具 + 7 个 webhook 工具 + 1 个 model IO trace 发现工具 + 4 个 model IO 字段工具。改动数量时必须更新 README、npm README、e2e smoke 和本 runbook。
+- MCP webhook configure/remove 是本地配置/钥匙串写入；send 是用户手动触发的外部 HTTP 请求。工具 schema、annotation 和文档都要明确这个副作用。
 - memory-backed webhook 默认只用 `/v1/agent/memories/{memory_id}/delivery-document`，model IO 只能显式导出。
 - 示例和文档只放 fake URL，不写真实机器人地址。
+
+新增 CLI/MCP model IO 字段能力时：
+
+- 字段选择、可用性判断、pretty JSON、文件写入统一放在 `internal/modelio`，CLI/MCP 不各写一套。
+- `internal/modelio` 不应反向依赖 `internal/cli`、`internal/mcp`、`internal/webhook`；通用原子写文件能力放在中立 helper，例如 `internal/localfile`。
+- 单字段工具只返回用户请求的字段，不夹带 client request、provider request、provider attempts 或其他 model IO 字段。
+- 大字段必须支持写入显式本地 `out` 文件；MCP stdout 仍只能是 JSON-RPC。
+- `patchxnote webhook export-model-io` 保持兼容，`patchxnote model-io export` 是推荐完整导出命令。
 
 ## 本地验证门禁
 
@@ -127,6 +139,8 @@ V1 公测默认只允许只读能力。写能力必须先有服务端设计和�
 go test ./...
 scripts/e2e/mvp-smoke.sh
 ```
+
+改动 MCP webhook 或 model IO 工具时，还要确认 `tools/list` 为预期工具数，并至少覆盖 webhook configure/list/templates/send/remove、model IO list、source/provider/parsed/packaged 字段；涉及真实发版前需做一次真实安装后的本地 MCP smoke。
 
 npm 安装壳变更时还要跑：
 

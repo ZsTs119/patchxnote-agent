@@ -84,4 +84,12 @@ func TestMaskWebhookURL(t *testing.T) {
 	if !strings.Contains(masked, "open.feishu.cn") || !strings.Contains(masked, "secret=%2A%2A%2A") {
 		t.Fatalf("unexpected masked URL: %s", masked)
 	}
+
+	generic := MaskWebhookURL("https://example.test/webhook/generic")
+	if strings.Contains(generic, "/webhook/generic") {
+		t.Fatalf("masked generic URL leaked full path: %s", generic)
+	}
+	if !strings.Contains(generic, "example.test") || !strings.Contains(generic, "/webhook/%2A%2A%2A") {
+		t.Fatalf("unexpected generic masked URL: %s", generic)
+	}
 }

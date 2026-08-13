@@ -39,6 +39,10 @@ patchxnote-agent/
     api/
     mcp/
     cache/
+    webhook/
+    renderdoc/
+    modelio/
+    localfile/
     output/
     diag/
     version/
@@ -65,6 +69,10 @@ Package responsibilities:
 - `internal/api`: PatchXNote server client, request/response mapping, retry policy, and stable API error mapping.
 - `internal/mcp`: MCP stdio server, tool registry, tool schemas, and JSON-RPC error mapping.
 - `internal/cache`: local cache and search index for authorized read-only projections.
+- `internal/webhook`: local webhook target metadata, keychain-backed secret lookup, provider payload building, and send result normalization.
+- `internal/renderdoc`: delivery-document to Markdown rendering, built-in templates, and user template loading.
+- `internal/modelio`: model IO field selection, availability handling, pretty JSON formatting, and explicit local field/export writing.
+- `internal/localfile`: neutral atomic local file writer helpers shared by local feature packages.
 - `internal/output`: table/json/plain renderers. Commands should not hand-roll output formatting.
 - `internal/diag`: safe diagnostics, redaction, stderr logging, and support bundle helpers.
 - `internal/version`: build-time version, commit, date, and target metadata.
@@ -73,9 +81,9 @@ Package responsibilities:
 The dependency direction is:
 
 ```text
-cmd/patchxnote -> internal/cli -> internal/{config,auth,api,mcp,cache,output,diag,version}
+cmd/patchxnote -> internal/cli -> internal/{config,auth,api,mcp,cache,webhook,renderdoc,modelio,localfile,output,diag,version}
 internal/auth -> internal/{config,keychain,api}
-internal/mcp -> internal/{auth,api,cache,diag}
+internal/mcp -> internal/{auth,api,cache,config,keychain,webhook,renderdoc,modelio,localfile,diag}
 internal/api -> external PatchXNote server APIs
 ```
 
@@ -251,6 +259,19 @@ patchxnote_get_quota_summary
 patchxnote_get_model_usage_summary
 patchxnote_list_memories
 patchxnote_search_memories
+patchxnote_get_memory
+patchxnote_list_webhook_targets
+patchxnote_configure_webhook_target
+patchxnote_remove_webhook_target
+patchxnote_list_webhook_templates
+patchxnote_render_webhook_message
+patchxnote_export_model_io
+patchxnote_send_webhook
+patchxnote_list_model_io_traces
+patchxnote_get_model_io_source_text
+patchxnote_get_model_io_provider_response
+patchxnote_get_model_io_parsed_result
+patchxnote_get_model_io_packaged_result
 ```
 
 Each tool must define:
@@ -264,6 +285,10 @@ Each tool must define:
 - whether results are live API projections or local cache projections
 
 Do not use generic names such as `search`, `list`, or `get_user`.
+
+Server-backed PatchXNote data tools should stay read-only unless a separate server contract allows otherwise. Webhook tools are the accepted V1 exception: they may write local non-secret config, write URL/signing secret material through `internal/keychain`, and perform manual external HTTP sends when explicitly invoked. They must never return full webhook URLs or signing secrets.
+
+Model IO trace discovery returns lightweight metadata and request IDs only. Model IO field tools are explicit inspection tools for trusted local agents. They must return only the requested field, keep large content behind explicit output files, and avoid scattering field selection logic outside `internal/modelio`.
 
 ## Local Cache
 

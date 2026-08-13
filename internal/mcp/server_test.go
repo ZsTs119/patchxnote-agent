@@ -45,8 +45,8 @@ func TestInitializeAndToolsList(t *testing.T) {
 
 	toolsResult := responses[1]["result"].(map[string]any)
 	tools := toolsResult["tools"].([]any)
-	if len(tools) != 7 {
-		t.Fatalf("expected seven tools, got %d", len(tools))
+	if len(tools) != 19 {
+		t.Fatalf("expected nineteen tools, got %d", len(tools))
 	}
 	names := make(map[string]bool)
 	for _, item := range tools {
@@ -64,6 +64,18 @@ func TestInitializeAndToolsList(t *testing.T) {
 		"patchxnote_list_memories",
 		"patchxnote_search_memories",
 		"patchxnote_get_memory",
+		"patchxnote_list_webhook_targets",
+		"patchxnote_configure_webhook_target",
+		"patchxnote_remove_webhook_target",
+		"patchxnote_list_webhook_templates",
+		"patchxnote_render_webhook_message",
+		"patchxnote_export_model_io",
+		"patchxnote_send_webhook",
+		"patchxnote_list_model_io_traces",
+		"patchxnote_get_model_io_source_text",
+		"patchxnote_get_model_io_provider_response",
+		"patchxnote_get_model_io_parsed_result",
+		"patchxnote_get_model_io_packaged_result",
 	} {
 		if !names[want] {
 			t.Fatalf("tool %s missing from tools/list", want)

@@ -12,9 +12,9 @@ GitHub 仓库：[https://github.com/ZsTs119/patchxnote-agent](https://github.com
 
 ![PatchXNote Agent 封面](./docs/assets/patchxnote-agent-cover.png)
 
-PatchXNote Agent 是 PatchXNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchXNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。
+PatchXNote Agent 是 PatchXNote 的本地 CLI 和 MCP 桥接工具。它让桌面 AI Agent 可以读取安全的 PatchXNote 账号上下文，包括账号状态、已绑定录音卡、额度、模型使用情况和结构化结果元数据。它也可以把用户确认后的 Markdown 手动发送到本地配置的飞书、钉钉或 generic webhook 目标。
 
-Agent V1 明确保持只读。它只调用专用的 `/v1/agent/**` PatchXNote 服务端 API，不暴露 App/PC 的硬件写入流程、原始音频、完整转写、SK、完整 MAC、供应商 payload、额度购买流程或 Admin API。
+Agent 服务端数据访问明确保持只读。它只调用专用的 `/v1/agent/**` PatchXNote 服务端 API，不暴露 App/PC 的硬件写入流程、原始音频、完整转写、SK、完整 MAC、额度购买流程或 Admin API。webhook 工具属于本地配置写入和手动外部发送；webhook URL 和签名密钥只作为写入输入，不会被列表或查询返回。
 
 将以下一句话发送给支持本地命令执行的 AI 助手即可：
 
@@ -36,7 +36,7 @@ npx -y patchxnote-agent install --print-config
 | Agent 协议 | 通过 `patchxnote mcp serve` 启动本地 stdio MCP server。 |
 | 登录 | 手机验证码登录，创建独立 Agent 会话，不占用 mobile/desktop 安装位。 |
 | 数据访问 | 读取有边界的账号、录音卡、额度、模型使用和结构化结果元数据投影。 |
-| 安全边界 | 只读、脱敏、按平台隔离，并且只走专用 Agent 服务端接口。 |
+| 安全边界 | 服务端数据只读、脱敏、按平台隔离，并且只走专用 Agent 接口；webhook 是本地手动发送副作用。 |
 | 包状态 | 公开 beta 版 `0.2.3`，默认连接 PatchXNote 公测 API。 |
 
 ## 功能
@@ -54,9 +54,10 @@ npx -y patchxnote-agent install --print-config
 | 本地记忆搜索 | 支持 | 搜索当前 MCP 会话中已授权缓存的元数据。 |
 | 本地 webhook 发送 | 支持 | 配置带别名的飞书、钉钉或 generic webhook，手动发送可编辑 Markdown。 |
 | 记忆 webhook 草稿 | 支持 | 读取 Agent delivery-document 投影，保存可编辑草稿，并可显式导出 model IO JSON。 |
+| Model IO 字段查看 | 支持 | 可按 memory 或 request 显式查看 source text、provider response、parsed result、packaged result。 |
 | 硬件绑定/解绑/恢复 | 不支持 | 仍由 App/PC 和 MR20 流程负责。 |
 | 原始音频/完整转写/下载 | 不支持 | V1 明确不暴露。 |
-| 模型执行 | 不支持 | Agent V1 只读。 |
+| 模型执行 | 不支持 | Agent 服务端数据访问保持只读。 |
 
 ## 环境要求
 
@@ -156,8 +157,22 @@ MCP 配置中不会保存 access token 或 refresh token。PatchXNote Agent 默�
 | `patchxnote_list_memories` | 按平台列出安全的结构化结果元数据。 |
 | `patchxnote_search_memories` | 搜索当前会话已授权缓存的记忆元数据。 |
 | `patchxnote_get_memory` | 读取单条结构化结果的安全元数据。 |
+| `patchxnote_list_webhook_targets` | 列出本地 webhook 别名和脱敏元数据。 |
+| `patchxnote_configure_webhook_target` | 创建或更新本地 webhook 目标；URL/密钥是只写输入。 |
+| `patchxnote_remove_webhook_target` | 删除本地 webhook 目标并尽力清理已保存密钥。 |
+| `patchxnote_list_webhook_templates` | 列出内置 webhook Markdown 模板。 |
+| `patchxnote_render_webhook_message` | 把 delivery-document 投影渲染成 Markdown，可选保存草稿。 |
+| `patchxnote_export_model_io` | 把显式 model IO JSON 导出到用户指定的本地文件。 |
+| `patchxnote_send_webhook` | 手动把 Markdown、草稿、记忆渲染结果或测试消息发送到目标别名。 |
+| `patchxnote_list_model_io_traces` | 按平台列出 model IO trace 元数据和 request ID。 |
+| `patchxnote_get_model_io_source_text` | 读取显式 source text/安全转写投影字段。 |
+| `patchxnote_get_model_io_provider_response` | 只读取模型供应商响应 JSON 字段。 |
+| `patchxnote_get_model_io_parsed_result` | 只读取模型解析结果 JSON 字段。 |
+| `patchxnote_get_model_io_packaged_result` | 只读取最终封装结构 JSON 字段。 |
 
 记忆类工具必须显式传入 `platform`：`mobile` 或 `desktop`。V1 的记忆响应只包含安全元数据，不重建模型运行响应正文，也不返回旧的完整摘要文本。
+webhook MCP 工具复用 CLI 的本地配置、钥匙串、模板和发送模块。工具不会返回完整 webhook URL 或签名密钥；只有 MCP client 明确调用发送工具时才会发起外部网络请求。
+Model IO 字段工具是显式、按字段隔离的能力。它可能返回当前登录用户的 source text 或模型/供应商 payload，因此只建议在可信本地 MCP Host 中使用。大字段建议写入显式 `out` 本地文件。
 
 可以在桌面 Agent 中这样询问：
 
@@ -165,6 +180,11 @@ MCP 配置中不会保存 access token 或 refresh token。PatchXNote Agent 默�
 查看我的 PatchXNote 账号和额度状态。
 列出我的 PatchXNote 录音卡。
 搜索 desktop 平台里和 roadmap 相关的 PatchXNote 记忆。
+配置一个名为“产品群 飞书”的飞书 webhook，然后把这段 Markdown 总结发送过去。
+列出今天 mobile 平台的 PatchXNote model IO traces，再用 request ID 查看 provider response。
+查看这条 PatchXNote 记忆的 provider response，并把 parsed result 保存到本地 JSON 文件。
+列出我配置过的 PatchXNote webhook 目标。
+删除名为“产品群 飞书”的 PatchXNote webhook 目标。
 ```
 
 ## CLI 命令
@@ -181,6 +201,12 @@ patchxnote webhook send --target "产品群 飞书" --file ./message.md
 patchxnote webhook draft --memory-id <memory_id> --out ./patchxnote-drafts/example
 patchxnote webhook send --target "产品群 飞书" --draft ./patchxnote-drafts/example
 patchxnote webhook export-model-io --memory-id <memory_id> --out ./patchxnote-drafts/example/model-io.json
+patchxnote model-io list --platform mobile
+patchxnote model-io source-text --memory-id <memory_id> --platform mobile
+patchxnote model-io provider-response --memory-id <memory_id> --platform mobile --out ./provider-response.json
+patchxnote model-io parsed-result --memory-id <memory_id> --platform mobile --out ./parsed-result.json
+patchxnote model-io packaged-result --request-id <request_id> --platform mobile
+patchxnote model-io export --memory-id <memory_id> --platform mobile --out ./model-io.json
 ```
 
 常用全局参数：
@@ -200,7 +226,8 @@ npx -y patchxnote-agent@0.2.3 update
 npx -y patchxnote-agent@0.2.3 uninstall
 ```
 
-webhook URL 和飞书/钉钉可选签名密钥只写入本机安全钥匙串，不写普通配置文件。建议用 `--url-stdin` 和 `--secret-stdin` 避免 shell history。webhook 发送第一版只支持用户手动执行，不新增 MCP 写工具，不跟随重定向，下游平台错误会直接透传给用户。
+webhook URL 和飞书/钉钉可选签名密钥只写入本机安全钥匙串，不写普通配置文件。建议用 `--url-stdin` 和 `--secret-stdin` 避免 shell history。CLI 和 MCP 的 webhook 发送都只支持用户手动执行，不跟随重定向，下游平台错误会直接透传给用户。
+`patchxnote model-io export` 是完整 model IO 导出的推荐命令。`patchxnote webhook export-model-io` 会继续兼容保留。
 
 ## 安全与风险提示
 
@@ -211,13 +238,15 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 默认安全边界：
 
 - Agent 登录态独立于 App/PC 的 `mobile` 和 `desktop` 安装位。
-- Agent 只调用专用只读 `/v1/agent/**` 服务端路由。
+- Agent 读取 PatchXNote 服务端数据时只调用专用只读 `/v1/agent/**` 服务端路由。
+- MCP webhook 工具可以写入本地非 secret 目标元数据，把 URL/密钥写入本机安全存储，并手动发送外部 webhook HTTP 请求。
 - MCP 在本地通过 stdio 运行；stdout 只用于 JSON-RPC。
 - MCP 配置不保存 bearer token、refresh token、验证码、SK 或完整 MAC。
 - 录音卡标识会被脱敏；不暴露实时 BLE 状态、电量、存储和录音状态。
 - 结构化内容按平台隔离。Agent 不会合并 mobile 和 desktop 内容。
 - 工具输出在返回给 MCP client 前会做边界控制和校验。
 - webhook URL 和签名密钥只保存在本机安全存储；普通 webhook payload 不包含 access token、refresh token 或导出的 model IO JSON。
+- Model IO 字段工具只返回用户请求的字段，不重放模型调用，也不会在单字段响应里夹带无关 model IO 字段。
 
 不要把 access token、refresh token、验证码、原始手机号、完整 MAC、SK、原始音频、完整转写、prompt 或供应商 payload 发到公开 Issue。安全问题请使用 [SECURITY.md](./SECURITY.md) 中的私密流程。
 
@@ -227,9 +256,9 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 - 默认服务端指向 PatchXNote 公测 API。
 - Linux 无桌面/headless 环境可能没有 Secret Service；此时仅本地冒烟可显式开启开发文件存储 fallback。
-- 公测期间会持续优化安装流程、MCP 客户端示例和只读工具覆盖范围。
+- 公测期间会持续优化安装流程、MCP 客户端示例和 webhook 格式效果。
 - `patchxnote_search_memories` 只搜索当前 MCP 会话中已缓存的元数据。
-- 原始音频、完整转写、完整模型响应、硬件写操作、额度购买/领取、支付和 Admin API 都不在 V1 范围内。
+- 原始音频、完整转写、硬件写操作、模型执行/重放、额度购买/领取、支付和 Admin API 都不在 V1 范围内。
 
 ## 常见问题排查
 
@@ -262,7 +291,7 @@ scripts/e2e/mvp-smoke.sh
 node packages/npm/bin/patchxnote-agent.js install --dry-run --print-config
 ```
 
-MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测试服务，检查 `auth status`，启动 `patchxnote mcp serve`，调用全部七个 V1 MCP 工具，登出，并扫描 evidence 中是否出现 secret-like 内容。
+MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测试服务，检查 `auth status`，启动 `patchxnote mcp serve`，调用全部 19 个 V1 MCP 工具，覆盖 model IO 发现、字段工具和本地 webhook 发送，登出，并扫描 evidence 中是否出现 secret-like 内容。
 
 修改 CLI 行为、安装器逻辑、MCP 工具、认证、本地缓存或发布配置前，请先阅读：
 

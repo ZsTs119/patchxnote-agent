@@ -103,8 +103,14 @@ func MaskWebhookURL(value string) string {
 		masked.RawQuery = query.Encode()
 	}
 	parts := strings.Split(masked.Path, "/")
+	lastPathSegment := -1
 	for i, part := range parts {
-		if looksSecretPathSegment(part) {
+		if part != "" {
+			lastPathSegment = i
+		}
+	}
+	for i, part := range parts {
+		if looksSecretPathSegment(part) || i == lastPathSegment {
 			parts[i] = maskToken(part)
 		}
 	}

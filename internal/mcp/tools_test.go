@@ -14,9 +14,10 @@ import (
 )
 
 type fakeToolAPI struct {
-	err        error
-	listParams api.ListMemoriesParams
-	largeCards bool
+	err             error
+	listParams      api.ListMemoriesParams
+	traceListParams api.ListModelIOTracesParams
+	largeCards      bool
 }
 
 func (f *fakeToolAPI) CurrentUser(ctx context.Context, accessToken string) (api.CurrentAccount, error) {
@@ -103,6 +104,55 @@ func (f *fakeToolAPI) GetMemory(ctx context.Context, accessToken string, platfor
 		return api.AgentMemory{}, f.err
 	}
 	return toolFixtureMemory(), nil
+}
+
+func (f *fakeToolAPI) GetMemoryDeliveryDocument(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentDeliveryDocument, error) {
+	if f.err != nil {
+		return api.AgentDeliveryDocument{}, f.err
+	}
+	return toolFixtureDeliveryDocument(), nil
+}
+
+func (f *fakeToolAPI) GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentModelIOExport, error) {
+	if f.err != nil {
+		return api.AgentModelIOExport{}, f.err
+	}
+	return toolFixtureModelIOExport(), nil
+}
+
+func (f *fakeToolAPI) GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (api.AgentModelIOExport, error) {
+	if f.err != nil {
+		return api.AgentModelIOExport{}, f.err
+	}
+	return toolFixtureModelIOExport(), nil
+}
+
+func (f *fakeToolAPI) ListModelIOTraces(ctx context.Context, accessToken string, params api.ListModelIOTracesParams) (api.AgentModelIOTracePage, error) {
+	if f.err != nil {
+		return api.AgentModelIOTracePage{}, f.err
+	}
+	f.traceListParams = params
+	return api.AgentModelIOTracePage{
+		Items: []api.AgentModelIOTraceSummary{
+			{
+				RequestID:              "mrun_fixture_trace_1",
+				Platform:               params.Platform,
+				APIContractVersion:     "1.0.0",
+				TaskType:               "daily_digest",
+				State:                  "completed",
+				CreatedAt:              fixedToolTime(),
+				UpdatedAt:              fixedToolTime(),
+				SourceTextAvailability: "available",
+				FieldStatus: api.AgentModelIOFieldStatus{
+					ProviderResponseJSON: "available",
+					ParsedResultJSON:     "available",
+					PackagedResultJSON:   "missing",
+				},
+				FieldBytes: api.AgentModelIOFieldBytes{ProviderResponseJSON: 256, ParsedResultJSON: 96},
+			},
+		},
+		NextCursor: "cursor_trace_page_2",
+	}, nil
 }
 
 func TestV1ToolSuccessCallsAPIAndSearchesCache(t *testing.T) {
@@ -357,6 +407,61 @@ func toolFixtureMemory() api.AgentMemory {
 		PayloadPlaintextBytes: 256,
 		CreatedAt:             fixedToolTime(),
 		UpdatedAt:             fixedToolTime(),
+	}
+}
+
+func toolFixtureDeliveryDocument() api.AgentDeliveryDocument {
+	return api.AgentDeliveryDocument{
+		Source:   "patchxnote",
+		Version:  "1",
+		Title:    "Webhook 测试记录",
+		Summary:  "用于 MCP webhook 测试。",
+		Markdown: "# Webhook 测试记录\n\n用于 MCP webhook 测试。\n",
+		Memory: &api.AgentDeliveryMemory{
+			ID:                 "mem_fixture_1",
+			Platform:           "mobile",
+			ObjectType:         "event",
+			ClientObjectID:     "local_event_fixture",
+			RevisionID:         "rev_fixture_1",
+			Revision:           3,
+			SchemaID:           "patchnote.event.v1",
+			SchemaVersion:      1,
+			SourceAvailability: "text_only",
+		},
+		Trace: api.AgentDeliveryTrace{
+			RequestID: "mrun_fixture_1",
+			Platform:  "mobile",
+			TaskType:  "event",
+			State:     "completed",
+		},
+		GeneratedAt: fixedToolTime(),
+	}
+}
+
+func toolFixtureModelIOExport() api.AgentModelIOExport {
+	return api.AgentModelIOExport{
+		Source:  "patchxnote",
+		Version: "1",
+		Memory:  toolFixtureDeliveryDocument().Memory,
+		Trace:   toolFixtureDeliveryDocument().Trace,
+		SourceText: &api.AgentSourceText{
+			Availability: "available",
+			Text:         "转写安全文本",
+		},
+		FieldStatus: api.AgentModelIOFieldStatus{
+			ClientRequestJSON:    "available",
+			ProviderRequestJSON:  "available",
+			ProviderResponseJSON: "available",
+			ParsedResultJSON:     "available",
+			PackagedResultJSON:   "available",
+			ProviderAttemptsJSON: "available",
+		},
+		ClientRequestJSON:    json.RawMessage(`{"content":"客户端请求"}`),
+		ProviderRequestJSON:  json.RawMessage(`{"content":"模型请求"}`),
+		ProviderResponseJSON: json.RawMessage(`{"content":"模型原始响应"}`),
+		ParsedResultJSON:     json.RawMessage(`{"content":"解析结果"}`),
+		PackagedResultJSON:   json.RawMessage(`{"content":"封装结构"}`),
+		ProviderAttemptsJSON: json.RawMessage(`[{"content":"供应商尝试"}]`),
 	}
 }
 

@@ -32,6 +32,8 @@ func newMCPServeCommand(state *rootState) *cobra.Command {
 				Credentials:   runtime.Credentials,
 				API:           runtime.API,
 				MemoryCache:   cache.NewMemoryIndex(),
+				Config:        runtime.Config,
+				Secrets:       runtime.Secrets,
 				Version:       version.Version,
 			})
 			return server.Serve(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout())

@@ -203,6 +203,33 @@ func (c *Client) GetModelRunIOTrace(ctx context.Context, accessToken string, pla
 	return response, err
 }
 
+func (c *Client) ListModelIOTraces(ctx context.Context, accessToken string, params ListModelIOTracesParams) (AgentModelIOTracePage, error) {
+	if err := validatePlatform(params.Platform); err != nil {
+		return AgentModelIOTracePage{}, err
+	}
+	if params.Limit < 0 || params.Limit > 50 {
+		return AgentModelIOTracePage{}, fmt.Errorf("limit must be between 1 and 50 when set")
+	}
+	query := url.Values{}
+	query.Set("platform", params.Platform)
+	setOptionalQuery(query, "request_id", params.RequestID)
+	setOptionalQuery(query, "task_type", params.TaskType)
+	setOptionalQuery(query, "state", params.State)
+	setOptionalQuery(query, "recording_id", params.RecordingID)
+	setOptionalQuery(query, "event_id", params.EventID)
+	setOptionalQuery(query, "business_id", params.BusinessID)
+	setOptionalQuery(query, "date_from", params.DateFrom)
+	setOptionalQuery(query, "date_to", params.DateTo)
+	setOptionalQuery(query, "cursor", params.Cursor)
+	if params.Limit > 0 {
+		query.Set("limit", fmt.Sprintf("%d", params.Limit))
+	}
+
+	var response AgentModelIOTracePage
+	err := c.doJSON(ctx, http.MethodGet, "/v1/agent/model-io-traces", query, accessToken, "", nil, &response, true, http.StatusOK)
+	return response, err
+}
+
 func (c *Client) Logout(ctx context.Context, accessToken string) error {
 	return c.doJSON(ctx, http.MethodPost, "/v1/agent/auth/logout", nil, accessToken, "", nil, nil, false, http.StatusNoContent)
 }
@@ -351,6 +378,13 @@ func optionalPlatformQuery(platform string) (url.Values, error) {
 	query := url.Values{}
 	query.Set("platform", platform)
 	return query, nil
+}
+
+func setOptionalQuery(query url.Values, key string, value string) {
+	value = strings.TrimSpace(value)
+	if value != "" {
+		query.Set(key, value)
+	}
 }
 
 func sleepContext(ctx context.Context, duration time.Duration) error {

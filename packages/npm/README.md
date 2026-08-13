@@ -27,9 +27,11 @@ The CLI also supports manual local webhook delivery:
 ```sh
 patchxnote webhook set "Product Feishu" --type feishu --url-stdin
 patchxnote webhook send --target "Product Feishu" --file ./message.md
+patchxnote model-io list --platform mobile
+patchxnote model-io provider-response --memory-id <memory_id> --platform mobile --out ./provider-response.json
 ```
 
-Agent V1 MCP tools remain read-only. The CLI stores credentials and webhook secrets in the OS-native keychain when available, exposes safe PatchXNote account projections through dedicated `/v1/agent/**` APIs, and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
+Server-backed Agent data access remains read-only through dedicated `/v1/agent/**` APIs. MCP also exposes local webhook tools for named target configuration and manual external sends, plus explicit model IO discovery and field tools for trusted local inspection. The CLI stores credentials and webhook secrets in the OS-native keychain when available, never lists webhook URLs or signing secrets back, and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
 
 For full installation, MCP setup, security notes, and troubleshooting, read the GitHub documentation:
 

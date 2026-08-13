@@ -184,3 +184,50 @@ type AgentModelIOFieldStatus struct {
 	PackagedResultJSON   string `json:"packaged_result_json,omitempty"`
 	ProviderAttemptsJSON string `json:"provider_attempts_json,omitempty"`
 }
+
+type ListModelIOTracesParams struct {
+	Platform    string
+	RequestID   string
+	TaskType    string
+	State       string
+	RecordingID string
+	EventID     string
+	BusinessID  string
+	DateFrom    string
+	DateTo      string
+	Limit       int
+	Cursor      string
+}
+
+type AgentModelIOTracePage struct {
+	Items      []AgentModelIOTraceSummary `json:"items"`
+	NextCursor string                     `json:"next_cursor,omitempty"`
+}
+
+type AgentModelIOTraceSummary struct {
+	RequestID              string                  `json:"request_id"`
+	Platform               string                  `json:"platform"`
+	APIContractVersion     string                  `json:"api_contract_version"`
+	TaskType               string                  `json:"task_type"`
+	State                  string                  `json:"state"`
+	SafeErrorCode          *string                 `json:"safe_error_code"`
+	RecordingID            string                  `json:"recording_id,omitempty"`
+	EventID                string                  `json:"event_id,omitempty"`
+	BusinessID             string                  `json:"business_id,omitempty"`
+	CreatedAt              time.Time               `json:"created_at"`
+	UpdatedAt              time.Time               `json:"updated_at"`
+	CompletedAt            *time.Time              `json:"completed_at,omitempty"`
+	SourceTextAvailability string                  `json:"source_text_availability"`
+	FieldStatus            AgentModelIOFieldStatus `json:"field_status"`
+	FieldBytes             AgentModelIOFieldBytes  `json:"field_bytes"`
+	Memory                 *AgentDeliveryMemory    `json:"memory,omitempty"`
+}
+
+type AgentModelIOFieldBytes struct {
+	ClientRequestJSON    int64 `json:"client_request_json"`
+	ProviderRequestJSON  int64 `json:"provider_request_json"`
+	ProviderResponseJSON int64 `json:"provider_response_json"`
+	ParsedResultJSON     int64 `json:"parsed_result_json"`
+	PackagedResultJSON   int64 `json:"packaged_result_json"`
+	ProviderAttemptsJSON int64 `json:"provider_attempts_json"`
+}

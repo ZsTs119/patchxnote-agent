@@ -2,17 +2,15 @@ package cli
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/ZsTs119/patchxnote-agent/internal/api"
 	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/modelio"
 	"github.com/ZsTs119/patchxnote-agent/internal/renderdoc"
 	"github.com/ZsTs119/patchxnote-agent/internal/webhook"
 	"github.com/spf13/cobra"
@@ -423,7 +421,7 @@ func newWebhookDraftCommand(state *rootState) *cobra.Command {
 				}
 				modelIO = &got
 			}
-			if err := writeDraftDirectory(outDir, delivery, message, templateNameOrDefault(templateName), modelIO, force); err != nil {
+			if err := webhook.WriteDraftDirectory(outDir, delivery, message, webhook.TemplateNameOrDefault(templateName), modelIO, force); err != nil {
 				return err
 			}
 			switch format := normalizedOutputFormat(state); format {
@@ -547,20 +545,16 @@ func newWebhookExportModelIOCommand(state *rootState) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			body, err := json.MarshalIndent(export, "", "  ")
+			out, err := modelio.WriteExportFile(outFile, export, force)
 			if err != nil {
-				return fmt.Errorf("encode model IO export: %w", err)
-			}
-			body = append(body, '\n')
-			if err := atomicWriteFile(outFile, body, 0o600, force); err != nil {
 				return err
 			}
 			switch format := normalizedOutputFormat(state); format {
 			case "", "plain":
-				_, err = fmt.Fprintf(cmd.OutOrStdout(), "model io exported\nout %s\n", outFile)
+				_, err = fmt.Fprintf(cmd.OutOrStdout(), "model io exported\nout %s\n", out)
 				return err
 			case "json":
-				return writeJSON(cmd.OutOrStdout(), map[string]any{"exported": true, "out": outFile})
+				return writeJSON(cmd.OutOrStdout(), map[string]any{"exported": true, "out": out})
 			default:
 				return unsupportedOutputFormatError(format)
 			}
@@ -577,9 +571,9 @@ func newWebhookExportModelIOCommand(state *rootState) *cobra.Command {
 func buildWebhookMessage(ctx context.Context, runtime runtimeState, filePath string, draftDir string, memoryID string, platform string, templateName string, title string, saveDraft bool, outDir string, includeModelIO bool, force bool) (webhook.Message, error) {
 	switch {
 	case filePath != "":
-		return messageFromFile(filePath, title)
+		return webhook.MessageFromFile(filePath, title)
 	case draftDir != "":
-		return messageFromDraft(draftDir)
+		return webhook.MessageFromDraft(draftDir)
 	case memoryID != "":
 		delivery, err := fetchDeliveryDocument(ctx, runtime, platform, memoryID)
 		if err != nil {
@@ -599,104 +593,14 @@ func buildWebhookMessage(ctx context.Context, runtime runtimeState, filePath str
 			modelIO = &got
 		}
 		if saveDraft {
-			if err := writeDraftDirectory(outDir, delivery, rendered, templateNameOrDefault(templateName), modelIO, force); err != nil {
+			if err := webhook.WriteDraftDirectory(outDir, delivery, rendered, webhook.TemplateNameOrDefault(templateName), modelIO, force); err != nil {
 				return webhook.Message{}, err
 			}
 		}
-		return messageFromDelivery(delivery, rendered, templateNameOrDefault(templateName)), nil
+		return webhook.MessageFromDelivery(delivery, rendered, webhook.TemplateNameOrDefault(templateName)), nil
 	default:
 		return webhook.Message{}, fmt.Errorf("missing webhook message source")
 	}
-}
-
-func messageFromFile(path string, titleOverride string) (webhook.Message, error) {
-	body, err := readMarkdownFile(path)
-	if err != nil {
-		return webhook.Message{}, err
-	}
-	return webhook.Message{
-		Title:    renderdoc.InferTitle(string(body), path, titleOverride),
-		Markdown: string(body),
-		Metadata: map[string]string{"source": "file"},
-	}, nil
-}
-
-func messageFromDraft(dir string) (webhook.Message, error) {
-	messagePath := filepath.Join(dir, "message.md")
-	body, err := readMarkdownFile(messagePath)
-	if err != nil {
-		return webhook.Message{}, err
-	}
-	metadata := readDraftMetadata(filepath.Join(dir, "metadata.json"))
-	message := webhook.Message{
-		Title:    renderdoc.InferTitle(string(body), dir, ""),
-		Markdown: string(body),
-		Metadata: metadata,
-	}
-	if metadata["memory_id"] != "" || metadata["platform"] != "" {
-		message.Memory = &webhook.MessageMemory{ID: metadata["memory_id"], Platform: metadata["platform"]}
-	}
-	return message, nil
-}
-
-func messageFromDelivery(delivery api.AgentDeliveryDocument, markdown string, templateName string) webhook.Message {
-	message := webhook.Message{
-		Title:    delivery.Title,
-		Markdown: markdown,
-		Metadata: map[string]string{
-			"source":   "patchxnote",
-			"template": templateName,
-		},
-	}
-	if delivery.Memory != nil {
-		message.Memory = &webhook.MessageMemory{ID: delivery.Memory.ID, Platform: delivery.Memory.Platform}
-	}
-	return message
-}
-
-func readMarkdownFile(path string) ([]byte, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("read markdown file: %w", err)
-	}
-	if info.IsDir() {
-		return nil, fmt.Errorf("markdown path must be a file")
-	}
-	if info.Size() > renderdoc.MaxRenderedMarkdownBytes {
-		return nil, fmt.Errorf("Markdown file exceeds local safety cap")
-	}
-	body, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read markdown file: %w", err)
-	}
-	if len(body) > renderdoc.MaxRenderedMarkdownBytes {
-		return nil, fmt.Errorf("Markdown file exceeds local safety cap")
-	}
-	return body, nil
-}
-
-func readDraftMetadata(path string) map[string]string {
-	body, err := os.ReadFile(path)
-	if err != nil {
-		return map[string]string{"source": "draft"}
-	}
-	var raw map[string]any
-	if err := json.Unmarshal(body, &raw); err != nil {
-		return map[string]string{"source": "draft"}
-	}
-	metadata := make(map[string]string, len(raw)+1)
-	metadata["source"] = "draft"
-	for key, value := range raw {
-		switch typed := value.(type) {
-		case string:
-			metadata[key] = typed
-		case bool:
-			metadata[key] = fmt.Sprintf("%t", typed)
-		case float64:
-			metadata[key] = fmt.Sprintf("%.0f", typed)
-		}
-	}
-	return metadata
 }
 
 func resolveTargets(ctx context.Context, runtime runtimeState, aliases []string) ([]webhook.ResolvedTarget, error) {
@@ -819,112 +723,6 @@ func friendlyAgentAPIError(err error) error {
 		return fmt.Errorf("record not found or no exportable model IO is available")
 	}
 	return err
-}
-
-func writeDraftDirectory(dir string, delivery api.AgentDeliveryDocument, message string, templateName string, modelIO *api.AgentModelIOExport, force bool) error {
-	if dir == "" {
-		return fmt.Errorf("draft output directory is required")
-	}
-	if info, err := os.Lstat(dir); err == nil {
-		if !info.IsDir() {
-			return fmt.Errorf("draft output path must be a directory")
-		}
-		if !force {
-			return fmt.Errorf("draft output directory already exists; pass --force to overwrite known draft files")
-		}
-	} else if os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0o700); err != nil {
-			return fmt.Errorf("create draft output directory: %w", err)
-		}
-	} else {
-		return fmt.Errorf("inspect draft output directory: %w", err)
-	}
-
-	sourceJSON, err := json.MarshalIndent(delivery, "", "  ")
-	if err != nil {
-		return fmt.Errorf("encode delivery source: %w", err)
-	}
-	sourceJSON = append(sourceJSON, '\n')
-	if err := atomicWriteFile(filepath.Join(dir, "source.json"), sourceJSON, 0o600, force); err != nil {
-		return err
-	}
-	if err := atomicWriteFile(filepath.Join(dir, "message.md"), []byte(message), 0o600, force); err != nil {
-		return err
-	}
-	metadataJSON, err := json.MarshalIndent(draftMetadata(delivery, templateName, modelIO != nil), "", "  ")
-	if err != nil {
-		return fmt.Errorf("encode draft metadata: %w", err)
-	}
-	metadataJSON = append(metadataJSON, '\n')
-	if err := atomicWriteFile(filepath.Join(dir, "metadata.json"), metadataJSON, 0o600, force); err != nil {
-		return err
-	}
-	if modelIO != nil {
-		body, err := json.MarshalIndent(modelIO, "", "  ")
-		if err != nil {
-			return fmt.Errorf("encode model IO: %w", err)
-		}
-		body = append(body, '\n')
-		if err := atomicWriteFile(filepath.Join(dir, "model-io.json"), body, 0o600, force); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func draftMetadata(delivery api.AgentDeliveryDocument, templateName string, modelIOIncluded bool) map[string]any {
-	metadata := map[string]any{
-		"source":              "patchxnote",
-		"version":             webhook.PatchXNoteWebhookPayloadVersion,
-		"template":            templateName,
-		"delivery_request_id": delivery.Trace.RequestID,
-		"model_io_included":   modelIOIncluded,
-		"generated_at":        time.Now().UTC().Format(time.RFC3339),
-	}
-	if delivery.Memory != nil {
-		metadata["platform"] = delivery.Memory.Platform
-		metadata["memory_id"] = delivery.Memory.ID
-	} else if delivery.Trace.Platform != "" {
-		metadata["platform"] = delivery.Trace.Platform
-	}
-	return metadata
-}
-
-func atomicWriteFile(path string, body []byte, perm os.FileMode, overwrite bool) error {
-	if info, err := os.Lstat(path); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 || info.IsDir() {
-			return fmt.Errorf("refusing to overwrite non-regular output path %s", path)
-		}
-		if !overwrite {
-			return fmt.Errorf("output file already exists: %s", path)
-		}
-	} else if !os.IsNotExist(err) {
-		return fmt.Errorf("inspect output file: %w", err)
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return fmt.Errorf("create output directory: %w", err)
-	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*.tmp")
-	if err != nil {
-		return fmt.Errorf("create temporary output file: %w", err)
-	}
-	tmpName := tmp.Name()
-	defer os.Remove(tmpName)
-	if _, err := tmp.Write(body); err != nil {
-		_ = tmp.Close()
-		return fmt.Errorf("write temporary output file: %w", err)
-	}
-	if err := tmp.Chmod(perm); err != nil {
-		_ = tmp.Close()
-		return fmt.Errorf("set output file permissions: %w", err)
-	}
-	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("close temporary output file: %w", err)
-	}
-	if err := os.Rename(tmpName, path); err != nil {
-		return fmt.Errorf("replace output file: %w", err)
-	}
-	return nil
 }
 
 func writeWebhookSendResults(cmd *cobra.Command, state *rootState, results []webhook.SendResult) error {

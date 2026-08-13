@@ -26,6 +26,7 @@ type agentAPI interface {
 	GetMemoryDeliveryDocument(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentDeliveryDocument, error)
 	GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentModelIOExport, error)
 	GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (api.AgentModelIOExport, error)
+	ListModelIOTraces(ctx context.Context, accessToken string, params api.ListModelIOTracesParams) (api.AgentModelIOTracePage, error)
 	Logout(ctx context.Context, accessToken string) error
 }
 

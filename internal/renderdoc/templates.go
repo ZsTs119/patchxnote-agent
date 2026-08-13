@@ -15,6 +15,21 @@ const MaxRenderedMarkdownBytes = 256 * 1024
 //go:embed templates/*.tmpl
 var builtInTemplates embed.FS
 
+type TemplateInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+func BuiltInTemplates() []TemplateInfo {
+	return []TemplateInfo{
+		{Name: "default", Description: "通用记录摘要，适合大多数 PatchXNote 记录。"},
+		{Name: "meeting-summary", Description: "会议纪要格式，突出结论、事项和跟进。"},
+		{Name: "daily-review", Description: "日复盘格式，适合当天记录整理。"},
+		{Name: "key-items", Description: "只突出关键事项和待办。"},
+		{Name: "raw-markdown", Description: "尽量保留服务端交付文档的 Markdown。"},
+	}
+}
+
 func RenderTemplate(nameOrPath string, doc Document) (string, error) {
 	nameOrPath = strings.TrimSpace(nameOrPath)
 	if nameOrPath == "" {

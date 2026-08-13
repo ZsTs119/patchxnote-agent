@@ -182,6 +182,15 @@ func TestReadProjectionSuccessAndPagination(t *testing.T) {
 			writeFixture(t, w, http.StatusOK, "agent_model_run_io_trace_success.json")
 		case "/v1/agent/model-runs/mrun_fixture_orphan/io-trace":
 			writeFixture(t, w, http.StatusOK, "agent_model_run_io_trace_without_memory_success.json")
+		case "/v1/agent/model-io-traces":
+			query := r.URL.Query()
+			if query.Get("platform") != "mobile" || query.Get("task_type") != "daily_digest" ||
+				query.Get("state") != "completed" || query.Get("business_id") != "business-fixture-1" ||
+				query.Get("date_from") != "2026-08-13T00:00:00Z" || query.Get("limit") != "10" ||
+				query.Get("cursor") != "cursor_trace_page_1" {
+				t.Fatalf("unexpected model io traces query: %s", r.URL.RawQuery)
+			}
+			writeFixture(t, w, http.StatusOK, "agent_model_io_traces_page_success.json")
 		case "/v1/agent/auth/logout":
 			w.WriteHeader(http.StatusNoContent)
 		default:
@@ -264,6 +273,25 @@ func TestReadProjectionSuccessAndPagination(t *testing.T) {
 	}
 	if orphanIO.Memory != nil || orphanIO.Trace.RequestID != "mrun_fixture_orphan" {
 		t.Fatalf("unexpected orphan io trace: %+v", orphanIO)
+	}
+	traces, err := client.ListModelIOTraces(context.Background(), credentialMaterial, ListModelIOTracesParams{
+		Platform:   "mobile",
+		TaskType:   "daily_digest",
+		State:      "completed",
+		BusinessID: "business-fixture-1",
+		DateFrom:   "2026-08-13T00:00:00Z",
+		Limit:      10,
+		Cursor:     "cursor_trace_page_1",
+	})
+	if err != nil {
+		t.Fatalf("list model io traces: %v", err)
+	}
+	if traces.NextCursor != "cursor_trace_page_2" || len(traces.Items) != 2 ||
+		traces.Items[0].RequestID != "mrun_fixture_trace_1" ||
+		traces.Items[0].Memory == nil ||
+		traces.Items[1].SourceTextAvailability != "not_applicable" ||
+		traces.Items[0].FieldBytes.ProviderResponseJSON == 0 {
+		t.Fatalf("unexpected model io traces page: %+v", traces)
 	}
 	if err := client.Logout(context.Background(), credentialMaterial); err != nil {
 		t.Fatalf("logout: %v", err)
@@ -393,6 +421,14 @@ func TestListMemoriesRequiresPlatform(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected platform validation error")
 	}
+	_, err = client.ListModelIOTraces(context.Background(), strings.Repeat("e", 32), ListModelIOTracesParams{})
+	if err == nil {
+		t.Fatal("expected model io trace platform validation error")
+	}
+	_, err = client.ListModelIOTraces(context.Background(), strings.Repeat("e", 32), ListModelIOTracesParams{Platform: "mobile", Limit: 51})
+	if err == nil {
+		t.Fatal("expected model io trace limit validation error")
+	}
 }
 
 func TestDeliveryAndModelIOValidateInputs(t *testing.T) {
@@ -412,6 +448,7 @@ func TestAgentDeliveryAndModelIOFixtureSensitiveValueScan(t *testing.T) {
 	fixtures := []string{
 		"agent_memory_delivery_document_success.json",
 		"agent_memory_model_io_success.json",
+		"agent_model_io_traces_page_success.json",
 		"agent_model_run_io_trace_success.json",
 		"agent_model_run_io_trace_without_memory_success.json",
 	}

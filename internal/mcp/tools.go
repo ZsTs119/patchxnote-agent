@@ -33,7 +33,7 @@ type ToolContent struct {
 }
 
 func defaultTools(server *Server) []Tool {
-	return []Tool{
+	tools := []Tool{
 		{
 			Name:        "patchxnote_get_current_user",
 			Description: "Read the current PatchXNote account projection for the logged-in Agent session.",
@@ -102,6 +102,8 @@ func defaultTools(server *Server) []Tool {
 			validator:   validateGetMemoryArgs,
 		},
 	}
+	tools = append(tools, defaultWebhookTools(server)...)
+	return append(tools, defaultModelIOTools(server)...)
 }
 
 func (s *Server) handleGetCurrentUser(ctx context.Context, arguments json.RawMessage) (CallToolResult, error) {

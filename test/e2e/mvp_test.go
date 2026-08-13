@@ -100,6 +100,30 @@ func TestMVP(t *testing.T) {
 		case "/v1/agent/memories/mem_fixture_1":
 			requireBearer(t, r, credentialMaterial)
 			writeJSON(t, w, http.StatusOK, memoryFixture())
+		case "/v1/agent/memories/mem_fixture_1/delivery-document":
+			requireBearer(t, r, credentialMaterial)
+			if got := r.URL.Query().Get("platform"); got != "mobile" {
+				t.Fatalf("unexpected delivery document platform: %s", r.URL.RawQuery)
+			}
+			writeJSON(t, w, http.StatusOK, deliveryFixture())
+		case "/v1/agent/memories/mem_fixture_1/model-io":
+			requireBearer(t, r, credentialMaterial)
+			if got := r.URL.Query().Get("platform"); got != "mobile" {
+				t.Fatalf("unexpected model IO platform: %s", r.URL.RawQuery)
+			}
+			writeJSON(t, w, http.StatusOK, modelIOFixture())
+		case "/v1/agent/model-io-traces":
+			requireBearer(t, r, credentialMaterial)
+			if got := r.URL.Query().Get("platform"); got != "mobile" {
+				t.Fatalf("unexpected model IO trace list platform: %s", r.URL.RawQuery)
+			}
+			writeJSON(t, w, http.StatusOK, modelIOTraceListFixture())
+		case "/v1/agent/model-runs/req_fixture_1/io-trace":
+			requireBearer(t, r, credentialMaterial)
+			if got := r.URL.Query().Get("platform"); got != "mobile" {
+				t.Fatalf("unexpected model IO trace platform: %s", r.URL.RawQuery)
+			}
+			writeJSON(t, w, http.StatusOK, modelIOFixture())
 		case "/v1/agent/auth/logout":
 			requireBearer(t, r, credentialMaterial)
 			w.WriteHeader(http.StatusNoContent)
@@ -134,6 +158,9 @@ func TestMVP(t *testing.T) {
 		t.Fatalf("unexpected auth status output:\n%s", status.stdout)
 	}
 
+	mcpDraftDir := filepath.Join(home, "mcp-draft")
+	mcpModelIOFile := filepath.Join(home, "mcp-model-io.json")
+	mcpParsedResultFile := filepath.Join(home, "mcp-parsed-result.json")
 	mcpInput := strings.Join([]string{
 		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`,
 		`{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`,
@@ -144,9 +171,69 @@ func TestMVP(t *testing.T) {
 		`{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"patchxnote_list_memories","arguments":{"platform":"mobile","limit":20}}}`,
 		`{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"patchxnote_search_memories","arguments":{"platform":"mobile","query":"event","limit":20}}}`,
 		`{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"patchxnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}}`,
+		mcpToolCallLine(t, 10, "patchxnote_configure_webhook_target", map[string]any{"alias": "MCP 网关", "type": "generic", "webhook_url": server.URL + "/webhook/generic", "template": "daily-review"}),
+		mcpToolCallLine(t, 11, "patchxnote_list_webhook_targets", map[string]any{"include_disabled": false}),
+		mcpToolCallLine(t, 12, "patchxnote_list_webhook_templates", map[string]any{}),
+		mcpToolCallLine(t, 13, "patchxnote_render_webhook_message", map[string]any{"memory_id": "mem_fixture_1", "platform": "mobile", "template": "daily-review", "save_draft": true, "out": mcpDraftDir, "include_model_io": true, "force": true}),
+		mcpToolCallLine(t, 14, "patchxnote_export_model_io", map[string]any{"memory_id": "mem_fixture_1", "platform": "mobile", "out": mcpModelIOFile, "force": true}),
+		mcpToolCallLine(t, 15, "patchxnote_send_webhook", map[string]any{"target_aliases": []string{"MCP 网关"}, "title": "MCP Webhook Smoke", "markdown": "## MCP Webhook Smoke\n\n发送内容\n"}),
+		mcpToolCallLine(t, 16, "patchxnote_remove_webhook_target", map[string]any{"alias": "MCP 网关"}),
+		mcpToolCallLine(t, 17, "patchxnote_list_webhook_targets", map[string]any{}),
+		mcpToolCallLine(t, 18, "patchxnote_list_model_io_traces", map[string]any{"platform": "mobile", "limit": 20}),
+		mcpToolCallLine(t, 19, "patchxnote_get_model_io_source_text", map[string]any{"memory_id": "mem_fixture_1", "platform": "mobile"}),
+		mcpToolCallLine(t, 20, "patchxnote_get_model_io_provider_response", map[string]any{"memory_id": "mem_fixture_1", "platform": "mobile"}),
+		mcpToolCallLine(t, 21, "patchxnote_get_model_io_parsed_result", map[string]any{"memory_id": "mem_fixture_1", "platform": "mobile", "out": mcpParsedResultFile}),
+		mcpToolCallLine(t, 22, "patchxnote_get_model_io_packaged_result", map[string]any{"request_id": "req_fixture_1", "platform": "mobile"}),
 	}, "\n") + "\n"
 	mcpResult := runCLIWithInput(t, binary, env, mcpInput, "mcp", "serve")
-	assertMCPResponses(t, mcpResult.stdout, 9)
+	mcpResponses := assertMCPResponses(t, mcpResult.stdout, 22)
+	assertMCPToolCount(t, mcpResponses, 19)
+	if strings.Contains(mcpResult.stdout, server.URL+"/webhook/generic") {
+		t.Fatalf("MCP output leaked raw webhook URL:\n%s", mcpResult.stdout)
+	}
+	traceListText := mcpResponseText(t, mcpResponses, 18)
+	sourceFieldText := mcpResponseText(t, mcpResponses, 19)
+	providerFieldText := mcpResponseText(t, mcpResponses, 20)
+	packagedFieldText := mcpResponseText(t, mcpResponses, 22)
+	if !strings.Contains(traceListText, "req_fixture_1") || !strings.Contains(traceListText, `"source_text_availability": "available"`) {
+		t.Fatalf("MCP model IO trace list did not return expected metadata:\n%s", traceListText)
+	}
+	if !strings.Contains(sourceFieldText, "安全投影文本") || !strings.Contains(providerFieldText, `"content": "ok"`) || !strings.Contains(packagedFieldText, "合成记录摘要") {
+		t.Fatalf("MCP model IO field tools did not return expected inline fields:\nsource=%s\nprovider=%s\npackaged=%s", sourceFieldText, providerFieldText, packagedFieldText)
+	}
+	if strings.Contains(providerFieldText, `"messages"`) {
+		t.Fatalf("MCP provider-response leaked provider request content:\n%s", providerFieldText)
+	}
+	for _, name := range []string{"source.json", "message.md", "metadata.json", "model-io.json"} {
+		if _, err := os.Stat(filepath.Join(mcpDraftDir, name)); err != nil {
+			t.Fatalf("expected MCP draft file %s: %v", name, err)
+		}
+	}
+	if _, err := os.Stat(mcpModelIOFile); err != nil {
+		t.Fatalf("expected MCP model IO export file: %v", err)
+	}
+	if body, err := os.ReadFile(mcpParsedResultFile); err != nil || !json.Valid(body) || !strings.Contains(string(body), `"summary": "ok"`) {
+		t.Fatalf("expected MCP parsed result file, err=%v body=%s", err, body)
+	}
+
+	sourceText := runCLI(t, binary, env, "model-io", "source-text", "--memory-id", "mem_fixture_1", "--platform", "mobile")
+	if sourceText.stdout != "安全投影文本\n" {
+		t.Fatalf("unexpected model-io source-text output:\n%s", sourceText.stdout)
+	}
+	providerOut := filepath.Join(home, "provider-response.json")
+	runCLI(t, binary, env, "model-io", "provider-response", "--memory-id", "mem_fixture_1", "--platform", "mobile", "--out", providerOut)
+	if body, err := os.ReadFile(providerOut); err != nil || !json.Valid(body) || !strings.Contains(string(body), `"content": "ok"`) {
+		t.Fatalf("expected CLI provider response file, err=%v body=%s", err, body)
+	}
+	fullModelIOOut := filepath.Join(home, "cli-model-io.json")
+	runCLI(t, binary, env, "model-io", "export", "--memory-id", "mem_fixture_1", "--platform", "mobile", "--out", fullModelIOOut)
+	if _, err := os.Stat(fullModelIOOut); err != nil {
+		t.Fatalf("expected CLI model IO export file: %v", err)
+	}
+	traceList := runCLI(t, binary, env, "model-io", "list", "--platform", "mobile")
+	if !strings.Contains(traceList.stdout, "req_fixture_1") || !strings.Contains(traceList.stdout, "available") {
+		t.Fatalf("unexpected model-io list output:\n%s", traceList.stdout)
+	}
 
 	webhookURL := server.URL + "/webhook/generic"
 	runCLI(t, binary, env, "webhook", "set", "内部网关", "--type", "generic", "--url", webhookURL)
@@ -169,8 +256,8 @@ func TestMVP(t *testing.T) {
 	}
 	runCLI(t, binary, env, "webhook", "send", "--target", "内部网关", "--draft", draftDir)
 	runCLIExpectError(t, binary, env, "webhook", "send", "--target", "内部网关", "--target", "内部网关", "--file", messageFile)
-	if webhookCalls != 3 {
-		t.Fatalf("expected webhook test/file/draft calls, got %d", webhookCalls)
+	if webhookCalls != 4 {
+		t.Fatalf("expected webhook MCP/test/file/draft calls, got %d", webhookCalls)
 	}
 
 	runCLI(t, binary, env, "logout")
@@ -181,8 +268,8 @@ func TestMVP(t *testing.T) {
 
 	writeEvidence(t, map[string]any{
 		"status":      "pass",
-		"commands":    []string{"login", "auth status", "mcp serve", "webhook set/list/test/send", "logout", "auth status"},
-		"tool_count":  7,
+		"commands":    []string{"login", "auth status", "mcp serve read tools", "mcp serve webhook tools", "mcp serve model-io tools", "model-io list/source-text/provider-response/export", "webhook set/list/test/send", "logout", "auth status"},
+		"tool_count":  19,
 		"server_kind": "httptest-agent-v1",
 	})
 }
@@ -235,12 +322,30 @@ func runCLIExpectError(t *testing.T, binary string, env []string, args ...string
 	return cliResult{stdout: stdout.String(), stderr: stderr.String()}
 }
 
-func assertMCPResponses(t *testing.T, stdout string, want int) {
+func mcpToolCallLine(t *testing.T, id int, name string, arguments map[string]any) string {
+	t.Helper()
+	body, err := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      name,
+			"arguments": arguments,
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode MCP call %s: %v", name, err)
+	}
+	return string(body)
+}
+
+func assertMCPResponses(t *testing.T, stdout string, want int) []map[string]any {
 	t.Helper()
 	lines := strings.Split(strings.TrimSpace(stdout), "\n")
 	if len(lines) != want {
 		t.Fatalf("expected %d MCP responses, got %d\n%s", want, len(lines), stdout)
 	}
+	responses := make([]map[string]any, 0, len(lines))
 	for _, line := range lines {
 		var response map[string]any
 		if err := json.Unmarshal([]byte(line), &response); err != nil {
@@ -249,7 +354,64 @@ func assertMCPResponses(t *testing.T, stdout string, want int) {
 		if response["error"] != nil {
 			t.Fatalf("unexpected MCP error response: %+v", response["error"])
 		}
+		responses = append(responses, response)
 	}
+	return responses
+}
+
+func assertMCPToolCount(t *testing.T, responses []map[string]any, want int) {
+	t.Helper()
+	for _, response := range responses {
+		if response["id"] != float64(2) {
+			continue
+		}
+		result, ok := response["result"].(map[string]any)
+		if !ok {
+			t.Fatalf("tools/list result has unexpected shape: %+v", response["result"])
+		}
+		tools, ok := result["tools"].([]any)
+		if !ok {
+			t.Fatalf("tools/list tools has unexpected shape: %+v", result["tools"])
+		}
+		if len(tools) != want {
+			t.Fatalf("expected %d MCP tools, got %d", want, len(tools))
+		}
+		return
+	}
+	t.Fatalf("tools/list response was not found")
+}
+
+func mcpResponseText(t *testing.T, responses []map[string]any, id int) string {
+	t.Helper()
+	for _, response := range responses {
+		if response["id"] != float64(id) {
+			continue
+		}
+		return toolTextFromMCPResult(t, response)
+	}
+	t.Fatalf("MCP response id %d was not found", id)
+	return ""
+}
+
+func toolTextFromMCPResult(t *testing.T, response map[string]any) string {
+	t.Helper()
+	result, ok := response["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("MCP response result has unexpected shape: %+v", response["result"])
+	}
+	content, ok := result["content"].([]any)
+	if !ok || len(content) == 0 {
+		t.Fatalf("MCP result content has unexpected shape: %+v", result["content"])
+	}
+	item, ok := content[0].(map[string]any)
+	if !ok {
+		t.Fatalf("MCP content item has unexpected shape: %+v", content[0])
+	}
+	text, ok := item["text"].(string)
+	if !ok {
+		t.Fatalf("MCP content text has unexpected shape: %+v", item["text"])
+	}
+	return text
 }
 
 func accountFixture() map[string]any {
@@ -276,6 +438,130 @@ func memoryFixture() map[string]any {
 		"payload_plaintext_bytes": 256,
 		"created_at":              "2026-08-06T09:00:00Z",
 		"updated_at":              "2026-08-06T09:30:00Z",
+	}
+}
+
+func deliveryFixture() map[string]any {
+	return map[string]any{
+		"source":   "patchxnote-agent",
+		"version":  "v1",
+		"title":    "合成记录摘要",
+		"summary":  "这是一条用于 Agent webhook MCP 测试的安全摘要。",
+		"markdown": "## 记录摘要\n\n这是一条用于 Agent webhook MCP 测试的安全摘要。",
+		"sections": []map[string]any{
+			{"title": "背景", "markdown": "用户完成了一条记录同步。"},
+			{"title": "结论", "markdown": "Agent 可以渲染并发送 webhook。"},
+		},
+		"key_items": []map[string]any{
+			{"title": "继续验收", "status": "open", "owner": "Agent", "due_at": "2026-08-14", "markdown": "完成本地安装链路验证。"},
+		},
+		"memory": map[string]any{
+			"id":                  "mem_fixture_1",
+			"platform":            "mobile",
+			"object_type":         "event",
+			"client_object_id":    "local_event_fixture",
+			"revision_id":         "rev_fixture_1",
+			"revision":            3,
+			"schema_id":           "patchnote.event.v1",
+			"schema_version":      1,
+			"source_availability": "safe_plaintext_projection",
+		},
+		"trace": map[string]any{
+			"trace_id":   "trace_fixture_1",
+			"request_id": "req_fixture_1",
+			"platform":   "mobile",
+			"task_type":  "event_summary",
+			"state":      "succeeded",
+		},
+		"generated_at": "2026-08-13T12:00:00Z",
+	}
+}
+
+func modelIOFixture() map[string]any {
+	return map[string]any{
+		"source":  "patchxnote-agent",
+		"version": "v1",
+		"memory": map[string]any{
+			"id":                  "mem_fixture_1",
+			"platform":            "mobile",
+			"object_type":         "event",
+			"client_object_id":    "local_event_fixture",
+			"revision_id":         "rev_fixture_1",
+			"revision":            3,
+			"schema_id":           "patchnote.event.v1",
+			"schema_version":      1,
+			"source_availability": "safe_plaintext_projection",
+		},
+		"trace": map[string]any{
+			"trace_id":   "trace_fixture_1",
+			"request_id": "req_fixture_1",
+			"platform":   "mobile",
+			"task_type":  "event_summary",
+			"state":      "succeeded",
+		},
+		"source_text": map[string]any{"availability": "available", "text": "安全投影文本"},
+		"field_status": map[string]any{
+			"client_request_json":    "available",
+			"provider_request_json":  "available",
+			"provider_response_json": "available",
+			"parsed_result_json":     "available",
+			"packaged_result_json":   "available",
+			"provider_attempts_json": "available",
+		},
+		"client_request_json":    map[string]any{"memory_id": "mem_fixture_1"},
+		"provider_request_json":  map[string]any{"messages": []string{"safe"}},
+		"provider_response_json": map[string]any{"content": "ok"},
+		"parsed_result_json":     map[string]any{"summary": "ok"},
+		"packaged_result_json":   map[string]any{"title": "合成记录摘要"},
+		"provider_attempts_json": []map[string]any{{"status": "succeeded"}},
+	}
+}
+
+func modelIOTraceListFixture() map[string]any {
+	return map[string]any{
+		"items": []map[string]any{{
+			"request_id":               "req_fixture_1",
+			"platform":                 "mobile",
+			"api_contract_version":     "v1",
+			"task_type":                "event_summary",
+			"state":                    "succeeded",
+			"safe_error_code":          nil,
+			"recording_id":             "rec_fixture_1",
+			"event_id":                 "event_fixture_1",
+			"business_id":              "biz_fixture_1",
+			"created_at":               "2026-08-13T12:00:00Z",
+			"updated_at":               "2026-08-13T12:00:05Z",
+			"completed_at":             "2026-08-13T12:00:05Z",
+			"source_text_availability": "available",
+			"field_status": map[string]any{
+				"client_request_json":    "available",
+				"provider_request_json":  "available",
+				"provider_response_json": "available",
+				"parsed_result_json":     "available",
+				"packaged_result_json":   "available",
+				"provider_attempts_json": "available",
+			},
+			"field_bytes": map[string]any{
+				"client_request_json":    29,
+				"provider_request_json":  21,
+				"provider_response_json": 17,
+				"parsed_result_json":     17,
+				"packaged_result_json":   28,
+				"provider_attempts_json": 26,
+			},
+			"memory": map[string]any{
+				"id":                  "mem_fixture_1",
+				"platform":            "mobile",
+				"object_type":         "event",
+				"client_object_id":    "local_event_fixture",
+				"revision_id":         "rev_fixture_1",
+				"revision":            3,
+				"schema_id":           "patchnote.event.v1",
+				"schema_version":      1,
+				"source_availability": "safe_plaintext_projection",
+			},
+		}},
+		"next_cursor": "",
 	}
 }
 
