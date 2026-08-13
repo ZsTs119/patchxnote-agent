@@ -161,6 +161,48 @@ func (c *Client) GetMemory(ctx context.Context, accessToken string, platform str
 	return response, err
 }
 
+func (c *Client) GetMemoryDeliveryDocument(ctx context.Context, accessToken string, platform string, memoryID string) (AgentDeliveryDocument, error) {
+	if strings.TrimSpace(memoryID) == "" {
+		return AgentDeliveryDocument{}, fmt.Errorf("memory id is required")
+	}
+	query, err := optionalPlatformQuery(platform)
+	if err != nil {
+		return AgentDeliveryDocument{}, err
+	}
+
+	var response AgentDeliveryDocument
+	err = c.doJSON(ctx, http.MethodGet, "/v1/agent/memories/"+url.PathEscape(memoryID)+"/delivery-document", query, accessToken, "", nil, &response, true, http.StatusOK)
+	return response, err
+}
+
+func (c *Client) GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (AgentModelIOExport, error) {
+	if strings.TrimSpace(memoryID) == "" {
+		return AgentModelIOExport{}, fmt.Errorf("memory id is required")
+	}
+	query, err := optionalPlatformQuery(platform)
+	if err != nil {
+		return AgentModelIOExport{}, err
+	}
+
+	var response AgentModelIOExport
+	err = c.doJSON(ctx, http.MethodGet, "/v1/agent/memories/"+url.PathEscape(memoryID)+"/model-io", query, accessToken, "", nil, &response, true, http.StatusOK)
+	return response, err
+}
+
+func (c *Client) GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (AgentModelIOExport, error) {
+	if strings.TrimSpace(requestID) == "" {
+		return AgentModelIOExport{}, fmt.Errorf("request id is required")
+	}
+	query, err := optionalPlatformQuery(platform)
+	if err != nil {
+		return AgentModelIOExport{}, err
+	}
+
+	var response AgentModelIOExport
+	err = c.doJSON(ctx, http.MethodGet, "/v1/agent/model-runs/"+url.PathEscape(requestID)+"/io-trace", query, accessToken, "", nil, &response, true, http.StatusOK)
+	return response, err
+}
+
 func (c *Client) Logout(ctx context.Context, accessToken string) error {
 	return c.doJSON(ctx, http.MethodPost, "/v1/agent/auth/logout", nil, accessToken, "", nil, nil, false, http.StatusNoContent)
 }
@@ -296,6 +338,19 @@ func validatePlatform(platform string) error {
 	default:
 		return fmt.Errorf("platform must be mobile or desktop")
 	}
+}
+
+func optionalPlatformQuery(platform string) (url.Values, error) {
+	platform = strings.TrimSpace(platform)
+	if platform == "" {
+		return nil, nil
+	}
+	if err := validatePlatform(platform); err != nil {
+		return nil, err
+	}
+	query := url.Values{}
+	query.Set("platform", platform)
+	return query, nil
 }
 
 func sleepContext(ctx context.Context, duration time.Duration) error {

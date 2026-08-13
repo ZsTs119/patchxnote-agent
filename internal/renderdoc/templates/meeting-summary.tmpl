@@ -1,0 +1,26 @@
+# {{.Title}}
+
+{{- if .Summary }}
+
+## 会议摘要
+
+{{ .Summary }}
+{{- end }}
+
+{{- if .Sections }}
+
+{{ range .Sections -}}
+## {{ .Title }}
+
+{{ .Markdown }}
+
+{{ end -}}
+{{- end }}
+
+{{- if .KeyItems }}
+## 待办事项
+
+{{ range .KeyItems -}}
+- {{ .Title }}{{ if .Owner }} @{{ .Owner }}{{ end }}{{ if .DueAt }} {{ .DueAt }}{{ end }}
+{{ end -}}
+{{- end }}

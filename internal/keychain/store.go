@@ -27,6 +27,12 @@ type Store interface {
 	Delete(ctx context.Context, profile string) error
 }
 
+type SecretStore interface {
+	GetSecret(ctx context.Context, profile string, name string) (string, error)
+	PutSecret(ctx context.Context, profile string, name string, value string) error
+	DeleteSecret(ctx context.Context, profile string, name string) error
+}
+
 func IsNotFound(err error) bool {
 	return errors.Is(err, ErrNotFound)
 }
@@ -48,6 +54,18 @@ func (s UnavailableStore) Put(ctx context.Context, profile string, credential Cr
 }
 
 func (s UnavailableStore) Delete(ctx context.Context, profile string) error {
+	return s.err()
+}
+
+func (s UnavailableStore) GetSecret(ctx context.Context, profile string, name string) (string, error) {
+	return "", s.err()
+}
+
+func (s UnavailableStore) PutSecret(ctx context.Context, profile string, name string, value string) error {
+	return s.err()
+}
+
+func (s UnavailableStore) DeleteSecret(ctx context.Context, profile string, name string) error {
 	return s.err()
 }
 

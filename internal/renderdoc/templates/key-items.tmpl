@@ -1,0 +1,19 @@
+# {{.Title}}
+
+{{- if .Summary }}
+
+{{ .Summary }}
+{{- end }}
+
+## 要事
+
+{{- if .KeyItems }}
+{{ range .KeyItems }}
+- {{ .Title }}{{ if .Owner }} @{{ .Owner }}{{ end }}{{ if .DueAt }} {{ .DueAt }}{{ end }}{{ if .Status }} ({{ .Status }}){{ end }}
+{{- if .Markdown }}
+  {{ .Markdown }}
+{{- end }}
+{{ end -}}
+{{- else }}
+- 暂无要事
+{{- end }}

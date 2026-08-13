@@ -22,6 +22,7 @@ func TestMVP(t *testing.T) {
 
 	credentialMaterial := strings.Repeat("a", 32)
 	refreshMaterial := strings.Repeat("r", 32)
+	var webhookCalls int
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/v1/agent/auth/otp/requests":
@@ -102,6 +103,16 @@ func TestMVP(t *testing.T) {
 		case "/v1/agent/auth/logout":
 			requireBearer(t, r, credentialMaterial)
 			w.WriteHeader(http.StatusNoContent)
+		case "/webhook/generic":
+			webhookCalls++
+			var payload map[string]any
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatalf("decode webhook payload: %v", err)
+			}
+			if payload["title"] == "" || payload["markdown"] == "" {
+				t.Fatalf("unexpected webhook payload: %+v", payload)
+			}
+			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.NotFound(w, r)
 		}
@@ -137,6 +148,31 @@ func TestMVP(t *testing.T) {
 	mcpResult := runCLIWithInput(t, binary, env, mcpInput, "mcp", "serve")
 	assertMCPResponses(t, mcpResult.stdout, 9)
 
+	webhookURL := server.URL + "/webhook/generic"
+	runCLI(t, binary, env, "webhook", "set", "内部网关", "--type", "generic", "--url", webhookURL)
+	runCLI(t, binary, env, "webhook", "list")
+	runCLI(t, binary, env, "webhook", "test", "内部网关")
+	messageFile := filepath.Join(home, "message.md")
+	if err := os.WriteFile(messageFile, []byte("# 合成周报\n\n合成内容\n"), 0o600); err != nil {
+		t.Fatalf("write webhook message file: %v", err)
+	}
+	runCLI(t, binary, env, "webhook", "send", "--target", "内部网关", "--file", messageFile)
+	draftDir := filepath.Join(home, "draft")
+	if err := os.MkdirAll(draftDir, 0o700); err != nil {
+		t.Fatalf("create draft dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(draftDir, "message.md"), []byte("# 草稿周报\n\n草稿内容\n"), 0o600); err != nil {
+		t.Fatalf("write draft message: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(draftDir, "metadata.json"), []byte(`{"source":"patchxnote","memory_id":"mem_fixture_1","platform":"mobile"}`), 0o600); err != nil {
+		t.Fatalf("write draft metadata: %v", err)
+	}
+	runCLI(t, binary, env, "webhook", "send", "--target", "内部网关", "--draft", draftDir)
+	runCLIExpectError(t, binary, env, "webhook", "send", "--target", "内部网关", "--target", "内部网关", "--file", messageFile)
+	if webhookCalls != 3 {
+		t.Fatalf("expected webhook test/file/draft calls, got %d", webhookCalls)
+	}
+
 	runCLI(t, binary, env, "logout")
 	status = runCLI(t, binary, env, "auth", "status")
 	if !strings.Contains(status.stdout, "unauthenticated") {
@@ -145,7 +181,7 @@ func TestMVP(t *testing.T) {
 
 	writeEvidence(t, map[string]any{
 		"status":      "pass",
-		"commands":    []string{"login", "auth status", "mcp serve", "logout", "auth status"},
+		"commands":    []string{"login", "auth status", "mcp serve", "webhook set/list/test/send", "logout", "auth status"},
 		"tool_count":  7,
 		"server_kind": "httptest-agent-v1",
 	})
@@ -181,6 +217,20 @@ func runCLIWithInput(t *testing.T, binary string, env []string, input string, ar
 		if strings.Contains(combined, disallowed) {
 			t.Fatalf("command %v leaked sensitive value %q", args, disallowed)
 		}
+	}
+	return cliResult{stdout: stdout.String(), stderr: stderr.String()}
+}
+
+func runCLIExpectError(t *testing.T, binary string, env []string, args ...string) cliResult {
+	t.Helper()
+	cmd := exec.CommandContext(context.Background(), binary, args...)
+	cmd.Env = env
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err == nil {
+		t.Fatalf("command %v unexpectedly succeeded\nstdout:\n%s\nstderr:\n%s", args, stdout.String(), stderr.String())
 	}
 	return cliResult{stdout: stdout.String(), stderr: stderr.String()}
 }

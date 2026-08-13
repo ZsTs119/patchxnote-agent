@@ -58,6 +58,17 @@ func (p *sessionCredentialProvider) Credential(ctx context.Context) (keychain.Cr
 		return keychain.Credential{}, false, nil
 	}
 
+	return p.refresh(ctx, false)
+}
+
+func (p *sessionCredentialProvider) RefreshNow(ctx context.Context) (keychain.Credential, bool, error) {
+	return p.refresh(ctx, true)
+}
+
+func (p *sessionCredentialProvider) refresh(ctx context.Context, force bool) (keychain.Credential, bool, error) {
+	if p.api == nil {
+		return keychain.Credential{}, false, nil
+	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -67,11 +78,11 @@ func (p *sessionCredentialProvider) Credential(ctx context.Context) (keychain.Cr
 	}
 	defer release()
 
-	credential, ok, err = p.auth.Credential(ctx)
+	credential, ok, err := p.auth.Credential(ctx)
 	if err != nil || !ok {
 		return credential, ok, err
 	}
-	if !p.shouldRefresh(credential) {
+	if !force && !p.shouldRefresh(credential) && credential.AccessToken != "" {
 		return credential, true, nil
 	}
 	if credential.RefreshToken == "" {

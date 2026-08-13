@@ -193,6 +193,44 @@ func (s *NativeStore) Delete(ctx context.Context, profile string) error {
 	return firstErr
 }
 
+func (s *NativeStore) GetSecret(ctx context.Context, profile string, name string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	profile = normalizeProfile(profile)
+	value, err := s.backend.Get(s.service, nativeAccount(profile, "secret:"+name))
+	if err != nil {
+		return "", mapNativeGetError(err)
+	}
+	return value, nil
+}
+
+func (s *NativeStore) PutSecret(ctx context.Context, profile string, name string, value string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	profile = normalizeProfile(profile)
+	if value == "" {
+		return s.DeleteSecret(ctx, profile, name)
+	}
+	if err := s.backend.Set(s.service, nativeAccount(profile, "secret:"+name), value); err != nil {
+		return mapNativePutError(err)
+	}
+	return nil
+}
+
+func (s *NativeStore) DeleteSecret(ctx context.Context, profile string, name string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	profile = normalizeProfile(profile)
+	err := s.backend.Delete(s.service, nativeAccount(profile, "secret:"+name))
+	if err == nil || errors.Is(err, keyring.ErrNotFound) {
+		return nil
+	}
+	return mapNativeDeleteError(err)
+}
+
 func (s *NativeStore) deleteService(service string, profile string) error {
 	var firstErr error
 	for _, field := range []string{nativeAccessKey, nativeRefreshKey, nativeMetadataKey} {

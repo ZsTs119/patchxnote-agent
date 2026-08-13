@@ -52,6 +52,8 @@ npx -y patchxnote-agent install --print-config
 | Model usage summary | Yes | Current-month usage and charged quota summary. |
 | Structured-result metadata | Yes | Platform-scoped `mobile` or `desktop` safe metadata. |
 | Local memory search | Yes | Searches authorized metadata cached during the MCP session. |
+| Local webhook delivery | Yes | Configure named Feishu, DingTalk, or generic webhook targets and manually send editable Markdown. |
+| Memory-backed webhook drafts | Yes | Fetches the Agent delivery-document projection, saves editable drafts, and can explicitly export model IO JSON. |
 | Hardware bind/release/recovery | No | Owned by App/PC and MR20 flows, not Agent V1. |
 | Raw audio/transcripts/downloads | No | Intentionally not exposed. |
 | Model execution | No | Agent V1 is read-only. |
@@ -173,6 +175,12 @@ patchxnote login
 patchxnote auth status
 patchxnote logout
 patchxnote mcp serve
+patchxnote webhook set "Product Feishu" --type feishu --url-stdin
+patchxnote webhook test "Product Feishu"
+patchxnote webhook send --target "Product Feishu" --file ./message.md
+patchxnote webhook draft --memory-id <memory_id> --out ./patchxnote-drafts/example
+patchxnote webhook send --target "Product Feishu" --draft ./patchxnote-drafts/example
+patchxnote webhook export-model-io --memory-id <memory_id> --out ./patchxnote-drafts/example/model-io.json
 ```
 
 Useful global flags:
@@ -192,6 +200,8 @@ npx -y patchxnote-agent@0.2.3 update
 npx -y patchxnote-agent@0.2.3 uninstall
 ```
 
+Webhook URLs and optional Feishu/DingTalk signing secrets are stored in the local secure credential store, not in the non-secret config file. `--url-stdin` and `--secret-stdin` avoid shell history. Webhook sending is manual only, does not add an MCP write tool, does not follow redirects, and surfaces provider errors directly.
+
 ## Security And Risk Notice
 
 ![PatchXNote Agent safety boundary](./docs/assets/patchxnote-agent-safety-boundary.png)
@@ -207,6 +217,7 @@ Default safety boundaries:
 - Recorder-card identifiers are masked; live BLE state, battery, storage, and recording status are not exposed.
 - Structured content is platform-scoped. The Agent does not merge mobile and desktop content.
 - Tool outputs are bounded and validated before being returned to the MCP client.
+- Webhook target URLs and signing secrets stay in local secure storage; normal webhook payloads never include access tokens, refresh tokens, or exported model IO JSON.
 
 Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full MAC values, SK values, raw audio, transcripts, prompts, or provider payloads into public issues. Use the private process in [SECURITY.md](./SECURITY.md) for vulnerability reports.
 

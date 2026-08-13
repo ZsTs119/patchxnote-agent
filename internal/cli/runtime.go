@@ -23,6 +23,9 @@ type agentAPI interface {
 	GetModelUsageSummary(ctx context.Context, accessToken string) (api.AgentModelUsageSummary, error)
 	ListMemories(ctx context.Context, accessToken string, params api.ListMemoriesParams) (api.AgentMemoryPage, error)
 	GetMemory(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentMemory, error)
+	GetMemoryDeliveryDocument(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentDeliveryDocument, error)
+	GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentModelIOExport, error)
+	GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (api.AgentModelIOExport, error)
 	Logout(ctx context.Context, accessToken string) error
 }
 
@@ -33,6 +36,7 @@ type runtimeState struct {
 	Auth        *auth.Manager
 	Credentials *sessionCredentialProvider
 	API         agentAPI
+	Secrets     keychain.SecretStore
 }
 
 func loadRuntime(state *rootState) (runtimeState, error) {
@@ -64,6 +68,7 @@ func loadRuntime(state *rootState) (runtimeState, error) {
 		Auth:        authManager,
 		Credentials: newSessionCredentialProvider(authManager, agentClient, cfg),
 		API:         agentClient,
+		Secrets:     secretStoreFromCredentialStore(store),
 	}, nil
 }
 
@@ -72,6 +77,13 @@ func defaultCredentialStore(cfg config.Config) keychain.Store {
 		return keychain.NewFileStore(filepath.Join(cfg.Paths.ConfigDir, "credentials.dev.json"))
 	}
 	return keychain.NewNativeStore()
+}
+
+func secretStoreFromCredentialStore(store keychain.Store) keychain.SecretStore {
+	if secretStore, ok := store.(keychain.SecretStore); ok {
+		return secretStore
+	}
+	return keychain.UnavailableStore{}
 }
 
 func defaultAPIFactory(cfg config.Config) (agentAPI, error) {

@@ -1,0 +1,41 @@
+{
+  "source": "patchxnote",
+  "version": "1",
+  "memory": {
+    "id": "mem_fixture_run",
+    "platform": "mobile",
+    "object_type": "event",
+    "client_object_id": "event_fixture",
+    "revision_id": "rev_fixture_run",
+    "revision": 2,
+    "schema_id": "patchnote.event",
+    "schema_version": 1,
+    "source_availability": "text_only"
+  },
+  "trace": {
+    "trace_id": "mitr_fixture_run",
+    "request_id": "mrun_fixture_run",
+    "platform": "mobile",
+    "task_type": "event_summary",
+    "state": "completed"
+  },
+  "source_text": {
+    "availability": "available",
+    "text": "合成事件文本"
+  },
+  "field_status": {
+    "client_request_json": "available",
+    "provider_request_json": "missing",
+    "provider_response_json": "missing",
+    "parsed_result_json": "available",
+    "packaged_result_json": "missing",
+    "provider_attempts_json": "available"
+  },
+  "client_request_json": {
+    "task": "event_summary_fixture"
+  },
+  "parsed_result_json": {
+    "summary": "合成摘要"
+  },
+  "provider_attempts_json": []
+}

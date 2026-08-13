@@ -1,6 +1,9 @@
 package api
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type AgentOTPRequest struct {
 	Phone          string `json:"phone"`
@@ -101,4 +104,83 @@ type ListMemoriesParams struct {
 	Platform string
 	Limit    int
 	Cursor   string
+}
+
+type AgentDeliveryDocument struct {
+	Source      string                 `json:"source"`
+	Version     string                 `json:"version"`
+	Title       string                 `json:"title"`
+	Summary     string                 `json:"summary"`
+	Markdown    string                 `json:"markdown"`
+	Sections    []AgentDeliverySection `json:"sections"`
+	KeyItems    []AgentDeliveryKeyItem `json:"key_items"`
+	Memory      *AgentDeliveryMemory   `json:"memory,omitempty"`
+	Trace       AgentDeliveryTrace     `json:"trace"`
+	GeneratedAt time.Time              `json:"generated_at"`
+}
+
+type AgentDeliverySection struct {
+	Title    string `json:"title"`
+	Markdown string `json:"markdown"`
+}
+
+type AgentDeliveryKeyItem struct {
+	Title    string `json:"title"`
+	Status   string `json:"status"`
+	Owner    string `json:"owner"`
+	DueAt    string `json:"due_at"`
+	Markdown string `json:"markdown"`
+}
+
+type AgentDeliveryMemory struct {
+	ID                 string `json:"id"`
+	Platform           string `json:"platform"`
+	ObjectType         string `json:"object_type"`
+	ClientObjectID     string `json:"client_object_id"`
+	RevisionID         string `json:"revision_id"`
+	Revision           int64  `json:"revision"`
+	SchemaID           string `json:"schema_id"`
+	SchemaVersion      int64  `json:"schema_version"`
+	SourceAvailability string `json:"source_availability"`
+}
+
+type AgentDeliveryTrace struct {
+	TraceID       string     `json:"trace_id,omitempty"`
+	RequestID     string     `json:"request_id"`
+	Platform      string     `json:"platform"`
+	TaskType      string     `json:"task_type"`
+	State         string     `json:"state"`
+	SafeErrorCode *string    `json:"safe_error_code,omitempty"`
+	CreatedAt     *time.Time `json:"created_at,omitempty"`
+	UpdatedAt     *time.Time `json:"updated_at,omitempty"`
+	CompletedAt   *time.Time `json:"completed_at,omitempty"`
+}
+
+type AgentModelIOExport struct {
+	Source               string                  `json:"source"`
+	Version              string                  `json:"version"`
+	Memory               *AgentDeliveryMemory    `json:"memory,omitempty"`
+	Trace                AgentDeliveryTrace      `json:"trace"`
+	SourceText           *AgentSourceText        `json:"source_text,omitempty"`
+	FieldStatus          AgentModelIOFieldStatus `json:"field_status"`
+	ClientRequestJSON    json.RawMessage         `json:"client_request_json,omitempty"`
+	ProviderRequestJSON  json.RawMessage         `json:"provider_request_json,omitempty"`
+	ProviderResponseJSON json.RawMessage         `json:"provider_response_json,omitempty"`
+	ParsedResultJSON     json.RawMessage         `json:"parsed_result_json,omitempty"`
+	PackagedResultJSON   json.RawMessage         `json:"packaged_result_json,omitempty"`
+	ProviderAttemptsJSON json.RawMessage         `json:"provider_attempts_json,omitempty"`
+}
+
+type AgentSourceText struct {
+	Availability string `json:"availability"`
+	Text         string `json:"text,omitempty"`
+}
+
+type AgentModelIOFieldStatus struct {
+	ClientRequestJSON    string `json:"client_request_json,omitempty"`
+	ProviderRequestJSON  string `json:"provider_request_json,omitempty"`
+	ProviderResponseJSON string `json:"provider_response_json,omitempty"`
+	ParsedResultJSON     string `json:"parsed_result_json,omitempty"`
+	PackagedResultJSON   string `json:"packaged_result_json,omitempty"`
+	ProviderAttemptsJSON string `json:"provider_attempts_json,omitempty"`
 }

@@ -18,6 +18,8 @@ type fakeAgentAPI struct {
 	verifyCode   string
 	refreshCalls int
 	currentUser  api.CurrentAccount
+	delivery     api.AgentDeliveryDocument
+	modelIO      api.AgentModelIOExport
 	logoutErr    error
 	logoutCalled bool
 }
@@ -98,6 +100,56 @@ func (f *fakeAgentAPI) ListMemories(ctx context.Context, accessToken string, par
 
 func (f *fakeAgentAPI) GetMemory(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentMemory, error) {
 	return api.AgentMemory{}, nil
+}
+
+func (f *fakeAgentAPI) GetMemoryDeliveryDocument(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentDeliveryDocument, error) {
+	if f.delivery.Title != "" {
+		return f.delivery, nil
+	}
+	return api.AgentDeliveryDocument{
+		Source:   "patchxnote",
+		Version:  "1",
+		Title:    "合成会议纪要",
+		Summary:  "合成摘要",
+		Markdown: "# 合成会议纪要\n\n正文",
+		Memory: &api.AgentDeliveryMemory{
+			ID:       memoryID,
+			Platform: platform,
+		},
+		Trace: api.AgentDeliveryTrace{
+			RequestID: "mrun_fixture",
+			Platform:  platform,
+			State:     "completed",
+		},
+	}, nil
+}
+
+func (f *fakeAgentAPI) GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentModelIOExport, error) {
+	if f.modelIO.Trace.RequestID != "" {
+		return f.modelIO, nil
+	}
+	return api.AgentModelIOExport{
+		Source:  "patchxnote",
+		Version: "1",
+		Memory:  &api.AgentDeliveryMemory{ID: memoryID, Platform: platform},
+		Trace:   api.AgentDeliveryTrace{RequestID: "mrun_fixture", Platform: platform, State: "completed"},
+		FieldStatus: api.AgentModelIOFieldStatus{
+			ClientRequestJSON: "available",
+		},
+		ClientRequestJSON: []byte(`{"fixture":true}`),
+	}, nil
+}
+
+func (f *fakeAgentAPI) GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (api.AgentModelIOExport, error) {
+	if f.modelIO.Trace.RequestID != "" {
+		return f.modelIO, nil
+	}
+	return api.AgentModelIOExport{
+		Source:      "patchxnote",
+		Version:     "1",
+		Trace:       api.AgentDeliveryTrace{RequestID: requestID, Platform: platform, State: "completed"},
+		FieldStatus: api.AgentModelIOFieldStatus{ClientRequestJSON: "available"},
+	}, nil
 }
 
 func (f *fakeAgentAPI) Logout(ctx context.Context, accessToken string) error {

@@ -1,0 +1,28 @@
+# {{.Title}}
+
+{{- if .Summary }}
+
+## 摘要
+
+{{ .Summary }}
+{{- end }}
+
+{{- if .Sections }}
+{{ range .Sections }}
+## {{ .Title }}
+
+{{ .Markdown }}
+{{ end -}}
+{{- else if .Markdown }}
+
+{{ .Markdown }}
+{{- end }}
+
+{{- if .KeyItems }}
+
+## 要事
+
+{{ range .KeyItems -}}
+- {{ .Title }}{{ if .Status }} ({{ .Status }}){{ end }}
+{{ end -}}
+{{- end }}

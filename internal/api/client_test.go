@@ -165,6 +165,23 @@ func TestReadProjectionSuccessAndPagination(t *testing.T) {
 				t.Fatalf("unexpected memory detail query: %s", r.URL.RawQuery)
 			}
 			writeFixture(t, w, http.StatusOK, "agent_memory_success.json")
+		case "/v1/agent/memories/mem_fixture_delivery/delivery-document":
+			if r.URL.Query().Get("platform") != "desktop" {
+				t.Fatalf("unexpected delivery document query: %s", r.URL.RawQuery)
+			}
+			writeFixture(t, w, http.StatusOK, "agent_memory_delivery_document_success.json")
+		case "/v1/agent/memories/mem_fixture_delivery/model-io":
+			if r.URL.RawQuery != "" {
+				t.Fatalf("expected optional platform to be omitted, got query: %s", r.URL.RawQuery)
+			}
+			writeFixture(t, w, http.StatusOK, "agent_memory_model_io_success.json")
+		case "/v1/agent/model-runs/mrun_fixture_run/io-trace":
+			if r.URL.Query().Get("platform") != "mobile" {
+				t.Fatalf("unexpected io trace query: %s", r.URL.RawQuery)
+			}
+			writeFixture(t, w, http.StatusOK, "agent_model_run_io_trace_success.json")
+		case "/v1/agent/model-runs/mrun_fixture_orphan/io-trace":
+			writeFixture(t, w, http.StatusOK, "agent_model_run_io_trace_without_memory_success.json")
 		case "/v1/agent/auth/logout":
 			w.WriteHeader(http.StatusNoContent)
 		default:
@@ -219,6 +236,34 @@ func TestReadProjectionSuccessAndPagination(t *testing.T) {
 	}
 	if memory.ID != "mem_fixture_1" || memory.SourceAvailability != "metadata_only" {
 		t.Fatalf("unexpected memory: %+v", memory)
+	}
+	delivery, err := client.GetMemoryDeliveryDocument(context.Background(), credentialMaterial, "desktop", "mem_fixture_delivery")
+	if err != nil {
+		t.Fatalf("delivery document: %v", err)
+	}
+	if delivery.Title != "合成会议纪要" || len(delivery.Sections) != 1 || delivery.Memory == nil || delivery.Trace.RequestID != "mrun_fixture_delivery" {
+		t.Fatalf("unexpected delivery document: %+v", delivery)
+	}
+	modelIO, err := client.GetMemoryModelIO(context.Background(), credentialMaterial, "", "mem_fixture_delivery")
+	if err != nil {
+		t.Fatalf("memory model io: %v", err)
+	}
+	if modelIO.SourceText == nil || modelIO.SourceText.Text == "" || modelIO.Memory == nil || len(modelIO.ProviderAttemptsJSON) == 0 {
+		t.Fatalf("unexpected memory model io: %+v", modelIO)
+	}
+	runIO, err := client.GetModelRunIOTrace(context.Background(), credentialMaterial, "mobile", "mrun_fixture_run")
+	if err != nil {
+		t.Fatalf("run io trace: %v", err)
+	}
+	if runIO.Memory == nil || runIO.Trace.Platform != "mobile" {
+		t.Fatalf("unexpected run io trace: %+v", runIO)
+	}
+	orphanIO, err := client.GetModelRunIOTrace(context.Background(), credentialMaterial, "", "mrun_fixture_orphan")
+	if err != nil {
+		t.Fatalf("orphan io trace: %v", err)
+	}
+	if orphanIO.Memory != nil || orphanIO.Trace.RequestID != "mrun_fixture_orphan" {
+		t.Fatalf("unexpected orphan io trace: %+v", orphanIO)
 	}
 	if err := client.Logout(context.Background(), credentialMaterial); err != nil {
 		t.Fatalf("logout: %v", err)
@@ -347,6 +392,53 @@ func TestListMemoriesRequiresPlatform(t *testing.T) {
 	_, err := client.ListMemories(context.Background(), strings.Repeat("e", 32), ListMemoriesParams{})
 	if err == nil {
 		t.Fatal("expected platform validation error")
+	}
+}
+
+func TestDeliveryAndModelIOValidateInputs(t *testing.T) {
+	client := newTestClient(t, "http://example.test", 0)
+	if _, err := client.GetMemoryDeliveryDocument(context.Background(), "token", "web", "mem_fixture"); err == nil {
+		t.Fatal("expected invalid platform error")
+	}
+	if _, err := client.GetMemoryModelIO(context.Background(), "token", "", ""); err == nil {
+		t.Fatal("expected missing memory id error")
+	}
+	if _, err := client.GetModelRunIOTrace(context.Background(), "token", "", ""); err == nil {
+		t.Fatal("expected missing request id error")
+	}
+}
+
+func TestAgentDeliveryAndModelIOFixtureSensitiveValueScan(t *testing.T) {
+	fixtures := []string{
+		"agent_memory_delivery_document_success.json",
+		"agent_memory_model_io_success.json",
+		"agent_model_run_io_trace_success.json",
+		"agent_model_run_io_trace_without_memory_success.json",
+	}
+	disallowed := []string{
+		"access_token",
+		"refresh_token",
+		"Bearer ",
+		"otp",
+		"tos_sk",
+		"\"sk\"",
+		"credential",
+		"protocol_mac",
+		"raw_audio",
+		"Authorization",
+		"13800138000",
+	}
+	for _, fixture := range fixtures {
+		body, err := os.ReadFile(filepath.Join("..", "..", "testdata", "api", fixture))
+		if err != nil {
+			t.Fatalf("read fixture %s: %v", fixture, err)
+		}
+		text := string(body)
+		for _, needle := range disallowed {
+			if strings.Contains(text, needle) {
+				t.Fatalf("fixture %s contains disallowed marker %q", fixture, needle)
+			}
+		}
 	}
 }
 

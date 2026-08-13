@@ -93,6 +93,8 @@ V1 公测默认只允许只读能力。写能力必须先有服务端设计和�
 
 - CLI 命令：`internal/cli/*.go`
 - API client：`internal/api/*.go`
+- webhook 目标、payload、发送器：`internal/webhook/*.go`
+- webhook 文档渲染和模板：`internal/renderdoc/*.go`
 - MCP tools：`internal/mcp/tools.go`
 - 本地缓存/search：`internal/cache/*.go`
 - keychain：`internal/keychain/*.go`
@@ -108,6 +110,14 @@ V1 公测默认只允许只读能力。写能力必须先有服务端设计和�
 - 稳定错误映射
 - 输出大小上限
 - secret / 敏感字段测试
+
+新增 CLI-only webhook 能力时：
+
+- webhook URL 和签名密钥必须只写入 `internal/keychain` 安全存储边界。
+- 普通配置文件只能保存 alias、type、enabled、masked URL、template 等非密信息。
+- 默认不新增 MCP webhook 工具；MCP tool 列表仍应保持 7 个，除非有单独接受的 MCP 写工具设计。
+- memory-backed webhook 默认只用 `/v1/agent/memories/{memory_id}/delivery-document`，model IO 只能显式导出。
+- 示例和文档只放 fake URL，不写真实机器人地址。
 
 ## 本地验证门禁
 

@@ -80,6 +80,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 		newLogoutCommand(state),
 		newMCPCommand(state),
 		newVersionCommand(state),
+		newWebhookCommand(state),
 	)
 	if deps.Stdin != nil {
 		cmd.SetIn(deps.Stdin)

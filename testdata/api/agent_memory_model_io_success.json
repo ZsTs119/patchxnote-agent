@@ -1,0 +1,59 @@
+{
+  "source": "patchxnote",
+  "version": "1",
+  "memory": {
+    "id": "mem_fixture_delivery",
+    "platform": "desktop",
+    "object_type": "daily_digest",
+    "client_object_id": "day_2026_08_13",
+    "revision_id": "rev_fixture_delivery",
+    "revision": 1,
+    "schema_id": "patchnote.daily-digest",
+    "schema_version": 1,
+    "source_availability": "text_only"
+  },
+  "trace": {
+    "trace_id": "mitr_fixture_delivery",
+    "request_id": "mrun_fixture_delivery",
+    "platform": "desktop",
+    "task_type": "daily_digest",
+    "state": "completed",
+    "created_at": "2026-08-13T08:00:00Z",
+    "updated_at": "2026-08-13T08:01:00Z",
+    "completed_at": "2026-08-13T08:01:30Z"
+  },
+  "source_text": {
+    "availability": "available",
+    "text": "合成示例文本"
+  },
+  "field_status": {
+    "client_request_json": "available",
+    "provider_request_json": "available",
+    "provider_response_json": "available",
+    "parsed_result_json": "available",
+    "packaged_result_json": "available",
+    "provider_attempts_json": "available"
+  },
+  "client_request_json": {
+    "task": "daily_digest_fixture"
+  },
+  "provider_request_json": {
+    "model": "fixture-model",
+    "input_kind": "synthetic"
+  },
+  "provider_response_json": {
+    "result_kind": "synthetic"
+  },
+  "parsed_result_json": {
+    "title": "合成会议纪要"
+  },
+  "packaged_result_json": {
+    "markdown_available": true
+  },
+  "provider_attempts_json": [
+    {
+      "attempt": 1,
+      "status": "completed"
+    }
+  ]
+}

@@ -10,11 +10,12 @@ import (
 )
 
 type Config struct {
-	Profile string       `mapstructure:"profile" json:"profile"`
-	Output  string       `mapstructure:"output" json:"output"`
-	Server  ServerConfig `mapstructure:"server" json:"server"`
-	Auth    AuthConfig   `mapstructure:"auth" json:"auth"`
-	Paths   Paths        `mapstructure:"-" json:"paths"`
+	Profile  string        `mapstructure:"profile" json:"profile"`
+	Output   string        `mapstructure:"output" json:"output"`
+	Server   ServerConfig  `mapstructure:"server" json:"server"`
+	Auth     AuthConfig    `mapstructure:"auth" json:"auth"`
+	Webhooks WebhookConfig `mapstructure:"webhooks" json:"webhooks"`
+	Paths    Paths         `mapstructure:"-" json:"paths"`
 }
 
 type ServerConfig struct {
@@ -25,6 +26,24 @@ const DefaultServerBaseURL = "https://ws-lab.patch-x.cn/patchnote-test-api"
 
 type AuthConfig struct {
 	InsecureFileKeychain bool `mapstructure:"insecure_file_keychain" json:"insecure_file_keychain"`
+}
+
+type WebhookConfig struct {
+	Profiles map[string]WebhookProfileConfig `mapstructure:"profiles" json:"profiles" yaml:"profiles"`
+}
+
+type WebhookProfileConfig struct {
+	Targets map[string]WebhookTargetConfig `mapstructure:"targets" json:"targets" yaml:"targets"`
+}
+
+type WebhookTargetConfig struct {
+	Alias     string `mapstructure:"alias" json:"alias" yaml:"alias"`
+	Type      string `mapstructure:"type" json:"type" yaml:"type"`
+	Enabled   bool   `mapstructure:"enabled" json:"enabled" yaml:"enabled"`
+	MaskedURL string `mapstructure:"masked_url" json:"masked_url" yaml:"masked_url"`
+	Template  string `mapstructure:"template,omitempty" json:"template,omitempty" yaml:"template,omitempty"`
+	CreatedAt string `mapstructure:"created_at" json:"created_at" yaml:"created_at"`
+	UpdatedAt string `mapstructure:"updated_at" json:"updated_at" yaml:"updated_at"`
 }
 
 type LoadOptions struct {

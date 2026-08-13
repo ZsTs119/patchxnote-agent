@@ -1,0 +1,26 @@
+{
+  "source": "patchxnote",
+  "version": "1",
+  "trace": {
+    "trace_id": "mitr_fixture_orphan",
+    "request_id": "mrun_fixture_orphan",
+    "platform": "desktop",
+    "task_type": "daily_digest",
+    "state": "completed"
+  },
+  "source_text": {
+    "availability": "not_recorded"
+  },
+  "field_status": {
+    "client_request_json": "available",
+    "provider_request_json": "missing",
+    "provider_response_json": "missing",
+    "parsed_result_json": "missing",
+    "packaged_result_json": "missing",
+    "provider_attempts_json": "available"
+  },
+  "client_request_json": {
+    "task": "orphan_fixture"
+  },
+  "provider_attempts_json": []
+}

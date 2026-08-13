@@ -52,6 +52,8 @@ npx -y patchxnote-agent install --print-config
 | 模型使用汇总 | 支持 | 返回当月模型使用和扣费额度概览。 |
 | 结构化结果元数据 | 支持 | 按 `mobile` 或 `desktop` 平台隔离。 |
 | 本地记忆搜索 | 支持 | 搜索当前 MCP 会话中已授权缓存的元数据。 |
+| 本地 webhook 发送 | 支持 | 配置带别名的飞书、钉钉或 generic webhook，手动发送可编辑 Markdown。 |
+| 记忆 webhook 草稿 | 支持 | 读取 Agent delivery-document 投影，保存可编辑草稿，并可显式导出 model IO JSON。 |
 | 硬件绑定/解绑/恢复 | 不支持 | 仍由 App/PC 和 MR20 流程负责。 |
 | 原始音频/完整转写/下载 | 不支持 | V1 明确不暴露。 |
 | 模型执行 | 不支持 | Agent V1 只读。 |
@@ -173,6 +175,12 @@ patchxnote login
 patchxnote auth status
 patchxnote logout
 patchxnote mcp serve
+patchxnote webhook set "产品群 飞书" --type feishu --url-stdin
+patchxnote webhook test "产品群 飞书"
+patchxnote webhook send --target "产品群 飞书" --file ./message.md
+patchxnote webhook draft --memory-id <memory_id> --out ./patchxnote-drafts/example
+patchxnote webhook send --target "产品群 飞书" --draft ./patchxnote-drafts/example
+patchxnote webhook export-model-io --memory-id <memory_id> --out ./patchxnote-drafts/example/model-io.json
 ```
 
 常用全局参数：
@@ -192,6 +200,8 @@ npx -y patchxnote-agent@0.2.3 update
 npx -y patchxnote-agent@0.2.3 uninstall
 ```
 
+webhook URL 和飞书/钉钉可选签名密钥只写入本机安全钥匙串，不写普通配置文件。建议用 `--url-stdin` 和 `--secret-stdin` 避免 shell history。webhook 发送第一版只支持用户手动执行，不新增 MCP 写工具，不跟随重定向，下游平台错误会直接透传给用户。
+
 ## 安全与风险提示
 
 ![PatchXNote Agent 安全边界](./docs/assets/patchxnote-agent-safety-boundary.png)
@@ -207,6 +217,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 - 录音卡标识会被脱敏；不暴露实时 BLE 状态、电量、存储和录音状态。
 - 结构化内容按平台隔离。Agent 不会合并 mobile 和 desktop 内容。
 - 工具输出在返回给 MCP client 前会做边界控制和校验。
+- webhook URL 和签名密钥只保存在本机安全存储；普通 webhook payload 不包含 access token、refresh token 或导出的 model IO JSON。
 
 不要把 access token、refresh token、验证码、原始手机号、完整 MAC、SK、原始音频、完整转写、prompt 或供应商 payload 发到公开 Issue。安全问题请使用 [SECURITY.md](./SECURITY.md) 中的私密流程。
 

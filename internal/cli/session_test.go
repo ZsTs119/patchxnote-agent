@@ -180,6 +180,18 @@ func (f *refreshErrorAPI) GetMemory(context.Context, string, string, string) (ap
 	return api.AgentMemory{}, nil
 }
 
+func (f *refreshErrorAPI) GetMemoryDeliveryDocument(context.Context, string, string, string) (api.AgentDeliveryDocument, error) {
+	return api.AgentDeliveryDocument{}, nil
+}
+
+func (f *refreshErrorAPI) GetMemoryModelIO(context.Context, string, string, string) (api.AgentModelIOExport, error) {
+	return api.AgentModelIOExport{}, nil
+}
+
+func (f *refreshErrorAPI) GetModelRunIOTrace(context.Context, string, string, string) (api.AgentModelIOExport, error) {
+	return api.AgentModelIOExport{}, nil
+}
+
 func (f *refreshErrorAPI) Logout(context.Context, string) error {
 	return nil
 }

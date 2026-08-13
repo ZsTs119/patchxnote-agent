@@ -22,7 +22,14 @@ PatchXNote Agent runs a local stdio MCP server:
 patchxnote mcp serve
 ```
 
-Agent V1 is read-only. It stores credentials in the OS-native keychain when available, exposes safe PatchXNote account projections through dedicated `/v1/agent/**` APIs, and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
+The CLI also supports manual local webhook delivery:
+
+```sh
+patchxnote webhook set "Product Feishu" --type feishu --url-stdin
+patchxnote webhook send --target "Product Feishu" --file ./message.md
+```
+
+Agent V1 MCP tools remain read-only. The CLI stores credentials and webhook secrets in the OS-native keychain when available, exposes safe PatchXNote account projections through dedicated `/v1/agent/**` APIs, and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
 
 For full installation, MCP setup, security notes, and troubleshooting, read the GitHub documentation:
 
