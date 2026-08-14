@@ -4,6 +4,8 @@
 
 This npm package is the installer wrapper for PatchXNote Agent. It downloads the matching native `patchxnote` CLI binary from GitHub Releases, verifies `checksums.txt`, and installs it into a user-writable directory.
 
+PatchXNote Agent is the local AI assistant connector for PatchXNote. It lets an MCP-capable AI assistant find PatchXNote records, inspect AI-generated results, create Markdown drafts, and manually send user-approved messages to Feishu, DingTalk, or another webhook.
+
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
@@ -13,7 +15,7 @@ Install and connect PatchXNote Agent by following the public guide at https://pa
 Or run the install command manually:
 
 ```sh
-npx -y patchxnote-agent install --print-config
+npx -y patchxnote-agent@0.2.4 install --print-config
 ```
 
 PatchXNote Agent runs a local stdio MCP server:
@@ -22,16 +24,18 @@ PatchXNote Agent runs a local stdio MCP server:
 patchxnote mcp serve
 ```
 
-The CLI also supports manual local webhook delivery:
+It currently exposes 19 MCP tools grouped around account/record lookup, webhook configuration and sending, and explicit AI result inspection.
+
+Common CLI examples:
 
 ```sh
+patchxnote model-io list --platform mobile
+patchxnote model-io provider-response --request-id <request_id> --platform mobile --out ./provider-response.json
 patchxnote webhook set "Product Feishu" --type feishu --url-stdin
 patchxnote webhook send --target "Product Feishu" --file ./message.md
-patchxnote model-io list --platform mobile
-patchxnote model-io provider-response --memory-id <memory_id> --platform mobile --out ./provider-response.json
 ```
 
-Server-backed Agent data access remains read-only through dedicated `/v1/agent/**` APIs. MCP also exposes local webhook tools for named target configuration and manual external sends, plus explicit model IO discovery and field tools for trusted local inspection. The CLI stores credentials and webhook secrets in the OS-native keychain when available, never lists webhook URLs or signing secrets back, and does not expose raw audio, full transcripts, SK, full MAC values, hardware write actions, payment flows, or Admin APIs.
+Server-backed PatchXNote data access remains read-only through dedicated `/v1/agent/**` APIs. Local webhook tools can configure named targets and perform explicit manual sends. AI result tools can inspect source text, AI response, parsed result, and final result when explicitly called. The CLI stores credentials and webhook secrets in the OS-native keychain when available, never lists webhook URLs or signing secrets back, and does not expose raw audio, audio downloads, hardware write actions, payment flows, or Admin APIs.
 
 For full installation, MCP setup, security notes, and troubleshooting, read the GitHub documentation:
 

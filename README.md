@@ -12,9 +12,11 @@ Repository: [https://github.com/ZsTs119/patchxnote-agent](https://github.com/ZsT
 
 ![PatchXNote Agent hero](./docs/assets/patchxnote-agent-cover.png)
 
-PatchXNote Agent is the local CLI and MCP bridge for PatchXNote. It lets desktop AI agents read safe PatchXNote account context, including account status, bound recorder cards, quota, model usage, and structured-result metadata. It can also manually deliver user-approved Markdown to locally configured Feishu, DingTalk, or generic webhook targets.
+PatchXNote Agent is the local AI assistant connector for PatchXNote. After installing it, you can let an AI assistant find PatchXNote records, inspect AI-generated results, create Markdown, and send user-approved messages to Feishu, DingTalk, or another webhook.
 
-Server-backed Agent data access is deliberately read-only. PatchXNote Agent uses dedicated `/v1/agent/**` server APIs and does not expose App/PC hardware write flows, raw audio, full transcripts, SK, full MAC values, quota purchase flows, or Admin APIs. Webhook tools are local configuration writes plus manual external sends; webhook URLs and signing secrets are write-only inputs and are never listed back.
+It helps your AI assistant search records synced from mobile or desktop, inspect the source text and AI output behind a processing run, save editable local drafts, and manually send the final text to a named webhook target.
+
+PatchXNote server data access remains read-only. Agent does not operate hardware binding, read raw audio, handle payments, or expose Admin APIs. Webhook configuration and sending happen locally, and messages are sent only when you or your AI assistant explicitly call a send command.
 
 Give this one-line prompt to a local-command-capable AI assistant:
 
@@ -33,31 +35,32 @@ npx -y patchxnote-agent install --print-config
 | Area | Agent V1 behavior |
 | --- | --- |
 | Runtime | Installs a versioned native `patchxnote` binary through an npm wrapper. |
-| Agent protocol | Runs a local stdio MCP server with `patchxnote mcp serve`. |
-| Login | Phone OTP login creates an independent Agent session, not a mobile/desktop installation. |
-| Data access | Reads bounded account, recorder-card, quota, usage, and structured-result metadata projections. |
-| Safety boundary | Server data is read-only, masked, platform-scoped, and routed through dedicated Agent endpoints; webhook sends are local, manual side effects. |
-| Package status | Public beta `0.2.3`, defaulting to the PatchXNote public beta API. |
+| AI connection | Runs a local stdio MCP server with `patchxnote mcp serve`. |
+| Login | Phone OTP login creates an independent Agent session, not an App/PC installation. |
+| Data access | Shows account, recorder cards, quota, records, and AI-generated results. |
+| Webhook | Locally configures named targets and manually sends to Feishu, DingTalk, or another webhook. |
+| Safety boundary | Server data is read-only; raw audio, hardware, payment, and Admin APIs are not exposed. |
+| Package status | Public beta `0.2.4`, defaulting to the PatchXNote public beta API. |
 
 ## Features
 
-| Capability | Available in `0.2.3` | Notes |
+| Capability | Available in `0.2.4` | Notes |
 | --- | --- | --- |
-| Phone OTP Agent login | Yes | Uses Agent-specific server auth, not mobile/desktop installation slots. |
+| Phone OTP Agent login | Yes | Uses Agent-specific server auth, not App/PC mobile or desktop installation slots. |
 | Agent session refresh | Yes | Automatically rotates Agent access and refresh tokens from the local keychain. |
-| Local MCP server | Yes | `patchxnote mcp serve` over stdio. |
-| Current account projection | Yes | Status, masked phone, registration platform, state version. |
-| Recorder-card list | Yes | Read-only projection with masked identifiers. |
-| Quota summary | Yes | Current account token balance summary. |
-| Model usage summary | Yes | Current-month usage and charged quota summary. |
-| Structured-result metadata | Yes | Platform-scoped `mobile` or `desktop` safe metadata. |
-| Local memory search | Yes | Searches authorized metadata cached during the MCP session. |
-| Local webhook delivery | Yes | Configure named Feishu, DingTalk, or generic webhook targets and manually send editable Markdown. |
-| Memory-backed webhook drafts | Yes | Fetches the Agent delivery-document projection, saves editable drafts, and can explicitly export model IO JSON. |
-| Model IO field inspection | Yes | Explicitly inspect source text, provider response, parsed result, or packaged result by memory or request ID. |
-| Hardware bind/release/recovery | No | Owned by App/PC and MR20 flows, not Agent V1. |
-| Raw audio/transcripts/downloads | No | Intentionally not exposed. |
-| Model execution | No | Server-backed Agent data access remains read-only. |
+| Local MCP server | Yes | Lets MCP-capable AI assistants call PatchXNote Agent. |
+| Account, recorder cards, quota | Yes | Shows account status, recorder-card list, quota, and current-month model usage. |
+| Record list and search | Yes | Lists records by `mobile` or `desktop`, and searches record basics cached in the current MCP session. |
+| Single record details | Yes | Shows safe basic information for one record. |
+| AI processing lookup | Yes | Finds an AI processing run and the follow-up `request_id`. |
+| Source text and AI result export | Yes | Explicitly inspect or export source text, AI response, parsed result, and final result. |
+| Multiple webhook aliases | Yes | Configure multiple Feishu, DingTalk, or generic webhooks with custom names, including Chinese names and spaces. |
+| Markdown drafts | Yes | Render a record into a local Markdown draft so the user can edit before sending. |
+| Manual webhook send | Yes | Sends only when the user or AI explicitly invokes a send command; no background push. |
+| Raw audio/audio download | No | Agent does not read raw audio and does not provide audio downloads. |
+| Hardware bind/release/recovery | No | Owned by App/PC and MR20 flows. |
+| Model execution/replay | No | Agent does not trigger new model runs or replay model calls. |
+| Payment/purchase/Admin APIs | No | Quota purchase, payments, and Admin APIs are out of scope. |
 
 ## Requirements
 
@@ -66,7 +69,7 @@ npx -y patchxnote-agent install --print-config
 - A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.2.3` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
+> `0.2.4` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
@@ -78,17 +81,17 @@ Install the npm wrapper. It downloads the matching `patchxnote` binary from GitH
 npx -y patchxnote-agent install --print-config
 ```
 
+To pin the current public beta version for troubleshooting or rollback:
+
+```sh
+npx -y patchxnote-agent@0.2.4 install --print-config
+```
+
 The installer prints:
 
 - the installed binary path
 - a PATH hint if `patchxnote` is not already on your terminal PATH
 - an MCP config snippet using the absolute binary path
-
-To pin the current public beta version for troubleshooting or rollback:
-
-```sh
-npx -y patchxnote-agent@0.2.3 install --print-config
-```
 
 The public beta build defaults to the PatchXNote public beta API:
 
@@ -96,18 +99,9 @@ The public beta build defaults to the PatchXNote public beta API:
 https://ws-lab.patch-x.cn/patchnote-test-api
 ```
 
-Log in and check your session.
-
-macOS/Linux:
+Log in and check your session:
 
 ```sh
-patchxnote login
-patchxnote auth status
-```
-
-Windows PowerShell:
-
-```powershell
 patchxnote login
 patchxnote auth status
 ```
@@ -123,6 +117,18 @@ To target a different PatchXNote environment:
 ```sh
 PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL> \
 patchxnote login
+```
+
+## Common Workflows
+
+Ask your AI assistant:
+
+```text
+Find today's mobile records.
+Show the AI result behind this record.
+Send this Markdown to my Product Feishu webhook.
+Export the AI response to a local JSON file.
+Create a Markdown draft from this record so I can edit it before sending.
 ```
 
 ## MCP Configuration
@@ -148,46 +154,51 @@ MCP config never contains access tokens or refresh tokens. PatchXNote Agent stor
 
 ![PatchXNote Agent tools](./docs/assets/patchxnote-agent-tools.png)
 
+PatchXNote Agent `0.2.4` exposes **19 MCP tools**. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
+
+### Account And Record Lookup
+
 | Tool | Purpose |
 | --- | --- |
-| `patchxnote_get_current_user` | Read the current PatchXNote account projection. |
+| `patchxnote_get_current_user` | Show the current PatchXNote account status. |
 | `patchxnote_list_recorder_cards` | List bound recorder cards with masked identifiers only. |
-| `patchxnote_get_quota_summary` | Read the current account quota summary. |
-| `patchxnote_get_model_usage_summary` | Read current-month model usage summary. |
-| `patchxnote_list_memories` | List safe structured-result metadata for one platform. |
-| `patchxnote_search_memories` | Search local authorized memory metadata cache. |
-| `patchxnote_get_memory` | Read safe metadata for one structured result. |
-| `patchxnote_list_webhook_targets` | List local webhook target aliases with masked metadata only. |
-| `patchxnote_configure_webhook_target` | Create or update a local webhook target; URL/secret inputs are write-only. |
-| `patchxnote_remove_webhook_target` | Remove a local webhook target and best-effort clean up stored secrets. |
-| `patchxnote_list_webhook_templates` | List built-in webhook Markdown templates. |
-| `patchxnote_render_webhook_message` | Render a delivery-document projection into Markdown and optionally save a draft. |
-| `patchxnote_export_model_io` | Export explicit model IO JSON to a user-chosen local file. |
-| `patchxnote_send_webhook` | Manually send Markdown, a draft, a memory render, or a test message to target aliases. |
-| `patchxnote_list_model_io_traces` | List model IO trace metadata and request IDs for one platform. |
-| `patchxnote_get_model_io_source_text` | Read the explicit source text/safe transcript projection field. |
-| `patchxnote_get_model_io_provider_response` | Read only the model provider response JSON field. |
-| `patchxnote_get_model_io_parsed_result` | Read only the parsed model result JSON field. |
-| `patchxnote_get_model_io_packaged_result` | Read only the packaged structured result JSON field. |
+| `patchxnote_get_quota_summary` | Show current quota. |
+| `patchxnote_get_model_usage_summary` | Show current-month AI usage and charged quota. |
+| `patchxnote_list_memories` | List records for `mobile` or `desktop`. |
+| `patchxnote_search_memories` | Search record basics cached in the current MCP session. |
+| `patchxnote_get_memory` | Show safe basic information for one record. |
 
-Memory tools require an explicit `platform` argument: `mobile` or `desktop`. V1 memory responses are safe metadata only; direct model-run response bodies and old summary text are not reconstructed by the Agent.
+### Webhook Configuration And Sending
+
+| Tool | Purpose |
+| --- | --- |
+| `patchxnote_list_webhook_targets` | List local webhook aliases and masked metadata. |
+| `patchxnote_configure_webhook_target` | Create or update a webhook alias; URL and secret inputs are write-only. |
+| `patchxnote_remove_webhook_target` | Remove a webhook alias and best-effort clean up stored secrets. |
+| `patchxnote_list_webhook_templates` | List built-in Markdown templates. |
+| `patchxnote_render_webhook_message` | Render a record into Markdown and optionally save a local draft. |
+| `patchxnote_export_model_io` | Export a complete AI processing record to a user-chosen local file. |
+| `patchxnote_send_webhook` | Manually send Markdown, a draft, a rendered record, or a test message to target aliases. |
+
+### AI Result Inspection
+
+| Tool | Purpose |
+| --- | --- |
+| `patchxnote_list_model_io_traces` | Find AI processing runs and the follow-up `request_id`. |
+| `patchxnote_get_model_io_source_text` | Inspect or export the source text used for that run. |
+| `patchxnote_get_model_io_provider_response` | Inspect or export the AI response. |
+| `patchxnote_get_model_io_parsed_result` | Inspect or export the parsed AI result. |
+| `patchxnote_get_model_io_packaged_result` | Inspect or export the final result. |
+
+Record tools require an explicit `platform` argument: `mobile` or `desktop`. The normal record list and the AI processing list are not the same data source; some accounts may have AI processing runs even when the normal record list is empty.
+
 Webhook MCP tools share the same local config, keychain, templates, and sender modules as the CLI. They do not return full webhook URLs or signing secrets, and send calls perform external network requests only when the MCP client explicitly invokes the send tool.
-Model IO field tools are explicit and field-scoped. They may expose source text or provider/model payloads for the logged-in user, so use them only from trusted local MCP hosts. Large fields should be written to an explicit local `out` file.
 
-Example prompts for your desktop agent:
-
-```text
-Show my PatchXNote account and quota status.
-List my PatchXNote recorder cards.
-Search my desktop PatchXNote memories for roadmap.
-Configure a Feishu webhook target named Product Feishu, then send this Markdown summary to it.
-List my mobile PatchXNote model IO traces from today and use the request ID to inspect the provider response.
-Show the provider response for this PatchXNote memory and save the parsed result to a local JSON file.
-List my configured PatchXNote webhook targets.
-Remove the PatchXNote webhook target named Product Feishu.
-```
+AI result tools are explicit inspection tools. They may expose source text or AI payloads for the logged-in user, so use them only from trusted local MCP hosts. Large fields should be written to an explicit local `out` file.
 
 ## CLI Commands
+
+Install and login:
 
 ```sh
 patchxnote version
@@ -195,18 +206,31 @@ patchxnote login
 patchxnote auth status
 patchxnote logout
 patchxnote mcp serve
-patchxnote webhook set "Product Feishu" --type feishu --url-stdin
-patchxnote webhook test "Product Feishu"
-patchxnote webhook send --target "Product Feishu" --file ./message.md
-patchxnote webhook draft --memory-id <memory_id> --out ./patchxnote-drafts/example
-patchxnote webhook send --target "Product Feishu" --draft ./patchxnote-drafts/example
-patchxnote webhook export-model-io --memory-id <memory_id> --out ./patchxnote-drafts/example/model-io.json
+```
+
+List AI processing runs and export results:
+
+```sh
 patchxnote model-io list --platform mobile
-patchxnote model-io source-text --memory-id <memory_id> --platform mobile
-patchxnote model-io provider-response --memory-id <memory_id> --platform mobile --out ./provider-response.json
-patchxnote model-io parsed-result --memory-id <memory_id> --platform mobile --out ./parsed-result.json
-patchxnote model-io packaged-result --request-id <request_id> --platform mobile
-patchxnote model-io export --memory-id <memory_id> --platform mobile --out ./model-io.json
+patchxnote model-io source-text --request-id <request_id> --platform mobile --out ./source.txt
+patchxnote model-io provider-response --request-id <request_id> --platform mobile --out ./provider-response.json
+patchxnote model-io parsed-result --request-id <request_id> --platform mobile --out ./parsed-result.json
+patchxnote model-io packaged-result --request-id <request_id> --platform mobile --out ./packaged-result.json
+patchxnote model-io export --request-id <request_id> --platform mobile --out ./model-io.json
+```
+
+Get `request_id` from `patchxnote model-io list --platform mobile|desktop`. Use `memory_id` for record rendering and draft workflows; use `request_id` when inspecting the content behind an AI processing run.
+
+Configure and send webhooks:
+
+```sh
+patchxnote webhook set "Product Feishu" --type feishu --url-stdin
+patchxnote webhook list
+patchxnote webhook test "Product Feishu"
+patchxnote webhook draft --memory-id <memory_id> --platform mobile --out ./patchxnote-drafts/example
+patchxnote webhook send --target "Product Feishu" --file ./message.md
+patchxnote webhook send --target "Product Feishu" --draft ./patchxnote-drafts/example
+patchxnote webhook remove "Product Feishu"
 ```
 
 Useful global flags:
@@ -221,44 +245,48 @@ Useful global flags:
 The npm package itself is only an installer/update wrapper:
 
 ```sh
-npx -y patchxnote-agent@0.2.3 install
-npx -y patchxnote-agent@0.2.3 update
-npx -y patchxnote-agent@0.2.3 uninstall
+npx -y patchxnote-agent@0.2.4 install
+npx -y patchxnote-agent@0.2.4 update
+npx -y patchxnote-agent@0.2.4 uninstall
 ```
 
 Webhook URLs and optional Feishu/DingTalk signing secrets are stored in the local secure credential store, not in the non-secret config file. `--url-stdin` and `--secret-stdin` avoid shell history. CLI and MCP webhook sending is manual only, does not follow redirects, and surfaces provider errors directly.
-`patchxnote model-io export` is the preferred complete model IO export command. `patchxnote webhook export-model-io` remains available for compatibility.
+
+`patchxnote model-io export` is the preferred complete AI processing export command. `patchxnote webhook export-model-io` remains available for compatibility.
 
 ## Security And Risk Notice
 
 ![PatchXNote Agent safety boundary](./docs/assets/patchxnote-agent-safety-boundary.png)
 
-PatchXNote Agent gives an AI agent access to account metadata that belongs to the logged-in PatchXNote user. Treat the MCP host as trusted software and review any prompts, tool calls, or logs that may reveal private account context.
+PatchXNote Agent gives an AI assistant access to account and record information for the logged-in PatchXNote user. Treat the MCP host as trusted software and review prompts, tool calls, local files, and logs that may contain account context, source text, or AI results.
 
 Default safety boundaries:
 
 - Agent auth is separate from App/PC `mobile` and `desktop` installations.
 - Agent calls only dedicated read-only `/v1/agent/**` server routes for PatchXNote server data.
 - MCP webhook tools can write local non-secret target metadata, write URL/secret material to local secure storage, and manually send external webhook HTTP requests.
+- Webhook sending never happens in the background and is not scheduled automatically.
 - MCP runs locally over stdio; stdout is reserved for JSON-RPC.
 - MCP config does not store bearer tokens, refresh tokens, OTPs, SK, or full MAC values.
 - Recorder-card identifiers are masked; live BLE state, battery, storage, and recording status are not exposed.
-- Structured content is platform-scoped. The Agent does not merge mobile and desktop content.
+- Content is platform-scoped. The Agent does not merge mobile and desktop content.
 - Tool outputs are bounded and validated before being returned to the MCP client.
-- Webhook target URLs and signing secrets stay in local secure storage; normal webhook payloads never include access tokens, refresh tokens, or exported model IO JSON.
-- Model IO field tools return only the requested field. They do not replay model calls and do not include unrelated model IO fields in single-field responses.
+- Webhook target URLs and signing secrets stay in local secure storage; normal webhook payloads never include access tokens, refresh tokens, or exported AI processing JSON.
+- AI result tools return only the requested field. They do not replay model calls and do not include unrelated fields in single-field responses.
+- Agent does not read raw audio and does not provide audio downloads. Source text and AI results are available only through explicit tool calls, and large/sensitive content should be exported to local files.
 
-Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full MAC values, SK values, raw audio, transcripts, prompts, or provider payloads into public issues. Use the private process in [SECURITY.md](./SECURITY.md) for vulnerability reports.
+Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full MAC values, SK values, raw audio, source text, prompts, or provider payloads into public issues. Use the private process in [SECURITY.md](./SECURITY.md) for vulnerability reports.
 
 ## Current Limitations
 
-`0.2.3` is a beta release.
+`0.2.4` is a beta release.
 
-- The default server points to the PatchXNote public beta API.
+- The default server points to the PatchXNote public beta API and does not imply a production SLA.
 - Linux headless environments may not have Secret Service available; use the explicit development file-store fallback only for local smoke.
 - Public beta users should expect iterative improvements to setup guidance, MCP client examples, and webhook formatting.
-- `patchxnote_search_memories` searches only metadata cached during the current MCP session.
-- Raw audio, full transcripts, hardware write actions, model execution/replay, quota purchase/reward actions, payment, and Admin APIs are out of scope.
+- `patchxnote_search_memories` searches only record basics cached during the current MCP session.
+- If the normal record list is empty, first check whether you selected `mobile` or `desktop`. AI processing runs can also be listed separately with `patchxnote model-io list`.
+- Raw audio, audio downloads, hardware write actions, model execution/replay, automatic webhook pushes, quota purchase/reward actions, payment, and Admin APIs are out of scope.
 
 ## Troubleshooting
 
@@ -267,19 +295,27 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 | `patchxnote` is not found after install | Add the printed install directory to PATH, then open a new terminal. |
 | Login says credential storage is unavailable | Check that macOS Keychain, Windows Credential Manager, or Linux Secret Service is available and unlocked. For local development only, set `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`. |
 | MCP host cannot start the server | Use the absolute `command` path printed by `--print-config`. |
-| Memory list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`. |
+| Record list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`; use `model-io list` for AI processing runs. |
+| Webhook did not send | Confirm the alias exists, the target is enabled, and check the provider error returned by the command. |
 | Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
 | Wrong server environment | Set `PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`. |
 
 ## Verify The Install
 
 ```sh
-npm view patchxnote-agent@0.2.3 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.3 install --dry-run --print-config
+npm view patchxnote-agent@0.2.4 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.4 install --dry-run --print-config
 patchxnote version
 ```
 
-The release binary should report version `0.2.3` and the commit attached to the `v0.2.3` GitHub Release.
+The release binary should report version `0.2.4` and the commit attached to the `v0.2.4` GitHub Release.
+
+## 0.2.4 Highlights
+
+- MCP expands to 19 tools across account/record lookup, webhook delivery, and AI result inspection.
+- Webhook workflows are available to MCP: configure named aliases and manually send to Feishu, DingTalk, or generic webhooks.
+- AI processing runs can be listed first, then inspected by `request_id` for source text, AI response, parsed result, and final result.
+- README, npm README, and public visual assets have been refreshed for the new user-facing positioning.
 
 ## Development
 
@@ -288,10 +324,10 @@ Local checks:
 ```sh
 go test ./...
 scripts/e2e/mvp-smoke.sh
-node packages/npm/bin/patchxnote-agent.js install --dry-run --print-config
+node packages/npm/test/install.test.js
 ```
 
-The MVP smoke builds the CLI, runs installer dry-run, logs in against an in-process Agent V1 test server, checks `auth status`, starts `patchxnote mcp serve`, calls all 19 V1 MCP tools, exercises model IO discovery and field tools plus local webhook delivery, logs out, and scans evidence for secret-like values.
+The MVP smoke builds the CLI, runs installer dry-run, logs in against an in-process Agent V1 test server, checks `auth status`, starts `patchxnote mcp serve`, calls all 19 V1 MCP tools, exercises AI processing discovery, field export, and local webhook delivery, logs out, and scans evidence for secret-like values.
 
 Before changing CLI behavior, installer logic, MCP tools, authentication, local cache, or release configuration, read:
 
@@ -306,7 +342,7 @@ The detailed release and documentation maintenance checklist lives in [docs/rele
 
 1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.2.3`.
+3. Push a clean tag, for example `v0.2.4`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`
