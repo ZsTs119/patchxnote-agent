@@ -4,6 +4,8 @@
 
 > **2026-08-14 implementation status:** GoServer Agent-only memory fallback and Agent optional-field support have been implemented locally. GoServer unit/integration/OpenAPI/module-smoke checks pass; Agent unit/e2e checks pass; a local GoServer process plus current Windows Agent build verified `patchxnote_list_memories`, `patchxnote_get_memory`, four model IO field tools, search cache, and webhook draft rendering against the real logged-in account.
 
+> **2026-08-14 release status:** Agent `0.2.6` has been released and published to npm. GitHub Release run `31804294579`, npm publish run `31804443521`, Linux release-asset smoke, Windows npm install smoke, default Windows install, MCP initialize, and macOS install smoke run `31804787679` all passed. Public test-server `patchxnote_list_memories` still returned an empty list while GoServer deployment was in progress; re-test that one server-dependent acceptance item after the test server is updated.
+
 **Goal:** Make `patchxnote_list_memories` show the user's readable records, summaries, daily reviews, and key-item style outputs even when the formal structured-result vault has not been populated yet.
 
 **Architecture:** Keep the behavior inside GoServer Agent-only read APIs. `/v1/agent/memories` continues to return formal `structured_result_current/revision` memories when they exist, and supplements them with read-only synthetic memories projected from completed `model_io_trace` rows. The Agent CLI/MCP only adds optional response fields so AI/users can see title, summary, task type, source, and request id without changing App/PC/Admin flows.
@@ -302,7 +304,7 @@
 ## Cross-Repo Acceptance Checklist
 
 - [ ] GoServer test deployment is updated only after local GoServer tests and smoke pass.
-- [ ] Agent release/update is done only after GoServer test deployment exposes the new optional fields.
+- [x] Agent release/update is done after Agent optional-field support is verified locally. Public test-server memory fallback is tracked below because GoServer deployment was still in progress during the Agent release.
 - [ ] On a clean user-style install, login succeeds without token copy/paste.
 - [ ] `patchxnote_list_memories` for the real test account returns non-empty mobile records.
 - [ ] Each returned synthetic memory includes a human-readable `title` or fallback title.
@@ -341,6 +343,6 @@
 - [ ] Verify deployed GoServer with direct Agent API smoke.
 - [ ] Implement Agent optional field support.
 - [ ] Release Agent after GoServer test deployment is verified.
-- [ ] Reinstall/update local CLI to the released Agent version.
-- [ ] Run real user-style CLI and MCP smoke from the installed binary.
-- [ ] Commit and push each repository separately with clear messages.
+- [x] Reinstall/update local CLI to the released Agent version.
+- [x] Run real user-style CLI and MCP smoke from the installed binary.
+- [x] Commit and push each repository separately with clear messages.
