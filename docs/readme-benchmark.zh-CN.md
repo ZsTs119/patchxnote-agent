@@ -64,33 +64,47 @@
 
 当产品事实变化时，必须同步更新 `docs/assets/patchxnote-agent-*.png`。当前公开素材应表达：
 
+- 所有 README / npm / 对外公开图片都必须同时出现：
+  - PatchXNote / PATCHX 品牌标识，不能只用抽象图标或无品牌卡片。
+  - AI 录音卡真实产品主体，不能只用概念设备、几何装饰或纯文字说明。
+- 图片风格参考现有产品宣发图：浅蓝底、白色纸面模块、黑色主文字、简洁留白、真实产品图；避免 AI 生成感、渐变炫光、抽象科技背景和过度装饰。
+- 产品图和 logo 不能只是“裁剪后贴进去”的小插图。每张公开图必须围绕产品做版面设计，让 AI 录音卡成为主视觉或清晰的视觉锚点，再用少量信息解释 Agent 能力。
+- 设计目标是“产品宣发 + 功能说明平衡”：比技术流程图更像产品宣传页，但仍能让 README 读者快速知道能做什么、怎么开始、边界在哪里。
+- 每张图只突出一个重点。不要把全部功能堆到每张图里；用户扫图时应能直接知道这张图负责解释什么。
 - `patchxnote-agent-cover.png`
-  - 标题：`PatchXNote Agent`
-  - 副标题：`让 AI 帮你查看记录、整理结果、发送 Webhook`
-  - 卡片：`安装 CLI`、`连接 AI 助手`、`查看记录`、`手动发送`
+  - 重点：Agent 的首屏价值。
+  - 主标题：`让 AI 读懂你的记录`
+  - 表达：记录查询、AI 整理和 Webhook 发送。
+  - 右侧使用产品宣发纸面，必须出现 PatchXNote / PATCHX 品牌信号和 AI 录音卡真实产品图。
 - `patchxnote-agent-quickstart.png`
-  - 标题：`三步接入 PatchXNote Agent`
-  - 步骤：`安装 CLI`、`验证码登录`、`连接 AI 助手`
-  - 底部：`开始查看记录、AI 整理结果，并手动发送 Webhook`
-- `patchxnote-agent-architecture.png`
-  - 主链路：`AI 助手 -> 本地 MCP -> patchxnote CLI -> Agent API`
-  - 本地支路：`本地 Webhook 配置/发送`
-  - 目标：`PatchXNote 服务端只读接口`、`本地安全存储`、`飞书/钉钉/Webhook`
+  - 重点：用户三步接入。
+  - 标题：`三步接入 AI 助手`
+  - 步骤：`安装`、`登录`、`接入 MCP`
+  - 命令示例：`npx -y patchxnote-agent install --print-config`、`patchxnote login`、`patchxnote mcp serve`
+- `patchxnote-agent-records.png`
+  - 重点：按平台找到记录。
+  - 标题：`找到你的每条记录`
+  - 表达：按手机端或电脑端查看记录，支持搜索和读取记录详情。
 - `patchxnote-agent-tools.png`
-  - 标题：`PatchXNote Agent 工具能力`
-  - 副标题：`19 个 MCP 工具，帮 AI 查看记录、整理结果和发送 Webhook`
-  - 三组：`账号和记录查询 7`、`Webhook 配置和发送 7`、`AI 整理结果查看 5`
+  - 重点：19 个 MCP 工具怎么分组。
+  - 标题：`19 个 MCP 工具`
+  - 三组：`记录查询 7`、`Webhook 7`、`AI 结果 5`
+- `patchxnote-agent-model-io.png`
+  - 重点：AI 整理背后的内容可以显式查看或导出。
+  - 标题：`看见 AI 整理背后的内容`
+  - 四组：`原始文本`、`AI 返回`、`解析结果`、`最终结果`
+- `patchxnote-agent-webhook-delivery.png`
+  - 重点：Webhook 协作发送。
+  - 标题：`整理好，再发送`
+  - 主链路：`Markdown 草稿 -> 确认发送 -> 飞书/钉钉/Webhook`
+  - 表达：先生成草稿，用户确认后再手动发送。
 - `patchxnote-agent-safety-boundary.png`
-  - 左侧：`可以明确查看`，包含账号与额度、记录列表、AI 整理结果、Webhook 别名。
-  - 右侧：`不会自动操作`，包含原始音频、硬件绑定/解绑、支付/Admin、自动发送。
-  - 底部：`原文文本和 AI 结果需显式调用，建议导出到本地文件`
-- `patchxnote-agent-feishu-cover.png`
-  - 副标题：`把 PatchXNote 记录整理成 Markdown，发送到飞书/钉钉`
-  - 卡片：`查看记录`、`生成草稿`、`确认后发送`
-- `patchxnote-agent-social-preview.png`
-  - 英文短句：`Records · AI Results · Webhook Delivery`
+  - 重点：能看什么、不会做什么。
+  - 标题：`本地运行，明确边界`
+  - 左侧：读取记录、查看 AI 结果、生成本地草稿、手动发送 Webhook。
+  - 右侧：原始音频、硬件操作、支付/Admin、后台自动发送都不做。
 
-图片必须保持现有浅蓝/白色背景、蓝色图标、白色卡片、柔和阴影和 MR20 产品信号。中文或英文文字如果变形、拼错、裁切、过小，不能发布。
+图片必须保持现有浅蓝/白色背景、白色卡片、黑色主文字、真实产品图和 PATCHX/PatchXNote 品牌信号。中文或英文文字如果变形、拼错、裁切、过小，不能发布。
 
 ## 禁止内容
 

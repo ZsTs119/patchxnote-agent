@@ -133,8 +133,6 @@ patchxnote login
 
 ## MCP 配置
 
-![PatchXNote Agent 架构](./docs/assets/patchxnote-agent-architecture.png)
-
 使用安装器 `--print-config` 打印的配置。典型配置如下：
 
 ```json
@@ -158,6 +156,8 @@ PatchXNote Agent `0.2.5` 暴露 **19 个 MCP 工具**。普通用户可以先理
 
 ### 账号和记录查询
 
+![PatchXNote Agent 记录查询](./docs/assets/patchxnote-agent-records.png)
+
 | 工具 | 用途 |
 | --- | --- |
 | `patchxnote_get_current_user` | 查看当前 PatchXNote 账号状态。 |
@@ -170,6 +170,8 @@ PatchXNote Agent `0.2.5` 暴露 **19 个 MCP 工具**。普通用户可以先理
 
 ### Webhook 配置和发送
 
+![PatchXNote Agent Webhook 发送](./docs/assets/patchxnote-agent-webhook-delivery.png)
+
 | 工具 | 用途 |
 | --- | --- |
 | `patchxnote_list_webhook_targets` | 查看本机配置过的 webhook 别名和脱敏信息。 |
@@ -181,6 +183,8 @@ PatchXNote Agent `0.2.5` 暴露 **19 个 MCP 工具**。普通用户可以先理
 | `patchxnote_send_webhook` | 手动发送 Markdown、草稿、记录渲染结果或测试消息到指定别名。 |
 
 ### AI 整理结果查看
+
+![PatchXNote Agent AI 整理结果](./docs/assets/patchxnote-agent-model-io.png)
 
 | 工具 | 用途 |
 | --- | --- |

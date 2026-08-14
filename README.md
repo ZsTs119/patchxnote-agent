@@ -133,8 +133,6 @@ Create a Markdown draft from this record so I can edit it before sending.
 
 ## MCP Configuration
 
-![PatchXNote Agent architecture](./docs/assets/patchxnote-agent-architecture.png)
-
 Use the `--print-config` output from the installer. A typical config looks like this:
 
 ```json
@@ -158,6 +156,8 @@ PatchXNote Agent `0.2.5` exposes **19 MCP tools**. End users can think of them a
 
 ### Account And Record Lookup
 
+![PatchXNote Agent record lookup](./docs/assets/patchxnote-agent-records.png)
+
 | Tool | Purpose |
 | --- | --- |
 | `patchxnote_get_current_user` | Show the current PatchXNote account status. |
@@ -170,6 +170,8 @@ PatchXNote Agent `0.2.5` exposes **19 MCP tools**. End users can think of them a
 
 ### Webhook Configuration And Sending
 
+![PatchXNote Agent webhook delivery](./docs/assets/patchxnote-agent-webhook-delivery.png)
+
 | Tool | Purpose |
 | --- | --- |
 | `patchxnote_list_webhook_targets` | List local webhook aliases and masked metadata. |
@@ -181,6 +183,8 @@ PatchXNote Agent `0.2.5` exposes **19 MCP tools**. End users can think of them a
 | `patchxnote_send_webhook` | Manually send Markdown, a draft, a rendered record, or a test message to target aliases. |
 
 ### AI Result Inspection
+
+![PatchXNote Agent AI result inspection](./docs/assets/patchxnote-agent-model-io.png)
 
 | Tool | Purpose |
 | --- | --- |
