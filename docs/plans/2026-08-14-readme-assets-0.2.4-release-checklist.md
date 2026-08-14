@@ -4,6 +4,8 @@
 
 **Goal:** Update PatchXNote Agent public documentation and visual assets so the `0.2.4` release clearly explains the new record lookup, AI整理结果查看, model IO export, and webhook delivery workflows.
 
+**Execution note (2026-08-14):** `0.2.4` was published first. Post-publish local acceptance found that webhook aliases containing dots were written to YAML but not read back through Viper. The accepted public release therefore moved to `0.2.5`, which keeps the same user-facing feature set and adds the alias persistence fix.
+
 **Architecture:** Treat README, npm README, visual assets, and release metadata as one public contract. Use user-facing language first, then list exact CLI and MCP tool names for users and AI hosts that need them. Keep the security boundary precise: server-backed PatchXNote data remains read-only, while local webhook configuration and manual sends are explicit local side effects.
 
 **Tech Stack:** Markdown, npm package metadata, GitHub Release, npm publish, Go CLI tests, MCP stdio smoke, image generation or controlled raster asset replacement under `docs/assets`.

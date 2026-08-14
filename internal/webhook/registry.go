@@ -32,6 +32,12 @@ func NewRegistry(cfg config.Config) *Registry {
 		targets: make(map[string]Target),
 		now:     time.Now,
 	}
+	if cfg.Paths.ConfigFile != "" {
+		if targets := readTargetsFromConfigFile(cfg.Paths.ConfigFile, profile); len(targets) > 0 {
+			registry.targets = targets
+			return registry
+		}
+	}
 	if cfg.Webhooks.Profiles != nil {
 		profileConfig := cfg.Webhooks.Profiles[profile]
 		for key, targetConfig := range profileConfig.Targets {
@@ -42,6 +48,46 @@ func NewRegistry(cfg config.Config) *Registry {
 		}
 	}
 	return registry
+}
+
+func readTargetsFromConfigFile(path string, profile string) map[string]Target {
+	root, err := readConfigMap(path)
+	if err != nil {
+		return nil
+	}
+	webhooks, ok := root["webhooks"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	profiles, ok := webhooks["profiles"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	profileConfig, ok := profiles[profile].(map[string]any)
+	if !ok {
+		return nil
+	}
+	targetConfigs, ok := profileConfig["targets"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	targets := make(map[string]Target, len(targetConfigs))
+	for key, raw := range targetConfigs {
+		var targetConfig config.WebhookTargetConfig
+		body, err := yaml.Marshal(raw)
+		if err != nil {
+			continue
+		}
+		if err := yaml.Unmarshal(body, &targetConfig); err != nil {
+			continue
+		}
+		target, err := targetFromConfig(key, targetConfig)
+		if err != nil {
+			continue
+		}
+		targets[target.Alias] = target
+	}
+	return targets
 }
 
 func (r *Registry) List() []Target {

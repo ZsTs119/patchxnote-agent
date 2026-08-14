@@ -15,7 +15,7 @@ Install and connect PatchXNote Agent by following the public guide at https://pa
 Or run the install command manually:
 
 ```sh
-npx -y patchxnote-agent@0.2.4 install --print-config
+npx -y patchxnote-agent@0.2.5 install --print-config
 ```
 
 PatchXNote Agent runs a local stdio MCP server:
@@ -34,6 +34,8 @@ patchxnote model-io provider-response --request-id <request_id> --platform mobil
 patchxnote webhook set "Product Feishu" --type feishu --url-stdin
 patchxnote webhook send --target "Product Feishu" --file ./message.md
 ```
+
+Webhook aliases can contain Chinese text, spaces, and dots.
 
 Server-backed PatchXNote data access remains read-only through dedicated `/v1/agent/**` APIs. Local webhook tools can configure named targets and perform explicit manual sends. AI result tools can inspect source text, AI response, parsed result, and final result when explicitly called. The CLI stores credentials and webhook secrets in the OS-native keychain when available, never lists webhook URLs or signing secrets back, and does not expose raw audio, audio downloads, hardware write actions, payment flows, or Admin APIs.
 

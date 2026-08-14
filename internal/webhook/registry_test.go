@@ -42,6 +42,32 @@ func TestRegistryWritesAndLoadsTargets(t *testing.T) {
 	}
 }
 
+func TestRegistryLoadsAliasWithDotsFromConfigFile(t *testing.T) {
+	cfg := registryTestConfig(t, "default")
+	alias := "0.2.5发布验收 飞书"
+
+	if _, err := NewRegistry(cfg).Set(alias, TargetTypeFeishu, "https://open.feishu.cn/open-apis/bot/v2/hook/c92b...64cf", "default"); err != nil {
+		t.Fatalf("set target: %v", err)
+	}
+	loaded, err := config.Load(config.NewViper(), config.LoadOptions{
+		ConfigFile: cfg.Paths.ConfigFile,
+		GOOS:       "linux",
+		PathEnv:    config.PathEnv{HomeDir: filepath.Dir(cfg.Paths.ConfigFile)},
+	})
+	if err != nil {
+		t.Fatalf("reload config: %v", err)
+	}
+
+	reloaded := NewRegistry(loaded)
+	got, err := reloaded.Get(alias)
+	if err != nil {
+		t.Fatalf("get alias with dots: %v", err)
+	}
+	if got.Alias != alias || got.Type != TargetTypeFeishu {
+		t.Fatalf("unexpected target: %+v", got)
+	}
+}
+
 func TestRegistryUpdatesExistingWithoutDuplicate(t *testing.T) {
 	cfg := registryTestConfig(t, "default")
 	registry := NewRegistry(cfg)
