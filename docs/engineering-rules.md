@@ -332,7 +332,7 @@ Never expose SK/credential or call hardware connect/release through MCP V1.
 
 ## Structured Content Projection
 
-Agent content access reads only server-stored structured results that the user has consented to store for the selected platform.
+Agent content access reads only dedicated server `/v1/agent/**` projections for the selected platform. Formal structured results still follow the server's storage-consent rules. Agent record lookup may also include read-only model-generated entries from server-authorized `model_io_trace` projections when no formal structured result exists yet.
 
 V1 may expose:
 
@@ -342,6 +342,7 @@ V1 may expose:
 - source availability status
 
 V1 must not imply access to original audio, complete raw transcript, complete corrected transcript, or speaker identity.
+Complete source text and AI payloads are available only through explicit model IO field tools or local exports for the logged-in user.
 
 ## Testing Layout And Gates
 

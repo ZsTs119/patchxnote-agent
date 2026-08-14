@@ -94,7 +94,7 @@ func (f *fakeToolAPI) ListMemories(ctx context.Context, accessToken string, para
 	}
 	f.listParams = params
 	return api.AgentMemoryPage{
-		Items:      []api.AgentMemory{toolFixtureMemory()},
+		Items:      []api.AgentMemory{toolFixtureMemory(), toolFixtureSyntheticMemory()},
 		NextCursor: "cursor_page_2",
 	}, nil
 }
@@ -169,7 +169,7 @@ func TestV1ToolSuccessCallsAPIAndSearchesCache(t *testing.T) {
 		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"patchxnote_get_quota_summary","arguments":{}}}`,
 		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"patchxnote_get_model_usage_summary","arguments":{}}}`,
 		`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"patchxnote_list_memories","arguments":{"platform":"mobile","limit":20}}}`,
-		`{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"patchxnote_search_memories","arguments":{"platform":"mobile","query":"event","limit":10}}}`,
+		`{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"patchxnote_search_memories","arguments":{"platform":"mobile","query":"模型整理","limit":10}}}`,
 		`{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"patchxnote_get_memory","arguments":{"platform":"mobile","memory_id":"mem_fixture_1"}}}`,
 	}
 	responses := serveCustomForTest(t, server, strings.Join(calls, "\n"))
@@ -190,7 +190,9 @@ func TestV1ToolSuccessCallsAPIAndSearchesCache(t *testing.T) {
 	}
 
 	searchText := toolTextResult(t, responses[5])
-	if !strings.Contains(searchText, `"id": "mem_fixture_1"`) {
+	if !strings.Contains(searchText, `"id": "mrun_fixture_synthetic_1"`) ||
+		!strings.Contains(searchText, `"source": "model_io_trace"`) ||
+		!strings.Contains(searchText, `"title": "合成记录总结"`) {
 		t.Fatalf("expected cached memory search result, got:\n%s", searchText)
 	}
 }
@@ -397,6 +399,7 @@ func toolFixtureMemory() api.AgentMemory {
 	return api.AgentMemory{
 		ID:                    "mem_fixture_1",
 		Platform:              "mobile",
+		Source:                "structured_result",
 		ObjectType:            "event",
 		ClientObjectID:        "local_event_fixture",
 		RevisionID:            "rev_fixture_1",
@@ -405,6 +408,28 @@ func toolFixtureMemory() api.AgentMemory {
 		SchemaVersion:         1,
 		SourceAvailability:    "metadata_only",
 		PayloadPlaintextBytes: 256,
+		CreatedAt:             fixedToolTime(),
+		UpdatedAt:             fixedToolTime(),
+	}
+}
+
+func toolFixtureSyntheticMemory() api.AgentMemory {
+	return api.AgentMemory{
+		ID:                    "mrun_fixture_synthetic_1",
+		Platform:              "mobile",
+		Source:                "model_io_trace",
+		RequestID:             "mrun_fixture_synthetic_1",
+		TaskType:              "event_summary",
+		Title:                 "合成记录总结",
+		Summary:               "这是一条用于测试 Agent 列表的模型整理结果。",
+		ObjectType:            "event",
+		ClientObjectID:        "rec_fixture_synthetic_1",
+		RevisionID:            "mrun_fixture_synthetic_1",
+		Revision:              1,
+		SchemaID:              "patchnote.agent.model-io-trace",
+		SchemaVersion:         1,
+		SourceAvailability:    "text_only",
+		PayloadPlaintextBytes: 512,
 		CreatedAt:             fixedToolTime(),
 		UpdatedAt:             fixedToolTime(),
 	}
@@ -420,6 +445,7 @@ func toolFixtureDeliveryDocument() api.AgentDeliveryDocument {
 		Memory: &api.AgentDeliveryMemory{
 			ID:                 "mem_fixture_1",
 			Platform:           "mobile",
+			Source:             "structured_result",
 			ObjectType:         "event",
 			ClientObjectID:     "local_event_fixture",
 			RevisionID:         "rev_fixture_1",

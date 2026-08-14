@@ -40,17 +40,17 @@ npx -y patchxnote-agent install --print-config
 | 数据访问 | 查看账号、录音卡、额度、记录列表、AI 整理结果。 |
 | Webhook | 本地配置别名，手动发送到飞书、钉钉或其他 webhook。 |
 | 安全边界 | 服务端数据只读；原始音频、硬件、支付和 Admin API 不开放。 |
-| 包状态 | 公开 beta 版 `0.2.5`，默认连接 PatchXNote 公测 API。 |
+| 包状态 | 公开 beta 版 `0.2.6`，默认连接 PatchXNote 公测 API。 |
 
 ## 功能
 
-| 能力 | `0.2.5` 是否支持 | 说明 |
+| 能力 | `0.2.6` 是否支持 | 说明 |
 | --- | --- | --- |
 | 手机验证码 Agent 登录 | 支持 | 使用 Agent 专用登录态，不影响 App/PC 的 mobile/desktop 安装位。 |
 | Agent 会话自动刷新 | 支持 | 从本机安全钥匙串自动轮换 Agent access token 和 refresh token。 |
 | 本地 MCP server | 支持 | 让支持 MCP 的 AI 助手调用 PatchXNote Agent。 |
 | 账号、录音卡、额度 | 支持 | 查看当前账号状态、录音卡列表、额度和当月模型用量。 |
-| 记录列表和搜索 | 支持 | 按 `mobile` 或 `desktop` 查看记录列表，也可以搜索当前会话已缓存的记录基础信息。 |
+| 记录列表和搜索 | 支持 | 按 `mobile` 或 `desktop` 查看可读记录入口，包括已保存结果和模型整理输出，也可以搜索当前会话已缓存的记录基础信息。 |
 | 单条记录详情 | 支持 | 查看一条记录的安全基础信息。 |
 | AI 整理记录查看 | 支持 | 找到某次 AI 整理的处理编号，也就是命令里的 `request_id`。 |
 | 原文文本和 AI 结果导出 | 支持 | 显式查看或导出原文文本、AI 返回内容、AI 解析后的结果、最终整理结果。 |
@@ -69,7 +69,7 @@ npx -y patchxnote-agent install --print-config
 - 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
 
-> `0.2.5` 是公测 beta 构建。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
+> `0.2.6` 是公测 beta 构建。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
 
 ## 快速开始
 
@@ -84,7 +84,7 @@ npx -y patchxnote-agent install --print-config
 如果需要固定当前公测版本用于排障或回滚：
 
 ```sh
-npx -y patchxnote-agent@0.2.5 install --print-config
+npx -y patchxnote-agent@0.2.6 install --print-config
 ```
 
 安装器会打印：
@@ -152,7 +152,7 @@ MCP 配置中不会保存 access token 或 refresh token。PatchXNote Agent 默�
 
 ![PatchXNote Agent 工具能力](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.5` 暴露 **19 个 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
+PatchXNote Agent `0.2.6` 暴露 **19 个 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
 
 ### 账号和记录查询
 
@@ -164,7 +164,7 @@ PatchXNote Agent `0.2.5` 暴露 **19 个 MCP 工具**。普通用户可以先理
 | `patchxnote_list_recorder_cards` | 查看已绑定录音卡，只返回脱敏标识。 |
 | `patchxnote_get_quota_summary` | 查看当前账号额度。 |
 | `patchxnote_get_model_usage_summary` | 查看当月 AI 使用情况和扣费额度。 |
-| `patchxnote_list_memories` | 按 `mobile` 或 `desktop` 查看记录列表。 |
+| `patchxnote_list_memories` | 按 `mobile` 或 `desktop` 查看可读记录入口。 |
 | `patchxnote_search_memories` | 搜索当前会话已缓存的记录基础信息。 |
 | `patchxnote_get_memory` | 查看单条记录的安全基础信息。 |
 
@@ -194,7 +194,7 @@ PatchXNote Agent `0.2.5` 暴露 **19 个 MCP 工具**。普通用户可以先理
 | `patchxnote_get_model_io_parsed_result` | 查看或导出 AI 解析后的结果。 |
 | `patchxnote_get_model_io_packaged_result` | 查看或导出最终整理结果。 |
 
-记录类工具必须显式传入 `platform`：`mobile` 或 `desktop`。普通记录列表和 AI 整理记录不是同一个列表；有些模型处理记录可能能在 AI 整理记录里查到，但普通记录列表暂时为空。
+记录类工具必须显式传入 `platform`：`mobile` 或 `desktop`。记录列表现在会包含正式保存结果，也会包含服务端已有 model IO 的模型整理输出。`patchxnote model-io list` 仍然是更底层的 AI 调用列表，适合按任务类型、状态或 request_id 排查。
 
 webhook MCP 工具复用 CLI 的本地配置、钥匙串、模板和发送模块。工具不会返回完整 webhook URL 或签名密钥；只有 MCP client 明确调用发送工具时才会发起外部网络请求。
 
@@ -223,7 +223,7 @@ patchxnote model-io packaged-result --request-id <request_id> --platform mobile 
 patchxnote model-io export --request-id <request_id> --platform mobile --out ./model-io.json
 ```
 
-`request_id` 来自 `patchxnote model-io list --platform mobile|desktop`。如果你正在走记录渲染或草稿流程，`memory_id` 来自记录列表；如果你正在查看某次 AI 整理背后的内容，优先使用 `request_id`。
+需要底层 AI 调用记录时，`request_id` 来自 `patchxnote model-io list --platform mobile|desktop`。MCP `patchxnote_list_memories` 会返回 `id` 和 `platform`，可用于记录渲染、草稿、webhook 和 model IO 字段工具；如果这条入口来自模型整理输出，这个 `id` 也可以就是 `request_id`。
 
 配置和发送 webhook：
 
@@ -249,9 +249,9 @@ patchxnote webhook remove "产品群 飞书"
 npm 包本身只是安装/更新/卸载壳：
 
 ```sh
-npx -y patchxnote-agent@0.2.5 install
-npx -y patchxnote-agent@0.2.5 update
-npx -y patchxnote-agent@0.2.5 uninstall
+npx -y patchxnote-agent@0.2.6 install
+npx -y patchxnote-agent@0.2.6 update
+npx -y patchxnote-agent@0.2.6 uninstall
 ```
 
 webhook URL 和飞书/钉钉可选签名密钥只写入本机安全钥匙串，不写普通配置文件。建议用 `--url-stdin` 和 `--secret-stdin` 避免 shell history。CLI 和 MCP 的 webhook 发送都只支持用户手动执行，不跟随重定向，下游平台错误会直接透传给用户。
@@ -283,13 +283,13 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 ## 当前限制
 
-`0.2.5` 是 beta 版本。
+`0.2.6` 是 beta 版本。
 
 - 默认服务端指向 PatchXNote 公测 API，不代表生产 SLA。
 - Linux 无桌面/headless 环境可能没有 Secret Service；此时仅本地冒烟可显式开启开发文件存储 fallback。
 - 公测期间会持续优化安装流程、MCP 客户端示例和 webhook 格式效果。
 - `patchxnote_search_memories` 只搜索当前 MCP 会话中已缓存的记录基础信息。
-- 普通记录列表为空时，先确认选择的是 `mobile` 还是 `desktop`。AI 整理记录可通过 `patchxnote model-io list` 单独查看。
+- 记录列表为空时，先确认选择的是 `mobile` 还是 `desktop`。底层 AI 调用记录可通过 `patchxnote model-io list` 单独查看。
 - 原始音频、音频下载、硬件写操作、模型执行/重放、自动 webhook 推送、额度购买/领取、支付和 Admin API 都不在 V1 范围内。
 
 ## 常见问题排查
@@ -299,7 +299,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 | 安装后找不到 `patchxnote` | 把安装器打印的目录加入 PATH，然后打开新终端。 |
 | 登录提示凭据存储不可用 | 检查 macOS Keychain、Windows Credential Manager 或 Linux Secret Service 是否可用且已解锁。本地开发才使用 `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`。 |
 | MCP Host 启动失败 | 使用 `--print-config` 打印出的绝对 `command` 路径。 |
-| 记录列表为空 | 检查是否选择了正确的 `platform`：`mobile` 或 `desktop`；AI 整理记录请用 `model-io list`。 |
+| 记录列表为空 | 检查是否选择了正确的 `platform`：`mobile` 或 `desktop`；底层 AI 调用记录请用 `model-io list`。 |
 | webhook 没发出去 | 确认别名存在、目标启用，并检查下游平台返回的错误信息。 |
 | checksum 校验失败 | 稍后重试或固定已知版本；安装器会拒绝未校验二进制。 |
 | 连到了错误服务端 | 设置 `PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`。 |
@@ -307,18 +307,19 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 ## 验证安装
 
 ```sh
-npm view patchxnote-agent@0.2.5 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.5 install --dry-run --print-config
+npm view patchxnote-agent@0.2.6 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.6 install --dry-run --print-config
 patchxnote version
 ```
 
-发布二进制应报告版本 `0.2.5`，commit 应为 GitHub Release `v0.2.5` 对应的提交。
+发布二进制应报告版本 `0.2.6`，commit 应为 GitHub Release `v0.2.6` 对应的提交。
 
-## 0.2.5 更新重点
+## 0.2.6 更新重点
 
 - MCP 工具扩展到 19 个，覆盖账号和记录查询、webhook 配置发送、AI 整理结果查看。
 - webhook 支持 MCP 调用：可以配置中文别名，手动发送到飞书、钉钉或其他 webhook。
 - 新增 AI 整理记录列表，AI 可以先找到 `request_id`，再查看原文文本、AI 返回内容、解析结果和最终整理结果。
+- 记录列表现在可以包含服务端返回的模型整理输出，用户可以先找到记录入口，再查看原文文本、AI 返回内容、解析结果或最终整理结果。
 - webhook 别名里包含点号、中文和空格时，现在可以正确保存并重新读取。
 - README、npm README 和公开图片素材已按新能力更新。
 
@@ -347,7 +348,7 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测
 
 1. 确认目标 PatchXNote GoServer 已暴露所需 `/v1/agent/**` 路由。
 2. 确认 `packages/npm/package.json` 版本与 release tag 一致，tag 不带前缀 `v` 时要匹配包版本。
-3. 推送干净 tag，例如 `v0.2.5`。
+3. 推送干净 tag，例如 `v0.2.6`。
 4. 等待 GitHub Release 产物：`checksums.txt`，以及 Linux/macOS/Windows 的 amd64 和 arm64 二进制。
 5. npm publish 前确认 npm Trusted Publishing 已配置：
    - owner/user：`ZsTs119`

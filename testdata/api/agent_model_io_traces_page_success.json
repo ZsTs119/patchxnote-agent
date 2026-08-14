@@ -32,6 +32,7 @@
       "memory": {
         "id": "mem_fixture_1",
         "platform": "mobile",
+        "source": "structured_result",
         "object_type": "daily_digest",
         "client_object_id": "client-memory-1",
         "revision_id": "rev_fixture_1",

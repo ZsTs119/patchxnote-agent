@@ -88,6 +88,11 @@ type AgentMemoryPage struct {
 type AgentMemory struct {
 	ID                    string    `json:"id"`
 	Platform              string    `json:"platform"`
+	Source                string    `json:"source,omitempty"`
+	RequestID             string    `json:"request_id,omitempty"`
+	TaskType              string    `json:"task_type,omitempty"`
+	Title                 string    `json:"title,omitempty"`
+	Summary               string    `json:"summary,omitempty"`
 	ObjectType            string    `json:"object_type"`
 	ClientObjectID        string    `json:"client_object_id"`
 	RevisionID            string    `json:"revision_id"`
@@ -135,6 +140,11 @@ type AgentDeliveryKeyItem struct {
 type AgentDeliveryMemory struct {
 	ID                 string `json:"id"`
 	Platform           string `json:"platform"`
+	Source             string `json:"source,omitempty"`
+	RequestID          string `json:"request_id,omitempty"`
+	TaskType           string `json:"task_type,omitempty"`
+	Title              string `json:"title,omitempty"`
+	Summary            string `json:"summary,omitempty"`
 	ObjectType         string `json:"object_type"`
 	ClientObjectID     string `json:"client_object_id"`
 	RevisionID         string `json:"revision_id"`

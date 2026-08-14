@@ -17,6 +17,7 @@ func TestSearchMemoriesMatchesAuthorizedMetadata(t *testing.T) {
 			{
 				ID:                 "mem_event_1",
 				Platform:           "mobile",
+				Source:             "structured_result",
 				ObjectType:         "event",
 				ClientObjectID:     "local_event_1",
 				RevisionID:         "rev_1",
@@ -26,6 +27,7 @@ func TestSearchMemoriesMatchesAuthorizedMetadata(t *testing.T) {
 			{
 				ID:                 "mem_daily_1",
 				Platform:           "desktop",
+				Source:             "structured_result",
 				ObjectType:         "daily",
 				ClientObjectID:     "local_daily_1",
 				RevisionID:         "rev_2",
@@ -45,6 +47,40 @@ func TestSearchMemoriesMatchesAuthorizedMetadata(t *testing.T) {
 	}
 	if len(result.Items) != 1 || result.Items[0].ID != "mem_event_1" {
 		t.Fatalf("unexpected search result: %+v", result)
+	}
+}
+
+func TestSearchMemoriesMatchesSyntheticTitleSummaryAndRequestID(t *testing.T) {
+	store := memoryStoreFunc(func(ctx context.Context, platform string) ([]Memory, error) {
+		return []Memory{
+			{
+				ID:             "mrun_fixture_synthetic_1",
+				Platform:       "mobile",
+				Source:         "model_io_trace",
+				RequestID:      "mrun_fixture_synthetic_1",
+				TaskType:       "event_summary",
+				Title:          "合成记录总结",
+				Summary:        "这是一条用于测试 Agent 列表的模型整理结果。",
+				ObjectType:     "event",
+				ClientObjectID: "rec_fixture_synthetic_1",
+				RevisionID:     "mrun_fixture_synthetic_1",
+				SchemaID:       "patchnote.agent.model-io-trace",
+			},
+		}, nil
+	})
+
+	for _, query := range []string{"合成记录", "模型整理", "event_summary", "mrun_fixture_synthetic_1"} {
+		result, err := SearchMemories(context.Background(), store, MemorySearchParams{
+			Platform: "mobile",
+			Query:    query,
+			Limit:    10,
+		})
+		if err != nil {
+			t.Fatalf("search memories by %q: %v", query, err)
+		}
+		if len(result.Items) != 1 || result.Items[0].ID != "mrun_fixture_synthetic_1" {
+			t.Fatalf("unexpected search result for %q: %+v", query, result)
+		}
 	}
 }
 

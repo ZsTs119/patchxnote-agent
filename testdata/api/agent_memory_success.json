@@ -1,6 +1,7 @@
 {
   "id": "mem_fixture_1",
   "platform": "mobile",
+  "source": "structured_result",
   "object_type": "event",
   "client_object_id": "local_event_fixture",
   "revision_id": "rev_fixture_1",

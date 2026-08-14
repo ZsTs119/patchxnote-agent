@@ -16,6 +16,11 @@ const (
 type Memory struct {
 	ID                 string    `json:"id"`
 	Platform           string    `json:"platform"`
+	Source             string    `json:"source,omitempty"`
+	RequestID          string    `json:"request_id,omitempty"`
+	TaskType           string    `json:"task_type,omitempty"`
+	Title              string    `json:"title,omitempty"`
+	Summary            string    `json:"summary,omitempty"`
 	ObjectType         string    `json:"object_type"`
 	ClientObjectID     string    `json:"client_object_id"`
 	RevisionID         string    `json:"revision_id"`
@@ -122,6 +127,11 @@ func SearchMemories(ctx context.Context, store MemoryStore, params MemorySearchP
 func memoryMatches(memory Memory, query string) bool {
 	fields := []string{
 		memory.ID,
+		memory.Source,
+		memory.RequestID,
+		memory.TaskType,
+		memory.Title,
+		memory.Summary,
 		memory.ObjectType,
 		memory.ClientObjectID,
 		memory.RevisionID,

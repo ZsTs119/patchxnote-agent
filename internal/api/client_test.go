@@ -236,21 +236,30 @@ func TestReadProjectionSuccessAndPagination(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list memories: %v", err)
 	}
-	if page.NextCursor != "cursor_page_2" || len(page.Items) != 1 {
+	if page.NextCursor != "cursor_page_2" || len(page.Items) != 2 {
 		t.Fatalf("unexpected memories page: %+v", page)
+	}
+	if page.Items[0].Source != "structured_result" ||
+		page.Items[1].Source != "model_io_trace" ||
+		page.Items[1].RequestID != "mrun_fixture_synthetic_1" ||
+		page.Items[1].TaskType != "event_summary" ||
+		page.Items[1].Title != "合成记录总结" ||
+		page.Items[1].Summary == "" {
+		t.Fatalf("unexpected memory optional fields: %+v", page.Items)
 	}
 	memory, err := client.GetMemory(context.Background(), credentialMaterial, "mobile", "mem_fixture_1")
 	if err != nil {
 		t.Fatalf("get memory: %v", err)
 	}
-	if memory.ID != "mem_fixture_1" || memory.SourceAvailability != "metadata_only" {
+	if memory.ID != "mem_fixture_1" || memory.SourceAvailability != "metadata_only" || memory.Source != "structured_result" {
 		t.Fatalf("unexpected memory: %+v", memory)
 	}
 	delivery, err := client.GetMemoryDeliveryDocument(context.Background(), credentialMaterial, "desktop", "mem_fixture_delivery")
 	if err != nil {
 		t.Fatalf("delivery document: %v", err)
 	}
-	if delivery.Title != "合成会议纪要" || len(delivery.Sections) != 1 || delivery.Memory == nil || delivery.Trace.RequestID != "mrun_fixture_delivery" {
+	if delivery.Title != "合成会议纪要" || len(delivery.Sections) != 1 || delivery.Memory == nil ||
+		delivery.Memory.Source != "structured_result" || delivery.Trace.RequestID != "mrun_fixture_delivery" {
 		t.Fatalf("unexpected delivery document: %+v", delivery)
 	}
 	modelIO, err := client.GetMemoryModelIO(context.Background(), credentialMaterial, "", "mem_fixture_delivery")

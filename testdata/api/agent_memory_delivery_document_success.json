@@ -22,6 +22,7 @@
   "memory": {
     "id": "mem_fixture_delivery",
     "platform": "desktop",
+    "source": "structured_result",
     "object_type": "daily_digest",
     "client_object_id": "day_2026_08_13",
     "revision_id": "rev_fixture_delivery",

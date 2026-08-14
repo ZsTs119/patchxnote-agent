@@ -40,17 +40,17 @@ npx -y patchxnote-agent install --print-config
 | Data access | Shows account, recorder cards, quota, records, and AI-generated results. |
 | Webhook | Locally configures named targets and manually sends to Feishu, DingTalk, or another webhook. |
 | Safety boundary | Server data is read-only; raw audio, hardware, payment, and Admin APIs are not exposed. |
-| Package status | Public beta `0.2.5`, defaulting to the PatchXNote public beta API. |
+| Package status | Public beta `0.2.6`, defaulting to the PatchXNote public beta API. |
 
 ## Features
 
-| Capability | Available in `0.2.5` | Notes |
+| Capability | Available in `0.2.6` | Notes |
 | --- | --- | --- |
 | Phone OTP Agent login | Yes | Uses Agent-specific server auth, not App/PC mobile or desktop installation slots. |
 | Agent session refresh | Yes | Automatically rotates Agent access and refresh tokens from the local keychain. |
 | Local MCP server | Yes | Lets MCP-capable AI assistants call PatchXNote Agent. |
 | Account, recorder cards, quota | Yes | Shows account status, recorder-card list, quota, and current-month model usage. |
-| Record list and search | Yes | Lists records by `mobile` or `desktop`, and searches record basics cached in the current MCP session. |
+| Record list and search | Yes | Lists readable record entries by `mobile` or `desktop`, including saved results and model-generated outputs, then searches basics cached in the current MCP session. |
 | Single record details | Yes | Shows safe basic information for one record. |
 | AI processing lookup | Yes | Finds an AI processing run and the follow-up `request_id`. |
 | Source text and AI result export | Yes | Explicitly inspect or export source text, AI response, parsed result, and final result. |
@@ -69,7 +69,7 @@ npx -y patchxnote-agent install --print-config
 - A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.2.5` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
+> `0.2.6` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
@@ -84,7 +84,7 @@ npx -y patchxnote-agent install --print-config
 To pin the current public beta version for troubleshooting or rollback:
 
 ```sh
-npx -y patchxnote-agent@0.2.5 install --print-config
+npx -y patchxnote-agent@0.2.6 install --print-config
 ```
 
 The installer prints:
@@ -152,7 +152,7 @@ MCP config never contains access tokens or refresh tokens. PatchXNote Agent stor
 
 ![PatchXNote Agent tools](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.5` exposes **19 MCP tools**. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
+PatchXNote Agent `0.2.6` exposes **19 MCP tools**. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
 
 ### Account And Record Lookup
 
@@ -194,7 +194,7 @@ PatchXNote Agent `0.2.5` exposes **19 MCP tools**. End users can think of them a
 | `patchxnote_get_model_io_parsed_result` | Inspect or export the parsed AI result. |
 | `patchxnote_get_model_io_packaged_result` | Inspect or export the final result. |
 
-Record tools require an explicit `platform` argument: `mobile` or `desktop`. The normal record list and the AI processing list are not the same data source; some accounts may have AI processing runs even when the normal record list is empty.
+Record tools require an explicit `platform` argument: `mobile` or `desktop`. The record list now includes formal saved results plus readable model-generated outputs when the server has model IO data. `patchxnote model-io list` remains the lower-level AI processing list for finding request IDs and filtering by task or state.
 
 Webhook MCP tools share the same local config, keychain, templates, and sender modules as the CLI. They do not return full webhook URLs or signing secrets, and send calls perform external network requests only when the MCP client explicitly invokes the send tool.
 
@@ -223,7 +223,7 @@ patchxnote model-io packaged-result --request-id <request_id> --platform mobile 
 patchxnote model-io export --request-id <request_id> --platform mobile --out ./model-io.json
 ```
 
-Get `request_id` from `patchxnote model-io list --platform mobile|desktop`. Use `memory_id` for record rendering and draft workflows; use `request_id` when inspecting the content behind an AI processing run.
+Get `request_id` from `patchxnote model-io list --platform mobile|desktop` when you need a lower-level AI processing run. MCP `patchxnote_list_memories` returns `id` and `platform` for record rendering, drafts, webhook workflows, and model IO field tools; for model-generated entries, that `id` can be the same value as `request_id`.
 
 Configure and send webhooks:
 
@@ -249,9 +249,9 @@ Useful global flags:
 The npm package itself is only an installer/update wrapper:
 
 ```sh
-npx -y patchxnote-agent@0.2.5 install
-npx -y patchxnote-agent@0.2.5 update
-npx -y patchxnote-agent@0.2.5 uninstall
+npx -y patchxnote-agent@0.2.6 install
+npx -y patchxnote-agent@0.2.6 update
+npx -y patchxnote-agent@0.2.6 uninstall
 ```
 
 Webhook URLs and optional Feishu/DingTalk signing secrets are stored in the local secure credential store, not in the non-secret config file. `--url-stdin` and `--secret-stdin` avoid shell history. CLI and MCP webhook sending is manual only, does not follow redirects, and surfaces provider errors directly.
@@ -283,13 +283,13 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.2.5` is a beta release.
+`0.2.6` is a beta release.
 
 - The default server points to the PatchXNote public beta API and does not imply a production SLA.
 - Linux headless environments may not have Secret Service available; use the explicit development file-store fallback only for local smoke.
 - Public beta users should expect iterative improvements to setup guidance, MCP client examples, and webhook formatting.
 - `patchxnote_search_memories` searches only record basics cached during the current MCP session.
-- If the normal record list is empty, first check whether you selected `mobile` or `desktop`. AI processing runs can also be listed separately with `patchxnote model-io list`.
+- If the record list is empty, first check whether you selected `mobile` or `desktop`. Lower-level AI processing runs can also be listed separately with `patchxnote model-io list`.
 - Raw audio, audio downloads, hardware write actions, model execution/replay, automatic webhook pushes, quota purchase/reward actions, payment, and Admin APIs are out of scope.
 
 ## Troubleshooting
@@ -299,7 +299,7 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 | `patchxnote` is not found after install | Add the printed install directory to PATH, then open a new terminal. |
 | Login says credential storage is unavailable | Check that macOS Keychain, Windows Credential Manager, or Linux Secret Service is available and unlocked. For local development only, set `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`. |
 | MCP host cannot start the server | Use the absolute `command` path printed by `--print-config`. |
-| Record list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`; use `model-io list` for AI processing runs. |
+| Record list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`; use `model-io list` for lower-level AI processing runs. |
 | Webhook did not send | Confirm the alias exists, the target is enabled, and check the provider error returned by the command. |
 | Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
 | Wrong server environment | Set `PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`. |
@@ -307,18 +307,19 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 ## Verify The Install
 
 ```sh
-npm view patchxnote-agent@0.2.5 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.5 install --dry-run --print-config
+npm view patchxnote-agent@0.2.6 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.6 install --dry-run --print-config
 patchxnote version
 ```
 
-The release binary should report version `0.2.5` and the commit attached to the `v0.2.5` GitHub Release.
+The release binary should report version `0.2.6` and the commit attached to the `v0.2.6` GitHub Release.
 
-## 0.2.5 Highlights
+## 0.2.6 Highlights
 
 - MCP expands to 19 tools across account/record lookup, webhook delivery, and AI result inspection.
 - Webhook workflows are available to MCP: configure named aliases and manually send to Feishu, DingTalk, or generic webhooks.
 - AI processing runs can be listed first, then inspected by `request_id` for source text, AI response, parsed result, and final result.
+- Record lists can now include readable model-generated outputs returned by the server, so users can find a record first and then inspect its source text, AI response, parsed result, or final result.
 - Webhook aliases containing dots, Chinese text, or spaces now persist and reload correctly from the local config file.
 - README, npm README, and public visual assets have been refreshed for the new user-facing positioning.
 
@@ -347,7 +348,7 @@ The detailed release and documentation maintenance checklist lives in [docs/rele
 
 1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.2.5`.
+3. Push a clean tag, for example `v0.2.6`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`

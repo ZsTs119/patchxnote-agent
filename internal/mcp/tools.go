@@ -68,7 +68,7 @@ func defaultTools(server *Server) []Tool {
 		},
 		{
 			Name:        "patchxnote_list_memories",
-			Description: "List safe metadata for stored structured results for one selected platform.",
+			Description: "List PatchXNote readable record entries for one selected platform, including formal saved results and model-generated outputs.",
 			InputSchema: objectSchema(map[string]any{
 				"platform": platformProperty(),
 				"limit":    integerProperty(1, 50),
@@ -92,7 +92,7 @@ func defaultTools(server *Server) []Tool {
 		},
 		{
 			Name:        "patchxnote_get_memory",
-			Description: "Read safe metadata for one PatchXNote structured result.",
+			Description: "Read safe metadata for one PatchXNote readable record entry.",
 			InputSchema: objectSchema(map[string]any{
 				"platform":  platformProperty(),
 				"memory_id": stringProperty(1, 160),
@@ -299,6 +299,11 @@ func apiMemoriesToCache(memories []api.AgentMemory) []cache.Memory {
 		result = append(result, cache.Memory{
 			ID:                 memory.ID,
 			Platform:           memory.Platform,
+			Source:             memory.Source,
+			RequestID:          memory.RequestID,
+			TaskType:           memory.TaskType,
+			Title:              memory.Title,
+			Summary:            memory.Summary,
 			ObjectType:         memory.ObjectType,
 			ClientObjectID:     memory.ClientObjectID,
 			RevisionID:         memory.RevisionID,

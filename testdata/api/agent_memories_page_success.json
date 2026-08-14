@@ -3,6 +3,7 @@
     {
       "id": "mem_fixture_1",
       "platform": "mobile",
+      "source": "structured_result",
       "object_type": "event",
       "client_object_id": "local_event_fixture",
       "revision_id": "rev_fixture_1",
@@ -13,6 +14,25 @@
       "payload_plaintext_bytes": 256,
       "created_at": "2026-08-06T09:00:00Z",
       "updated_at": "2026-08-06T09:30:00Z"
+    },
+    {
+      "id": "mrun_fixture_synthetic_1",
+      "platform": "mobile",
+      "source": "model_io_trace",
+      "request_id": "mrun_fixture_synthetic_1",
+      "task_type": "event_summary",
+      "title": "合成记录总结",
+      "summary": "这是一条用于测试 Agent 列表的模型整理结果。",
+      "object_type": "event",
+      "client_object_id": "rec_fixture_synthetic_1",
+      "revision_id": "mrun_fixture_synthetic_1",
+      "revision": 1,
+      "schema_id": "patchnote.agent.model-io-trace",
+      "schema_version": 1,
+      "source_availability": "text_only",
+      "payload_plaintext_bytes": 512,
+      "created_at": "2026-08-06T09:40:00Z",
+      "updated_at": "2026-08-06T09:40:00Z"
     }
   ],
   "next_cursor": "cursor_page_2"
