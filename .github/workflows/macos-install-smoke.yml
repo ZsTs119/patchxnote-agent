@@ -6,7 +6,7 @@ on:
       version:
         description: "Published npm/GitHub Release version to install, without leading v"
         required: true
-        default: "0.2.3"
+        default: "0.2.5"
         type: string
   pull_request:
     paths:
@@ -50,7 +50,7 @@ jobs:
           "${INSTALL_DIR}/patchxnote" version --output json > "${RUNNER_TEMP}/patchxnote-version.json"
           node -e "const fs=require('fs'); const got=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/patchxnote-version.json', 'utf8')); if (got.version !== process.env.VERSION) { throw new Error('unexpected patchxnote version ' + got.version); } if (got.os !== 'darwin') { throw new Error('expected darwin binary, got ' + got.os); }"
         env:
-          VERSION: ${{ github.event.inputs.version || '0.2.3' }}
+          VERSION: ${{ github.event.inputs.version || '0.2.5' }}
 
       - name: MCP stdio initialize smoke
         run: |
@@ -60,4 +60,4 @@ jobs:
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
             | "${INSTALL_DIR}/patchxnote" mcp serve > "${RUNNER_TEMP}/patchxnote-mcp.jsonl"
-          node -e "const fs=require('fs'); const lines=fs.readFileSync(process.env.RUNNER_TEMP + '/patchxnote-mcp.jsonl', 'utf8').trim().split(/\n+/).map(JSON.parse); if (lines.length !== 2) { throw new Error('expected 2 MCP responses'); } if (lines.some(line => line.error)) { throw new Error('unexpected MCP error ' + JSON.stringify(lines)); } const tools=lines[1].result.tools || []; if (tools.length !== 7) { throw new Error('expected 7 tools, got ' + tools.length); }"
+          node -e "const fs=require('fs'); const lines=fs.readFileSync(process.env.RUNNER_TEMP + '/patchxnote-mcp.jsonl', 'utf8').trim().split(/\n+/).map(JSON.parse); if (lines.length !== 2) { throw new Error('expected 2 MCP responses'); } if (lines.some(line => line.error)) { throw new Error('unexpected MCP error ' + JSON.stringify(lines)); } const tools=lines[1].result.tools || []; if (tools.length !== 19) { throw new Error('expected 19 tools, got ' + tools.length); }"
