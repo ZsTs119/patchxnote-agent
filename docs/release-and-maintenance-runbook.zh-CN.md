@@ -6,7 +6,9 @@
 
 - GitHub 仓库：`https://github.com/ZsTs119/patchxnote-agent`
 - npm 包：`patchxnote-agent`
-- 用户安装命令：`npx -y patchxnote-agent install`
+- 用户通用 MCP 配置命令：`npx -y patchxnote-agent@latest mcp config`
+- 用户通用 MCP 启动命令：`npx -y patchxnote-agent@latest mcp serve`
+- 用户 fallback 安装命令：`npx -y patchxnote-agent install`
 - 本地二进制：`patchxnote`
 - MCP Server 命令：`patchxnote mcp serve`
 - MCP 工具前缀：`patchxnote_*`
@@ -46,7 +48,7 @@
 - `patchxnote` CLI
 - 本地 MCP stdio bridge
 - MCP tool schema 和 tool registry
-- npm 安装壳
+- npm 安装/启动壳
 - 本地非 secret 配置
 - 系统原生钥匙串集成
 - 本地缓存和当前会话 search
@@ -148,6 +150,15 @@ npm 安装壳变更时还要跑：
 node packages/npm/test/install.test.js
 ```
 
+新增或修改 npm 通用 MCP 入口时还要确认：
+
+```sh
+npx -y patchxnote-agent@latest mcp config
+npx -y patchxnote-agent@latest mcp serve
+```
+
+本地源码验证可以使用 `packages/npm/bin/patchxnote-agent.js` 和 `--from-local` 指向当前构建或 fake binary；发布后必须再用 npm registry 上的包验证。`mcp serve` 的 stdout 只能来自 Go binary 的 JSON-RPC，安装、版本探测、修复和错误诊断只能走 stderr。
+
 WSL 环境目前可能没有 Linux Node；Windows npm 直接在 WSL UNC 路径下执行 `npm pack` 可能会把路径拼成重复的 `Ubuntu-22.04`。遇到这个问题时，把 `packages/npm` 复制到 Windows 临时目录再跑：
 
 ```powershell
@@ -197,6 +208,7 @@ PY
 - `git status --short` 干净，或者只包含本次发布变更。
 - `packages/npm/package.json` 的 `version` 是目标版本。
 - README / 中文 README / npm README 中的 pin 版本同步。
+- README / 中文 README / npm README 中的通用 `mcp config`、`mcp serve`、`login` 命令同步。
 - `.github/workflows/publish-npm.yml` 没有 `NODE_AUTH_TOKEN` 或 `NPM_TOKEN`。
 - `gh secret list --repo ZsTs119/patchxnote-agent` 不应包含 npm 发布 token。
 - npm 包 `patchxnote-agent` 的 Trusted Publisher 指向：
@@ -276,6 +288,8 @@ You cannot publish over the previously published versions: X.Y.Z.
 
 ```sh
 npm view patchxnote-agent version dist-tags.latest repository.url --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z mcp config
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z install --dry-run --print-config
 ```
 
 Windows 安装验证：
@@ -396,7 +410,7 @@ grep -RInE "access_token|refresh_token|Bearer |otp|sk_|protocol_mac|NPM_TOKEN|NO
 - Windows npm 在 WSL UNC 路径下可能解析路径错误。打包测试用 Windows 临时目录。
 - GoServer 没有存的字段，Agent 不能展示成工具能力。
 - MCP stdio 的 stdout 只能输出 JSON-RPC，日志和诊断必须走 stderr。
-- 用户宣传命令推荐不 pin 版本：`npx -y patchxnote-agent install`。排障和回滚文档可以 pin 具体版本。
+- 用户宣传命令推荐不 pin 版本：`npx -y patchxnote-agent@latest mcp config` 和 `npx -y patchxnote-agent@latest login`。排障、回滚和绝对路径 fallback 文档可以 pin 具体版本。
 
 ## 回滚策略
 
@@ -426,6 +440,8 @@ npm deprecate patchxnote-agent@BAD_VERSION "Please upgrade to X.Y.Z or newer."
 - [ ] `go test ./...` PASS
 - [ ] `scripts/e2e/mvp-smoke.sh` PASS
 - [ ] npm wrapper 测试 PASS，如本次涉及 installer
+- [ ] npm `mcp config` 输出为纯 JSON
+- [ ] npm `mcp serve` stdout 未被安装日志、版本探测或错误诊断污染
 - [ ] README / 中文 README / npm README 已同步
 - [ ] GoServer 飞书指南已同步
 - [ ] 图片链接已校验

@@ -6,19 +6,86 @@ const fs = require("fs");
 const https = require("https");
 const os = require("os");
 const path = require("path");
+const { spawn, spawnSync } = require("child_process");
 
 const packageRoot = path.resolve(__dirname, "..");
 const packageJSON = require(path.join(packageRoot, "package.json"));
 const repo = "ZsTs119/patchxnote-agent";
+const lockTimeoutMs = 10000;
+const staleLockMs = 10 * 60 * 1000;
 
 async function main(argv) {
   const parsed = parseArgs(argv);
-  if (!["install", "update", "uninstall"].includes(parsed.command)) {
-    throw new Error("usage: patchxnote-agent <install|update|uninstall> [--dry-run] [--print-config] [--install-dir <path>]");
+
+  if (parsed.command === "install" || parsed.command === "update") {
+    await runInstall(parsed);
+    return;
+  }
+  if (parsed.command === "uninstall") {
+    await runUninstall(parsed);
+    return;
+  }
+  if (parsed.command === "login") {
+    await runLogin(parsed);
+    return;
+  }
+  if (parsed.command === "mcp" && parsed.subcommand === "config") {
+    printUniversalMCPConfig();
+    return;
+  }
+  if (parsed.command === "mcp" && parsed.subcommand === "serve") {
+    await runMCPServe(parsed);
+    return;
   }
 
-  const target = resolveTarget(parsed.options.platform || process.platform, parsed.options.arch || process.arch);
-  const installDir = parsed.options.installDir || defaultInstallDir(process.platform);
+  throw new Error(usage());
+}
+
+async function runInstall(parsed) {
+  const plan = createInstallPlan(parsed.command, parsed.options);
+  if (parsed.options.dryRun) {
+    printPlan(plan);
+    if (parsed.options.printConfig) {
+      printMCPConfig(plan.install_path);
+    }
+    return;
+  }
+  await withInstallLock(plan, async () => installBinary(plan, parsed.options));
+  console.log(`Installed PatchXNote Agent ${plan.version} to ${plan.install_path}`);
+  printPathGuidance(plan.install_dir, plan.platform);
+  if (parsed.options.printConfig) {
+    printMCPConfig(plan.install_path);
+  } else {
+    console.log("Run: patchxnote login");
+    console.log("MCP config: patchxnote mcp serve");
+  }
+}
+
+async function runUninstall(parsed) {
+  const plan = createInstallPlan(parsed.command, parsed.options);
+  await uninstall(plan, parsed.options);
+}
+
+async function runLogin(parsed) {
+  const plan = await ensureBinary(parsed.options, { stderr: process.stderr });
+  const code = await spawnAndWait(plan.install_path, ["login", ...parsed.passthroughArgs], {
+    stdio: "inherit"
+  });
+  process.exitCode = code;
+}
+
+async function runMCPServe(parsed) {
+  const plan = await ensureBinary(parsed.options, { stderr: process.stderr });
+  const code = await spawnAndWait(plan.install_path, ["mcp", "serve", ...parsed.passthroughArgs], {
+    stdio: ["pipe", "inherit", "inherit"],
+    pipeStdin: true
+  });
+  process.exitCode = code;
+}
+
+function createInstallPlan(command, options = {}) {
+  const target = resolveTarget(options.platform || process.platform, options.arch || process.arch);
+  const installDir = options.installDir || defaultInstallDir(process.platform);
   const binaryName = target.platform === "windows" ? "patchxnote.exe" : "patchxnote";
   const installPath = joinInstallPath(installDir, binaryName, target.platform);
   const version = packageJSON.version;
@@ -37,48 +104,65 @@ async function main(argv) {
     install_path: installPath,
     install_dir_on_path: isInstallDirOnPath(installDir, process.env.PATH || "", target.platform),
     path_hint: pathHint(installDir, target.platform),
+    asset_name: assetName,
     asset_url: assetURL,
     checksums_url: checksumsURL,
-    action: parsed.command,
-    dry_run: Boolean(parsed.options.dryRun)
+    action: command,
+    dry_run: Boolean(options.dryRun)
   };
+  return plan;
+}
 
-  if (parsed.command === "uninstall") {
-    await uninstall(plan, parsed.options);
-    return;
-  }
-
-  if (parsed.options.dryRun) {
-    printPlan(plan);
-    if (parsed.options.printConfig) {
-      printMCPConfig(installPath);
-    }
-    return;
-  }
-
+async function installBinary(plan, options = {}) {
   let binary;
-  if (parsed.options.fromLocal) {
-    binary = await fs.promises.readFile(parsed.options.fromLocal);
+  if (options.fromLocal) {
+    binary = await fs.promises.readFile(options.fromLocal);
   } else {
-    binary = await download(assetURL);
-    const checksums = await download(checksumsURL, "utf8");
-    verifyChecksum(binary, assetName, checksums);
+    binary = await download(plan.asset_url);
+    const checksums = await download(plan.checksums_url, "utf8");
+    verifyChecksum(binary, plan.asset_name, checksums);
   }
 
-  await fs.promises.mkdir(installDir, { recursive: true, mode: 0o755 });
-  await fs.promises.writeFile(installPath, binary, { mode: target.platform === "windows" ? 0o644 : 0o755 });
-  if (target.platform !== "windows") {
-    await fs.promises.chmod(installPath, 0o755);
-    await assertExecutable(installPath);
+  await fs.promises.mkdir(plan.install_dir, { recursive: true, mode: 0o755 });
+  const tempPath = `${plan.install_path}.tmp-${process.pid}-${Date.now()}`;
+  try {
+    await fs.promises.writeFile(tempPath, binary, { mode: plan.platform === "windows" ? 0o644 : 0o755 });
+    if (plan.platform !== "windows") {
+      await fs.promises.chmod(tempPath, 0o755);
+      await assertExecutable(tempPath);
+    }
+    await replaceInstalledBinary(tempPath, plan.install_path);
+    if (plan.platform !== "windows") {
+      await assertExecutable(plan.install_path);
+    }
+  } finally {
+    await fs.promises.rm(tempPath, { force: true }).catch(() => {});
+  }
+}
+
+async function replaceInstalledBinary(tempPath, installPath) {
+  const backupPath = `${installPath}.bak-${process.pid}-${Date.now()}`;
+  let hasBackup = false;
+  try {
+    await fs.promises.rename(installPath, backupPath);
+    hasBackup = true;
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
   }
 
-  console.log(`Installed PatchXNote Agent ${version} to ${installPath}`);
-  printPathGuidance(installDir, target.platform);
-  if (parsed.options.printConfig) {
-    printMCPConfig(installPath);
-  } else {
-    console.log("Run: patchxnote login");
-    console.log("MCP config: patchxnote mcp serve");
+  try {
+    await fs.promises.rename(tempPath, installPath);
+  } catch (error) {
+    if (hasBackup) {
+      await fs.promises.rename(backupPath, installPath).catch(() => {});
+    }
+    throw error;
+  }
+
+  if (hasBackup) {
+    await fs.promises.rm(backupPath, { force: true }).catch(() => {});
   }
 }
 
@@ -98,8 +182,210 @@ async function assertExecutable(installPath) {
   }
 }
 
+async function ensureBinary(options = {}, io = {}) {
+  const plan = createInstallPlan("install", options);
+  return withInstallLock(plan, async () => {
+    const inspected = inspectInstalledBinary(plan);
+    if (inspected.ok && inspected.version === plan.version) {
+      return plan;
+    }
+
+    if (!inspected.exists) {
+      writeDiagnostic(io, `PatchXNote Agent binary missing; installing ${plan.version}.\n`);
+    } else if (inspected.ok) {
+      writeDiagnostic(io, `PatchXNote Agent binary version ${inspected.version} does not match package ${plan.version}; reinstalling.\n`);
+    } else {
+      writeDiagnostic(io, `PatchXNote Agent binary preflight failed; reinstalling ${plan.version}.\n`);
+    }
+
+    await installBinary(plan, options);
+    const afterInstall = inspectInstalledBinary(plan);
+    if (!afterInstall.ok) {
+      throw new Error(`installed PatchXNote Agent binary failed preflight: ${afterInstall.reason}`);
+    }
+    if (afterInstall.version !== plan.version) {
+      throw new Error(`installed PatchXNote Agent binary version ${afterInstall.version} does not match package ${plan.version}`);
+    }
+    return plan;
+  });
+}
+
+function inspectInstalledBinary(plan) {
+  if (!fs.existsSync(plan.install_path)) {
+    return { exists: false, ok: false, reason: "missing" };
+  }
+  const result = spawnSync(plan.install_path, ["version", "--output", "json"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 5000,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024
+  });
+  if (result.error) {
+    return { exists: true, ok: false, reason: result.error.message };
+  }
+  if (result.status !== 0) {
+    return { exists: true, ok: false, reason: `exit ${result.status}` };
+  }
+  let decoded;
+  try {
+    decoded = JSON.parse(result.stdout.trim());
+  } catch (error) {
+    return { exists: true, ok: false, reason: "invalid version output" };
+  }
+  return { exists: true, ok: true, version: String(decoded.version || "") };
+}
+
+async function withInstallLock(plan, action) {
+  await fs.promises.mkdir(plan.install_dir, { recursive: true, mode: 0o755 });
+  const release = await acquireInstallLock(`${plan.install_path}.lock`);
+  try {
+    return await action();
+  } finally {
+    await release();
+  }
+}
+
+async function acquireInstallLock(lockDir) {
+  const startedAt = Date.now();
+  for (;;) {
+    try {
+      await fs.promises.mkdir(lockDir);
+      return async () => {
+        await fs.promises.rmdir(lockDir).catch(() => {});
+      };
+    } catch (error) {
+      if (error.code !== "EEXIST") {
+        throw error;
+      }
+      await removeStaleLock(lockDir).catch(() => {});
+      if (Date.now() - startedAt > lockTimeoutMs) {
+        throw new Error(`install lock timed out: ${lockDir}`);
+      }
+      await delay(100);
+    }
+  }
+}
+
+async function removeStaleLock(lockDir) {
+  const stat = await fs.promises.stat(lockDir);
+  if (Date.now() - stat.mtimeMs > staleLockMs) {
+    await fs.promises.rmdir(lockDir);
+  }
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function writeDiagnostic(io, message) {
+  if (io.stderr && typeof io.stderr.write === "function") {
+    io.stderr.write(message);
+  }
+}
+
+function spawnAndWait(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: options.stdio || "inherit",
+      windowsHide: true
+    });
+    let settled = false;
+    let stdinEndHandler;
+    let stdinErrorHandler;
+    let exitHandler;
+
+    const cleanup = () => {
+      for (const [signal, handler] of signalHandlers) {
+        process.off(signal, handler);
+      }
+      if (stdinEndHandler) {
+        process.stdin.off("end", stdinEndHandler);
+      }
+      if (stdinErrorHandler) {
+        process.stdin.off("error", stdinErrorHandler);
+      }
+      if (exitHandler) {
+        process.off("exit", exitHandler);
+      }
+    };
+
+    const signalHandlers = ["SIGINT", "SIGTERM"].map(signal => {
+      const handler = () => {
+        if (!child.killed) {
+          child.kill(signal);
+        }
+      };
+      process.on(signal, handler);
+      return [signal, handler];
+    });
+
+    if (options.pipeStdin && child.stdin) {
+      child.stdin.on("error", () => {});
+      stdinEndHandler = () => child.stdin.end();
+      stdinErrorHandler = () => child.stdin.destroy();
+      process.stdin.on("end", stdinEndHandler);
+      process.stdin.on("error", stdinErrorHandler);
+      process.stdin.pipe(child.stdin);
+    }
+
+    exitHandler = () => {
+      if (!settled && !child.killed) {
+        child.kill();
+      }
+    };
+    process.on("exit", exitHandler);
+
+    child.on("error", error => {
+      settled = true;
+      cleanup();
+      reject(error);
+    });
+    child.on("exit", (code, signal) => {
+      settled = true;
+      cleanup();
+      resolve(code == null ? signalExitCode(signal) : code);
+    });
+  });
+}
+
+function signalExitCode(signal) {
+  if (signal === "SIGINT") {
+    return 130;
+  }
+  if (signal === "SIGTERM") {
+    return 143;
+  }
+  return 1;
+}
+
 function parseArgs(argv) {
   const [command, ...rest] = argv;
+  if (!command) {
+    throw new Error(usage());
+  }
+  if (["install", "update", "uninstall"].includes(command)) {
+    return { command, options: parseInstallOptions(command, rest), passthroughArgs: [] };
+  }
+  if (command === "login") {
+    const launcher = parseLauncherOptions(rest, { allowPassthrough: true, rejectPrintConfig: true });
+    return { command, options: launcher.options, passthroughArgs: launcher.passthroughArgs };
+  }
+  if (command === "mcp") {
+    const [subcommand, ...subcommandArgs] = rest;
+    if (!["serve", "config"].includes(subcommand)) {
+      throw new Error(mcpUsage());
+    }
+    const launcher = parseLauncherOptions(subcommandArgs, {
+      allowPassthrough: subcommand === "serve",
+      rejectPrintConfig: true
+    });
+    return { command, subcommand, options: launcher.options, passthroughArgs: launcher.passthroughArgs };
+  }
+  throw new Error(usage());
+}
+
+function parseInstallOptions(command, rest) {
   const options = {};
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -129,7 +415,50 @@ function parseArgs(argv) {
         throw new Error(`unknown option ${arg}`);
     }
   }
-  return { command, options };
+  return options;
+}
+
+function parseLauncherOptions(rest, settings = {}) {
+  const options = {};
+  const passthroughArgs = [];
+  for (let index = 0; index < rest.length; index += 1) {
+    const arg = rest[index];
+    switch (arg) {
+      case "--":
+        if (settings.allowPassthrough) {
+          passthroughArgs.push(...rest.slice(index + 1));
+          index = rest.length;
+          break;
+        }
+        throw new Error(`unknown option ${arg}`);
+      case "--dry-run":
+        throw new Error("--dry-run is only valid for install/update/uninstall");
+      case "--print-config":
+        if (settings.rejectPrintConfig) {
+          throw new Error("--print-config is not valid for this command");
+        }
+        options.printConfig = true;
+        break;
+      case "--install-dir":
+        options.installDir = requireValue(rest, ++index, arg);
+        break;
+      case "--from-local":
+        options.fromLocal = requireValue(rest, ++index, arg);
+        break;
+      case "--platform":
+        options.platform = requireValue(rest, ++index, arg);
+        break;
+      case "--arch":
+        options.arch = requireValue(rest, ++index, arg);
+        break;
+      default:
+        if (!settings.allowPassthrough) {
+          throw new Error(`unknown option ${arg}`);
+        }
+        passthroughArgs.push(arg);
+    }
+  }
+  return { options, passthroughArgs };
 }
 
 function requireValue(values, index, option) {
@@ -193,6 +522,21 @@ function printMCPConfig(commandPath) {
       }
     }
   }, null, 2));
+}
+
+function printUniversalMCPConfig() {
+  console.log(JSON.stringify(universalMCPConfig(), null, 2));
+}
+
+function universalMCPConfig() {
+  return {
+    mcpServers: {
+      patchxnote: {
+        command: "npx",
+        args: ["-y", "patchxnote-agent@latest", "mcp", "serve"]
+      }
+    }
+  };
 }
 
 function isInstallDirOnPath(installDir, pathValue, targetPlatform) {
@@ -284,6 +628,14 @@ function verifyChecksum(binary, assetName, checksumsText) {
   }
 }
 
+function usage() {
+  return "usage: patchxnote-agent <install|update|uninstall|login|mcp> [options]";
+}
+
+function mcpUsage() {
+  return "usage: patchxnote-agent mcp <serve|config> [options]";
+}
+
 if (require.main === module) {
   main(process.argv.slice(2)).catch(error => {
     console.error(error.message);
@@ -292,12 +644,16 @@ if (require.main === module) {
 }
 
 module.exports = {
+  createInstallPlan,
   defaultInstallDir,
+  inspectInstalledBinary,
+  parseLauncherOptions,
   parseArgs,
   resolveTarget,
   joinInstallPath,
   isInstallDirOnPath,
   pathHint,
   resolveRedirectURL,
+  universalMCPConfig,
   verifyChecksum
 };

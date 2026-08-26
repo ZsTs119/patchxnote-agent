@@ -21,21 +21,21 @@ PatchXNote 服务端数据访问仍是只读的。Agent 不操作硬件绑定、
 将以下一句话发送给支持本地命令执行的 AI 助手即可：
 
 ```text
-请按照 PatchXNote Agent 使用指南（https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd）帮我安装并接入 MCP：先执行 npx -y patchxnote-agent install --print-config，然后引导我执行 patchxnote login 登录 PatchXNote 账号，并把安装器打印的 MCP JSON 配置接入当前 AI 助手；过程中不要让我把验证码、access token 或 refresh token 粘贴到对话里；GitHub 仓库是 https://github.com/ZsTs119/patchxnote-agent。
+请按照 PatchXNote Agent 使用指南（https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd）帮我接入 MCP：先执行 npx -y patchxnote-agent@latest mcp config，把打印出来的 MCP JSON 配置接入当前 AI 助手，然后引导我在编辑器终端执行 npx -y patchxnote-agent@latest login 登录 PatchXNote 账号；过程中不要让我把验证码、access token 或 refresh token 粘贴到对话里；GitHub 仓库是 https://github.com/ZsTs119/patchxnote-agent。
 ```
 
-也可以手动执行安装命令：
+也可以手动打印通用 MCP 配置：
 
 ```sh
-npx -y patchxnote-agent install --print-config
+npx -y patchxnote-agent@latest mcp config
 ```
 
 ## 快速了解
 
 | 维度 | Agent V1 行为 |
 | --- | --- |
-| 运行方式 | 通过 npm 安装壳下载并安装版本化的原生 `patchxnote` 二进制。 |
-| 连接 AI | 通过 `patchxnote mcp serve` 启动本地 stdio MCP server。 |
+| 运行方式 | 通过 npm 安装壳下载、安装或校验版本化的原生 `patchxnote` 二进制。 |
+| 连接 AI | 通过 `npx -y patchxnote-agent@latest mcp serve` 或绝对路径 fallback 启动本地 stdio MCP server。 |
 | 登录 | 手机验证码登录，创建独立 Agent 会话，不占用 App/PC 安装位。 |
 | 数据访问 | 查看账号、录音卡、额度、记录列表、AI 整理结果。 |
 | Webhook | 本地配置别名，手动发送到飞书、钉钉或其他 webhook。 |
@@ -64,7 +64,7 @@ npx -y patchxnote-agent install --print-config
 
 ## 环境要求
 
-- Node.js `18` 或更高版本，用于 npm 安装壳。
+- Node.js `18` 或更高版本，用于 npm 安装/启动壳。
 - Windows、macOS 或 Linux，支持 `amd64` 和 `arm64`。
 - 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
@@ -75,10 +75,30 @@ npx -y patchxnote-agent install --print-config
 
 ![三步接入 PatchXNote Agent](./docs/assets/patchxnote-agent-quickstart.png)
 
-安装 npm 包。它会从 GitHub Releases 下载匹配平台的 `patchxnote` 二进制，校验 `checksums.txt`，并安装到用户可写目录。
+先打印通用 MCP 配置，把输出粘贴到支持本地 stdio MCP 的 AI 助手或编辑器里：
 
 ```sh
-npx -y patchxnote-agent install --print-config
+npx -y patchxnote-agent@latest mcp config
+```
+
+生成的配置会通过下面的命令启动 PatchXNote Agent：
+
+```sh
+npx -y patchxnote-agent@latest mcp serve
+```
+
+第一次启动时，npm wrapper 会从 GitHub Releases 下载匹配平台的 `patchxnote` 二进制，校验 `checksums.txt`，安装到用户可写目录，然后委托给 `patchxnote mcp serve`。MCP 的 stdout 仍然只保留给 JSON-RPC。
+
+在编辑器终端登录：
+
+```sh
+npx -y patchxnote-agent@latest login
+```
+
+如果某个 MCP Host 在首次下载二进制时超时，可以先运行一次稳定 fallback，并复制它打印的绝对路径配置：
+
+```sh
+npx -y patchxnote-agent@latest install --print-config
 ```
 
 如果需要固定当前公测版本用于排障或回滚：
@@ -87,29 +107,10 @@ npx -y patchxnote-agent install --print-config
 npx -y patchxnote-agent@0.2.6 install --print-config
 ```
 
-安装器会打印：
-
-- 已安装的二进制路径
-- 如果 `patchxnote` 还不在 PATH 中，会打印 PATH 配置提示
-- 使用绝对二进制路径的 MCP 配置片段
-
 公测版本默认连接 PatchXNote 公测 API：
 
 ```text
 https://ws-lab.patch-x.cn/patchnote-test-api
-```
-
-登录并检查会话状态：
-
-```sh
-patchxnote login
-patchxnote auth status
-```
-
-启动 MCP server：
-
-```sh
-patchxnote mcp serve
 ```
 
 如果要切换到其他 PatchXNote 环境：
@@ -133,7 +134,32 @@ patchxnote login
 
 ## MCP 配置
 
-使用安装器 `--print-config` 打印的配置。典型配置如下：
+通用本地 stdio MCP Host 可以直接使用下面命令打印的纯 JSON：
+
+```sh
+npx -y patchxnote-agent@latest mcp config
+```
+
+默认配置如下：
+
+```json
+{
+  "mcpServers": {
+    "patchxnote": {
+      "command": "npx",
+      "args": ["-y", "patchxnote-agent@latest", "mcp", "serve"]
+    }
+  }
+}
+```
+
+有些客户端可能要求额外写 `type: "stdio"`，或者使用不同的顶层字段名，但 `command` 和 `args` 不变。如果客户端拒绝 `npx`、首次冷启动太慢或只允许白名单绝对路径，可以改用下面命令打印的 fallback：
+
+```sh
+npx -y patchxnote-agent@latest install --print-config
+```
+
+fallback 配置会使用已安装二进制的绝对路径：
 
 ```json
 {
@@ -146,7 +172,7 @@ patchxnote login
 }
 ```
 
-MCP 配置中不会保存 access token 或 refresh token。PatchXNote Agent 默认把凭据写入 macOS Keychain、Windows Credential Manager 或 Linux Secret Service。显式的 `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` 文件存储仅保留给本地开发和 CI 冒烟。
+MCP 配置中不会保存 access token、refresh token、验证码、手机号、webhook 密钥，默认也不包含 base URL。PatchXNote Agent 默认把凭据写入 macOS Keychain、Windows Credential Manager 或 Linux Secret Service。显式的 `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true` 文件存储仅保留给本地开发和 CI 冒烟。
 
 ## MCP 工具
 
@@ -246,9 +272,12 @@ patchxnote webhook remove "产品群 飞书"
 --config <path>           非 secret 配置文件路径
 ```
 
-npm 包本身只是安装/更新/卸载壳：
+npm 包本身是轻量安装/启动壳：
 
 ```sh
+npx -y patchxnote-agent@latest mcp config
+npx -y patchxnote-agent@latest mcp serve
+npx -y patchxnote-agent@latest login
 npx -y patchxnote-agent@0.2.6 install
 npx -y patchxnote-agent@0.2.6 update
 npx -y patchxnote-agent@0.2.6 uninstall
@@ -298,7 +327,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 | --- | --- |
 | 安装后找不到 `patchxnote` | 把安装器打印的目录加入 PATH，然后打开新终端。 |
 | 登录提示凭据存储不可用 | 检查 macOS Keychain、Windows Credential Manager 或 Linux Secret Service 是否可用且已解锁。本地开发才使用 `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`。 |
-| MCP Host 启动失败 | 使用 `--print-config` 打印出的绝对 `command` 路径。 |
+| MCP Host 启动失败 | 如果首次启动较慢或客户端拒绝 `npx`，先运行 `npx -y patchxnote-agent@latest install --print-config`，再使用它打印出的绝对 `command` 路径。 |
 | 记录列表为空 | 检查是否选择了正确的 `platform`：`mobile` 或 `desktop`；底层 AI 调用记录请用 `model-io list`。 |
 | webhook 没发出去 | 确认别名存在、目标启用，并检查下游平台返回的错误信息。 |
 | checksum 校验失败 | 稍后重试或固定已知版本；安装器会拒绝未校验二进制。 |
@@ -308,6 +337,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 ```sh
 npm view patchxnote-agent@0.2.6 version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.6 mcp config
 npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.6 install --dry-run --print-config
 patchxnote version
 ```
@@ -333,7 +363,7 @@ scripts/e2e/mvp-smoke.sh
 node packages/npm/test/install.test.js
 ```
 
-MVP smoke 会构建 CLI，执行安装器 dry-run，登录进程内 Agent V1 测试服务，检查 `auth status`，启动 `patchxnote mcp serve`，调用全部 19 个 V1 MCP 工具，覆盖 AI 整理记录发现、字段导出和本地 webhook 发送，登出，并扫描 evidence 中是否出现 secret-like 内容。
+MVP smoke 会构建 CLI，执行安装器 dry-run，检查 npm 通用 MCP 启动入口，登录进程内 Agent V1 测试服务，检查 `auth status`，启动 `patchxnote mcp serve`，调用全部 19 个 V1 MCP 工具，覆盖 AI 整理记录发现、字段导出和本地 webhook 发送，登出，并扫描 evidence 中是否出现 secret-like 内容。
 
 修改 CLI 行为、安装器逻辑、MCP 工具、认证、本地缓存或发布配置前，请先阅读：
 

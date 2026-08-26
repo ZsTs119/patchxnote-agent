@@ -9,8 +9,8 @@ PatchXNote Agent has three layers:
 1. `patchxnote` Go binary
    The local runtime for login, account inspection, MCP stdio serving, local cache management, and installer integration.
 
-2. npm installer wrapper
-   A thin package that supports commands such as `npx -y patchxnote-agent install`. It installs or updates the versioned Go binary, then exits.
+2. npm installer/launcher wrapper
+   A thin package that supports commands such as `npx -y patchxnote-agent install`, `npx -y patchxnote-agent login`, and `npx -y patchxnote-agent mcp serve`. It installs or verifies the versioned Go binary, then delegates runtime work to that binary.
 
 3. PatchXNote server APIs
    The remote source of truth. The agent never bypasses server authorization and never reconstructs server facts from local guesses.
@@ -51,7 +51,7 @@ patchxnote-agent/
     npm/
       package.json
       bin/
-        install.js
+    patchxnote-agent.js
 
   docs/
     engineering-rules.md
@@ -76,7 +76,7 @@ Package responsibilities:
 - `internal/output`: table/json/plain renderers. Commands should not hand-roll output formatting.
 - `internal/diag`: safe diagnostics, redaction, stderr logging, and support bundle helpers.
 - `internal/version`: build-time version, commit, date, and target metadata.
-- `packages/npm`: npm install/update/uninstall wrapper. Do not place product runtime logic here.
+- `packages/npm`: npm install/update/uninstall wrapper plus thin launcher commands. Do not place product runtime logic here; launcher commands must delegate to the Go binary.
 
 The dependency direction is:
 
@@ -388,7 +388,7 @@ The npm package should:
 The npm package should not:
 
 - bundle secrets
-- download unpinned `latest` during normal MCP startup
+- download an unpinned Go binary during normal MCP startup; if users invoke the npm package through `@latest`, the wrapper must still install only the package-pinned binary version
 - require admin/root for normal installation
 - hide failures behind a successful exit code
 
