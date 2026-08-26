@@ -241,6 +241,12 @@ gh run list --repo ZsTs119/patchxnote-agent --workflow release.yml --limit 5
 gh run view <run-id> --repo ZsTs119/patchxnote-agent --json status,conclusion,url
 ```
 
+如果 tag push 没有产生可用 run，或者 run 在进入 runner 前失败且没有步骤日志，可以按同一个 tag 手动触发：
+
+```sh
+gh workflow run release.yml --repo ZsTs119/patchxnote-agent --ref vX.Y.Z
+```
+
 必须看到 GitHub Release 中存在：
 
 ```text
