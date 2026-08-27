@@ -1,0 +1,782 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-08-27",
+  "default_server": {
+    "name": "patchxnote",
+    "command": "npx",
+    "args": [
+      "-y",
+      "patchxnote-agent@latest",
+      "mcp",
+      "serve"
+    ],
+    "candidate_version": "0.2.8",
+    "candidate_evidence_state": "locally_smoked",
+    "candidate_evidence": "docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md"
+  },
+  "remote_gateway": {
+    "planned_url": "https://ws-lab.patch-x.cn/patchnote-test-api/mcp",
+    "status": "test-deployed",
+    "default_transport": "streamable_http"
+  },
+  "clients": [
+    {
+      "id": "vscode",
+      "name": "VS Code / GitHub Copilot",
+      "priority": "P0",
+      "category": "ai-editor",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "supported",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": false
+      },
+      "runtime": {
+        "location": "host-or-remote-workspace",
+        "credential_caveat": "Run setup in the same OS/runtime that VS Code uses to launch MCP servers."
+      },
+      "install": {
+        "primary_strategy": "config-merge",
+        "strategies": [
+          "config-merge",
+          "cli-command",
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client vscode",
+        "config_format": "json",
+        "config_scope": "user",
+        "auto_write": true,
+        "requires_restart": "server-refresh-or-window-reload",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy",
+          "open-settings"
+        ]
+      },
+      "references": [
+        "https://code.visualstudio.com/docs/agent-customization/mcp-servers",
+        "https://code.visualstudio.com/docs/agents/reference/mcp-configuration"
+      ]
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "priority": "P0",
+      "category": "ai-editor",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "supported",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "host-or-remote-workspace",
+        "credential_caveat": "Run setup in the same OS/runtime that Cursor uses to launch MCP servers."
+      },
+      "install": {
+        "primary_strategy": "config-merge",
+        "strategies": [
+          "config-merge",
+          "deeplink",
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client cursor",
+        "config_format": "json",
+        "config_scope": "user",
+        "auto_write": true,
+        "requires_restart": "server-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy",
+          "deeplink"
+        ],
+        "deeplink_scheme": "cursor://anysphere.cursor-deeplink/mcp/install"
+      },
+      "references": [
+        "https://cursor.com/docs/mcp",
+        "https://cursor.com/docs/mcp/install-links"
+      ]
+    },
+    {
+      "id": "codex",
+      "name": "Codex / ChatGPT Desktop / Codex IDE",
+      "priority": "P0",
+      "category": "terminal-agent",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "supported",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": false
+      },
+      "runtime": {
+        "location": "host-or-project",
+        "credential_caveat": "The ChatGPT desktop app, Codex CLI, and IDE extension share Codex MCP config, but credentials still live in the runtime keychain."
+      },
+      "install": {
+        "primary_strategy": "cli-command",
+        "strategies": [
+          "cli-command",
+          "config-merge",
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client codex",
+        "config_format": "toml",
+        "config_scope": "user",
+        "auto_write": true,
+        "requires_restart": "new-session",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ],
+        "cli_command": "codex mcp add patchxnote -- npx -y patchxnote-agent@latest mcp serve"
+      },
+      "references": [
+        "https://learn.chatgpt.com/docs/extend/mcp"
+      ]
+    },
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "priority": "P0",
+      "category": "terminal-agent",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "manual",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "terminal-host",
+        "credential_caveat": "Run setup from the same terminal environment that launches Claude Code."
+      },
+      "install": {
+        "primary_strategy": "cli-command",
+        "strategies": [
+          "cli-command",
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client claude-code",
+        "config_format": "client-cli",
+        "config_scope": "user",
+        "auto_write": false,
+        "requires_restart": "new-session",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ],
+        "cli_command": "claude mcp add patchxnote -- npx -y patchxnote-agent@latest mcp serve"
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp"
+      ]
+    },
+    {
+      "id": "claude-desktop",
+      "name": "Claude Desktop",
+      "priority": "P0",
+      "category": "desktop-agent",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "supported",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "desktop-host",
+        "credential_caveat": "Run setup on the same desktop account that launches Claude Desktop."
+      },
+      "install": {
+        "primary_strategy": "config-merge",
+        "strategies": [
+          "config-merge",
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client claude-desktop",
+        "config_format": "json",
+        "config_scope": "user",
+        "auto_write": true,
+        "requires_restart": "app-restart",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/desktop",
+        "https://docs.anthropic.com/en/docs/claude-code/mcp"
+      ]
+    },
+    {
+      "id": "windsurf",
+      "name": "Windsurf",
+      "priority": "P0",
+      "category": "ai-editor",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "supported",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "desktop-host",
+        "credential_caveat": "Run setup where Windsurf launches Cascade MCP servers."
+      },
+      "install": {
+        "primary_strategy": "config-merge",
+        "strategies": [
+          "config-merge",
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client windsurf",
+        "config_format": "json",
+        "config_scope": "user",
+        "auto_write": true,
+        "requires_restart": "server-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://docs.windsurf.com/windsurf/cascade/mcp"
+      ]
+    },
+    {
+      "id": "trae",
+      "name": "Trae / Trae CN / TraeWork Code",
+      "priority": "P0",
+      "category": "ai-editor",
+      "regions": [
+        "global",
+        "domestic"
+      ],
+      "card_group": "domestic-local",
+      "support_status": "manual",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "desktop-host",
+        "credential_caveat": "Use Trae MCP settings until a stable writable config path is confirmed for each variant."
+      },
+      "install": {
+        "primary_strategy": "manual-ui",
+        "strategies": [
+          "copy",
+          "manual-ui"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client trae",
+        "config_format": "ui-json",
+        "config_scope": "user",
+        "auto_write": false,
+        "requires_restart": "server-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy",
+          "open-settings"
+        ]
+      },
+      "references": [
+        "https://docs.trae.ai/ide/add-mcp-servers",
+        "https://docs.trae.ai/ide/model-context-protocol"
+      ]
+    },
+    {
+      "id": "qoder",
+      "name": "Qoder",
+      "priority": "P0",
+      "category": "ai-editor",
+      "regions": [
+        "global",
+        "domestic"
+      ],
+      "card_group": "global-local",
+      "support_status": "manual",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "desktop-host",
+        "credential_caveat": "Run setup in the OS where Qoder launches MCP servers."
+      },
+      "install": {
+        "primary_strategy": "deeplink",
+        "strategies": [
+          "deeplink",
+          "copy",
+          "manual-ui"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client qoder",
+        "config_format": "ui-json",
+        "config_scope": "user",
+        "auto_write": false,
+        "requires_restart": "server-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy",
+          "deeplink"
+        ],
+        "deeplink_scheme": "qoder://aicoding.aicoding-deeplink/mcp/add"
+      },
+      "references": [
+        "https://docs.qoder.com/user-guide/deeplink",
+        "https://docs.qoder.com/user-guide/chat/model-context-protocol"
+      ]
+    },
+    {
+      "id": "workbuddy",
+      "name": "WorkBuddy / Tencent CodeBuddy WorkBuddy",
+      "priority": "P0",
+      "category": "office-agent",
+      "regions": [
+        "domestic"
+      ],
+      "card_group": "domestic-local",
+      "support_status": "manual",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "desktop-or-enterprise-platform",
+        "credential_caveat": "Show local setup as primary only when WorkBuddy can launch a local CLI connector; use remote MCP for enterprise platform mode."
+      },
+      "install": {
+        "primary_strategy": "manual-ui",
+        "strategies": [
+          "copy",
+          "manual-ui",
+          "remote-url"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client workbuddy",
+        "config_format": "ui-json",
+        "config_scope": "user-or-enterprise",
+        "auto_write": false,
+        "requires_restart": "server-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy",
+          "remote-url"
+        ]
+      },
+      "references": [
+        "https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+        "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/MCP-Guide"
+      ]
+    },
+    {
+      "id": "feishu-aily",
+      "name": "Feishu Aily / Doubao Work Partner",
+      "priority": "P0.5",
+      "category": "office-agent-platform",
+      "regions": [
+        "domestic"
+      ],
+      "card_group": "domestic-platform",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": false,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "cloud-platform",
+        "credential_caveat": "Local npx setup is not enough; this needs a remote PatchXNote MCP connector."
+      },
+      "install": {
+        "primary_strategy": "remote-url",
+        "strategies": [
+          "remote-url",
+          "platform-form"
+        ],
+        "setup_command": "",
+        "config_format": "platform-form",
+        "config_scope": "workspace-or-tenant",
+        "auto_write": false,
+        "requires_restart": "platform-refresh",
+        "auth_in_config": "connector-session",
+        "website_buttons": [
+          "remote-url"
+        ]
+      },
+      "references": [
+        "https://www.feishu.cn/content/article/7576921890476788922",
+        "https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/mcp_integration/mcp_introduction?lang=zh-CN"
+      ]
+    },
+    {
+      "id": "tencent-agent-platform",
+      "name": "Tencent Agent Development Platform / Enterprise WorkBuddy",
+      "priority": "P0.5",
+      "category": "office-agent-platform",
+      "regions": [
+        "domestic"
+      ],
+      "card_group": "domestic-platform",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": false,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "cloud-platform",
+        "credential_caveat": "Use remote MCP only; no local keychain or local npx process is available in platform mode."
+      },
+      "install": {
+        "primary_strategy": "remote-url",
+        "strategies": [
+          "remote-url",
+          "platform-form"
+        ],
+        "setup_command": "",
+        "config_format": "platform-form",
+        "config_scope": "workspace-or-tenant",
+        "auto_write": false,
+        "requires_restart": "platform-refresh",
+        "auth_in_config": "connector-session",
+        "website_buttons": [
+          "remote-url"
+        ]
+      },
+      "references": [
+        "https://cloud.tencent.com/document/product/1759/117855"
+      ]
+    },
+    {
+      "id": "jetbrains",
+      "name": "JetBrains AI Assistant",
+      "priority": "P1",
+      "category": "ide-family",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": false
+      },
+      "runtime": {
+        "location": "desktop-host",
+        "credential_caveat": "Confirm IDE-family path differences before enabling auto-write."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy",
+          "manual-ui"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client jetbrains",
+        "config_format": "ui-json",
+        "config_scope": "ide",
+        "auto_write": false,
+        "requires_restart": "ide-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://www.jetbrains.com/help/ai-assistant/mcp.html"
+      ]
+    },
+    {
+      "id": "zed",
+      "name": "Zed",
+      "priority": "P1",
+      "category": "ai-editor",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": false,
+        "sse": false
+      },
+      "runtime": {
+        "location": "desktop-host",
+        "credential_caveat": "Confirm Zed context server schema before enabling auto-write."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client zed",
+        "config_format": "json",
+        "config_scope": "user",
+        "auto_write": false,
+        "requires_restart": "editor-reload",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://zed.dev/docs/ai/mcp"
+      ]
+    },
+    {
+      "id": "gemini-cli",
+      "name": "Gemini CLI",
+      "priority": "P1",
+      "category": "terminal-agent",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": false,
+        "sse": false
+      },
+      "runtime": {
+        "location": "terminal-host",
+        "credential_caveat": "Confirm current settings file and schema before enabling auto-write."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client gemini-cli",
+        "config_format": "json",
+        "config_scope": "user-or-project",
+        "auto_write": false,
+        "requires_restart": "new-session",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+      ]
+    },
+    {
+      "id": "qwen-code",
+      "name": "Qwen Code",
+      "priority": "P1",
+      "category": "terminal-agent",
+      "regions": [
+        "global",
+        "domestic"
+      ],
+      "card_group": "domestic-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": false,
+        "sse": false
+      },
+      "runtime": {
+        "location": "terminal-host",
+        "credential_caveat": "Confirm current Qwen Code MCP settings before enabling auto-write."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client qwen-code",
+        "config_format": "json",
+        "config_scope": "user-or-project",
+        "auto_write": false,
+        "requires_restart": "new-session",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://qwenlm.github.io/qwen-code-docs/en/developers/tools/mcp-server/"
+      ]
+    },
+    {
+      "id": "kimi-code",
+      "name": "Kimi Code / Kimi CLI",
+      "priority": "P1",
+      "category": "terminal-agent",
+      "regions": [
+        "global",
+        "domestic"
+      ],
+      "card_group": "domestic-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "terminal-host",
+        "credential_caveat": "Confirm current Kimi Code CLI config before enabling auto-write."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client kimi-code",
+        "config_format": "json",
+        "config_scope": "user-or-project",
+        "auto_write": false,
+        "requires_restart": "new-session",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html"
+      ]
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "priority": "P1",
+      "category": "terminal-agent",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": false,
+        "sse": false
+      },
+      "runtime": {
+        "location": "terminal-host",
+        "credential_caveat": "Confirm current OpenCode MCP config before enabling auto-write."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client opencode",
+        "config_format": "json",
+        "config_scope": "user-or-project",
+        "auto_write": false,
+        "requires_restart": "new-session",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://opencode.ai/docs/tools/"
+      ]
+    },
+    {
+      "id": "vscode-derived-agents",
+      "name": "Cline / Continue / Roo-derived VS Code agents",
+      "priority": "P1",
+      "category": "vs-code-extension",
+      "regions": [
+        "global"
+      ],
+      "card_group": "global-local",
+      "support_status": "planned",
+      "evidence_state": "researched",
+      "reviewed_at": "2026-08-27",
+      "transports": {
+        "stdio": true,
+        "streamable_http": true,
+        "sse": true
+      },
+      "runtime": {
+        "location": "host-or-vs-code-runtime",
+        "credential_caveat": "Use the VS Code base path first; extension-specific setup needs separate acceptance."
+      },
+      "install": {
+        "primary_strategy": "copy",
+        "strategies": [
+          "copy",
+          "manual-ui"
+        ],
+        "setup_command": "npx -y patchxnote-agent@latest setup --client vscode-derived-agents",
+        "config_format": "json",
+        "config_scope": "extension",
+        "auto_write": false,
+        "requires_restart": "extension-refresh",
+        "auth_in_config": "none",
+        "website_buttons": [
+          "copy"
+        ]
+      },
+      "references": [
+        "https://code.visualstudio.com/docs/agent-customization/mcp-servers"
+      ]
+    }
+  ]
+}

@@ -21,7 +21,13 @@ PatchXNote server data access remains read-only. Agent does not operate hardware
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
-Connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent@latest mcp config, add the printed MCP JSON config to this AI assistant, then guide me through npx -y patchxnote-agent@latest login in the editor terminal. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+Connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent@latest setup --client <my-client>, keep MCP config secret-free, and guide me through login in the same runtime that will launch the MCP server. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+```
+
+For a supported client, start with setup:
+
+```sh
+npx -y patchxnote-agent@latest setup --client cursor
 ```
 
 Or print the generic MCP config manually:
@@ -36,19 +42,20 @@ npx -y patchxnote-agent@latest mcp config
 | --- | --- |
 | Runtime | Installs or verifies a versioned native `patchxnote` binary through an npm wrapper. |
 | AI connection | Runs a local stdio MCP server with `npx -y patchxnote-agent@latest mcp serve` or the absolute `patchxnote mcp serve` fallback. |
-| Login | Phone OTP login creates an independent Agent session, not an App/PC installation. |
+| Login | MCP browser OAuth is available through `patchxnote mcp login`; terminal `patchxnote login` remains for the legacy local Agent path. |
 | Data access | Shows account, recorder cards, quota, records, and AI-generated results. |
 | Webhook | Locally configures named targets and manually sends to Feishu, DingTalk, or another webhook. |
 | Safety boundary | Server data is read-only; raw audio, hardware, payment, and Admin APIs are not exposed. |
-| Package status | Public beta `0.2.6`, defaulting to the PatchXNote public beta API. |
+| Package status | Next beta source for `0.2.8`, defaulting to the PatchXNote public beta API. |
 
 ## Features
 
-| Capability | Available in `0.2.6` | Notes |
+| Capability | Available in `0.2.8` source | Notes |
 | --- | --- | --- |
 | Phone OTP Agent login | Yes | Uses Agent-specific server auth, not App/PC mobile or desktop installation slots. |
 | Agent session refresh | Yes | Automatically rotates Agent access and refresh tokens from the local keychain. |
 | Local MCP server | Yes | Lets MCP-capable AI assistants call PatchXNote Agent. |
+| Local client setup wizard | Yes | `patchxnote setup --client <id>` plans, confirms, backs up, writes supported client config, and falls back to manual instructions where needed. |
 | Account, recorder cards, quota | Yes | Shows account status, recorder-card list, quota, and current-month model usage. |
 | Record list and search | Yes | Lists readable record entries by `mobile` or `desktop`, including saved results and model-generated outputs, then searches basics cached in the current MCP session. |
 | Single record details | Yes | Shows safe basic information for one record. |
@@ -69,13 +76,31 @@ npx -y patchxnote-agent@latest mcp config
 - A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.2.6` is a public beta build. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
+> `0.2.8` is the next public beta source state. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
 ![PatchXNote Agent quickstart](./docs/assets/patchxnote-agent-quickstart.png)
 
-Print the generic MCP config and paste it into any local stdio MCP-capable assistant or editor:
+Run setup for the client you use:
+
+```sh
+npx -y patchxnote-agent@latest setup --client vscode
+npx -y patchxnote-agent@latest setup --client cursor
+npx -y patchxnote-agent@latest setup --client codex
+npx -y patchxnote-agent@latest setup --client workbuddy
+```
+
+Setup checks the MCP browser OAuth login, keeps credentials in the OS keychain, writes or prints the client MCP configuration, and creates a backup before modifying supported config files.
+
+You can also log in explicitly before adding the client:
+
+```sh
+npx -y patchxnote-agent@latest mcp login
+npx -y patchxnote-agent@latest mcp status
+```
+
+You can still print the generic MCP config and paste it into any local stdio MCP-capable assistant or editor:
 
 ```sh
 npx -y patchxnote-agent@latest mcp config
@@ -89,7 +114,7 @@ npx -y patchxnote-agent@latest mcp serve
 
 On first start, the npm wrapper downloads the matching `patchxnote` binary from GitHub Releases, verifies `checksums.txt`, installs it into a user-writable directory, and then delegates to `patchxnote mcp serve`. MCP stdout stays reserved for JSON-RPC.
 
-Log in from the editor terminal:
+The older terminal Agent login remains available only for legacy local CLI/MCP fallback:
 
 ```sh
 npx -y patchxnote-agent@latest login
@@ -101,10 +126,10 @@ If an MCP host times out during the first binary download, run the stable fallba
 npx -y patchxnote-agent@latest install --print-config
 ```
 
-To pin the current public beta version for troubleshooting or rollback:
+To pin the current published public beta version for troubleshooting or rollback:
 
 ```sh
-npx -y patchxnote-agent@0.2.6 install --print-config
+npx -y patchxnote-agent@0.2.7 install --print-config
 ```
 
 The public beta build defaults to the PatchXNote public beta API:
@@ -117,7 +142,7 @@ To target a different PatchXNote environment:
 
 ```sh
 PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL> \
-patchxnote login
+patchxnote mcp login
 ```
 
 ## Common Workflows
@@ -131,6 +156,28 @@ Send this Markdown to my Product Feishu webhook.
 Export the AI response to a local JSON file.
 Create a Markdown draft from this record so I can edit it before sending.
 ```
+
+## Client Setup
+
+Local setup supports these P0 client IDs:
+
+```text
+vscode, cursor, codex, claude-code, claude-desktop, windsurf, trae, qoder, workbuddy
+```
+
+`vscode`, `cursor`, `codex`, `claude-desktop`, and `windsurf` can write a local config file after confirmation. `claude-code`, `trae`, `qoder`, and `workbuddy` return manual commands or copyable config in V1. Platform clients such as Feishu Aily, Doubao Work Partner, Tencent Agent Development Platform, and enterprise WorkBuddy require the hosted remote MCP gateway and platform-console acceptance instead of local `npx`.
+
+Useful setup flags:
+
+```sh
+patchxnote setup --client cursor --dry-run --print-config
+patchxnote setup --client cursor --yes
+patchxnote setup --client cursor --no-browser
+patchxnote setup --all-local-supported --dry-run
+patchxnote setup --client cursor --output json
+```
+
+Run setup in the same OS/runtime that will later launch MCP. For example, a Windows desktop editor needs Windows Credential Manager credentials, while a WSL or remote VS Code session needs credentials in that Linux runtime.
 
 ## MCP Configuration
 
@@ -178,7 +225,7 @@ MCP config never contains access tokens, refresh tokens, OTP codes, phone number
 
 ![PatchXNote Agent tools](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.6` exposes **19 MCP tools**. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
+PatchXNote Agent `0.2.8` source still exposes the same **19 local MCP tools** as the current public local server. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
 
 ### Account And Record Lookup
 
@@ -234,6 +281,7 @@ Install and login:
 patchxnote version
 patchxnote login
 patchxnote auth status
+patchxnote setup --client cursor
 patchxnote logout
 patchxnote mcp serve
 ```
@@ -278,9 +326,10 @@ The npm package is a small installer/launcher wrapper:
 npx -y patchxnote-agent@latest mcp config
 npx -y patchxnote-agent@latest mcp serve
 npx -y patchxnote-agent@latest login
-npx -y patchxnote-agent@0.2.6 install
-npx -y patchxnote-agent@0.2.6 update
-npx -y patchxnote-agent@0.2.6 uninstall
+npx -y patchxnote-agent@latest setup --client cursor
+npx -y patchxnote-agent@latest install
+npx -y patchxnote-agent@latest update
+npx -y patchxnote-agent@latest uninstall
 ```
 
 Webhook URLs and optional Feishu/DingTalk signing secrets are stored in the local secure credential store, not in the non-secret config file. `--url-stdin` and `--secret-stdin` avoid shell history. CLI and MCP webhook sending is manual only, does not follow redirects, and surfaces provider errors directly.
@@ -312,9 +361,12 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.2.6` is a beta release.
+`0.2.8` is the next beta source state.
 
 - The default server points to the PatchXNote public beta API and does not imply a production SLA.
+- `mcp serve` never opens a browser during editor startup. Run `mcp login` first, or let `setup --client <id>` reuse that same OAuth flow.
+- The GoServer website and authorization page own phone OTP input. The local Agent owns loopback callback, token exchange, secure storage, and stdio bridging.
+- Remote platform MCP for Feishu Aily, Doubao Work Partner, Tencent Agent Development Platform, and enterprise WorkBuddy requires hosted platform-console acceptance; local `npx` setup only closes desktop/terminal clients.
 - Linux headless environments may not have Secret Service available; use the explicit development file-store fallback only for local smoke.
 - Public beta users should expect iterative improvements to setup guidance, MCP client examples, and webhook formatting.
 - `patchxnote_search_memories` searches only record basics cached during the current MCP session.
@@ -327,7 +379,10 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 | --- | --- |
 | `patchxnote` is not found after install | Add the printed install directory to PATH, then open a new terminal. |
 | Login says credential storage is unavailable | Check that macOS Keychain, Windows Credential Manager, or Linux Secret Service is available and unlocked. For local development only, set `PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true`. |
+| MCP login expired or points at the wrong server | Run `npx -y patchxnote-agent@latest mcp logout --local-only`, then run `npx -y patchxnote-agent@latest mcp login` again in the same runtime. |
 | MCP host cannot start the server | If first start is slow or the client rejects `npx`, run `npx -y patchxnote-agent@latest install --print-config` once and use the printed absolute `command` path. |
+| Setup writes credentials in the wrong place | Run setup from the same OS/runtime that will launch MCP. Windows desktop apps, WSL terminals, and VS Code Remote do not automatically share keychain credentials. |
+| Need to undo setup | Restore the timestamped `.bak-YYYYMMDDTHHMMSSZ` file printed by setup, or remove only the `patchxnote` MCP server entry from the client config. |
 | Record list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`; use `model-io list` for lower-level AI processing runs. |
 | Webhook did not send | Confirm the alias exists, the target is enabled, and check the provider error returned by the command. |
 | Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
@@ -336,13 +391,24 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 ## Verify The Install
 
 ```sh
-npm view patchxnote-agent@0.2.6 version --registry https://registry.npmjs.org
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.6 mcp config
-npx -y --registry https://registry.npmjs.org patchxnote-agent@0.2.6 install --dry-run --print-config
+npm view patchxnote-agent@latest version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp config
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp status --output json
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp logout --local-only --output json
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest setup --client cursor --dry-run --print-config
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest install --dry-run --print-config
 patchxnote version
 ```
 
-The release binary should report version `0.2.6` and the commit attached to the `v0.2.6` GitHub Release.
+The release binary should report the npm package version and the commit attached to the matching GitHub Release tag.
+
+## 0.2.8 Highlights
+
+- Adds `patchxnote setup --client <id>` and npm wrapper delegation with dry-run, JSON output, confirmation, config printing, force repair, and local MCP smoke hooks.
+- Adds a client registry for VS Code, Cursor, Codex, Claude Code, Claude Desktop, Windsurf, Trae, Qoder, WorkBuddy, Feishu/Doubao, Tencent platform, and P1 follow-up clients.
+- Adds JSON and TOML config merge adapters with backup, conflict detection, rollback, and manual JSONC mode.
+- Adds `patchxnote mcp login/status/logout`, browser OAuth with PKCE, MCP OAuth secure storage, and remote `/mcp` stdio proxy mode with local fallback.
+- Adds website page specs, detail-page copy, and remote platform gateway design for product-style onboarding.
 
 ## 0.2.6 Highlights
 
@@ -361,9 +427,10 @@ Local checks:
 go test ./...
 scripts/e2e/mvp-smoke.sh
 node packages/npm/test/install.test.js
+node docs/mcp-clients/validate-clients.mjs
 ```
 
-The MVP smoke builds the CLI, runs installer dry-run, checks the npm universal MCP launcher, logs in against an in-process Agent V1 test server, checks `auth status`, starts `patchxnote mcp serve`, calls all 19 V1 MCP tools, exercises AI processing discovery, field export, and local webhook delivery, logs out, and scans evidence for secret-like values.
+The MVP smoke builds the CLI, runs installer dry-run, checks the npm universal MCP launcher plus `mcp login/status/logout` non-interactive paths, logs in against an in-process Agent V1 test server, checks `auth status`, starts `patchxnote mcp serve`, calls all 19 V1 MCP tools, exercises AI processing discovery, field export, and local webhook delivery, logs out, and scans evidence for secret-like values.
 
 Before changing CLI behavior, installer logic, MCP tools, authentication, local cache, or release configuration, read:
 
@@ -378,7 +445,7 @@ The detailed release and documentation maintenance checklist lives in [docs/rele
 
 1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.2.6`.
+3. Push a clean tag, for example `v0.2.8`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`

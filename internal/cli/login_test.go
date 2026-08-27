@@ -23,6 +23,11 @@ type fakeAgentAPI struct {
 	modelIO      api.AgentModelIOExport
 	tracePage    api.AgentModelIOTracePage
 	traceParams  api.ListModelIOTracesParams
+	oauthMeta    api.OAuthAuthorizationServerMetadata
+	oauthToken   api.OAuthTokenResponse
+	oauthRefresh api.OAuthTokenResponse
+	oauthRequest api.OAuthTokenRequest
+	oauthRevoked []string
 	logoutErr    error
 	logoutCalled bool
 }
@@ -179,6 +184,61 @@ func (f *fakeAgentAPI) ListModelIOTraces(ctx context.Context, accessToken string
 			Memory:     &api.AgentDeliveryMemory{ID: "mem_fixture_1", Platform: params.Platform},
 		},
 	}}, nil
+}
+
+func (f *fakeAgentAPI) GetOAuthAuthorizationServer(ctx context.Context) (api.OAuthAuthorizationServerMetadata, error) {
+	if f.oauthMeta.Issuer != "" {
+		return f.oauthMeta, nil
+	}
+	base := strings.TrimRight(config.DefaultServerBaseURL, "/")
+	return api.OAuthAuthorizationServerMetadata{
+		Issuer:                        base,
+		AuthorizationEndpoint:         base + "/v1/agent/oauth/authorize",
+		TokenEndpoint:                 base + "/v1/agent/oauth/token",
+		RevocationEndpoint:            base + "/v1/agent/oauth/revoke",
+		ResponseTypesSupported:        []string{"code"},
+		GrantTypesSupported:           []string{"authorization_code", "refresh_token"},
+		CodeChallengeMethodsSupported: []string{"S256"},
+		ScopesSupported:               []string{"agent:account.read", "agent:content.read:mobile"},
+	}, nil
+}
+
+func (f *fakeAgentAPI) ExchangeOAuthCode(ctx context.Context, request api.OAuthTokenRequest) (api.OAuthTokenResponse, error) {
+	f.oauthRequest = request
+	if f.oauthToken.AccessToken != "" {
+		return f.oauthToken, nil
+	}
+	return api.OAuthTokenResponse{
+		AccessToken:            strings.Repeat("a", 32),
+		TokenType:              "Bearer",
+		ExpiresIn:              3600,
+		RefreshToken:           strings.Repeat("b", 43),
+		RefreshTokenExpiresIn:  2592000,
+		Scope:                  "agent:account.read agent:content.read:mobile",
+		ConnectorSessionID:     "conn_fixture",
+		PatchXNoteSchemaNotice: "",
+	}, nil
+}
+
+func (f *fakeAgentAPI) RefreshOAuthToken(ctx context.Context, request api.OAuthTokenRequest) (api.OAuthTokenResponse, error) {
+	f.oauthRequest = request
+	if f.oauthRefresh.AccessToken != "" {
+		return f.oauthRefresh, nil
+	}
+	return api.OAuthTokenResponse{
+		AccessToken:           strings.Repeat("c", 32),
+		TokenType:             "Bearer",
+		ExpiresIn:             3600,
+		RefreshToken:          strings.Repeat("d", 43),
+		RefreshTokenExpiresIn: 2592000,
+		Scope:                 "agent:account.read agent:content.read:mobile",
+		ConnectorSessionID:    "conn_fixture",
+	}, nil
+}
+
+func (f *fakeAgentAPI) RevokeOAuthToken(ctx context.Context, token string) error {
+	f.oauthRevoked = append(f.oauthRevoked, token)
+	return nil
 }
 
 func (f *fakeAgentAPI) Logout(ctx context.Context, accessToken string) error {

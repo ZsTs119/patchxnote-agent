@@ -2,11 +2,26 @@
 
 **Goal:** Build a product-style PatchXNote MCP onboarding experience that closes both local desktop-agent setup and platform-agent access for the common domestic and global AI clients as of 2026-08-27.
 
-**Architecture:** Keep the existing npm universal stdio entrypoint as the local runtime base. Add a Context7-style setup wizard that opens browser login, stores Agent credentials in OS-native secure storage, installs PatchXNote into selected local MCP clients, and verifies the connection. In parallel, design and implement a minimal remote MCP gateway for platform agents that cannot run local `npx` commands.
+**Architecture:** Keep the existing npm universal stdio entrypoint as the local runtime base. Add a Context7-style setup wizard that reuses `patchxnote mcp login` browser OAuth, stores MCP connector credentials in OS-native secure storage, installs PatchXNote into selected local MCP clients, and verifies the connection. In parallel, design and implement a remote MCP gateway for platform agents that cannot run local `npx` commands.
 
-**Tech Stack:** Go, Cobra, npm launcher, OS-native keychain storage, local stdio MCP, Streamable HTTP/SSE MCP for platform mode, PatchXNote GoServer Agent APIs, browser setup session, JSON/TOML config merge helpers, website client registry data.
+**Tech Stack:** Go, Cobra, npm launcher, OS-native keychain storage, local stdio MCP, hosted `/mcp` JSON-RPC for platform mode, PatchXNote GoServer Agent APIs, OAuth authorization code + PKCE, JSON/TOML config merge helpers, website client registry data.
 
 **Execution Rule:** Work sequentially in the primary agent. Do not use sub-agents or parallel task execution. Keep changes small, testable, and reversible.
+
+## Implementation Status 2026-08-27
+
+- [x] Task 0 baseline rechecked: npm latest is `0.2.7`, local installed binary reports `0.2.7`, `mcp config` prints pure JSON, and `mcp serve` stdout remains JSON-RPC only.
+- [x] Task 1 client registry added under `docs/mcp-clients/clients.json` with schema validation script and Chinese registry notes.
+- [x] Task 2 setup command contract implemented: `patchxnote setup`, npm wrapper delegation, `--client`, `--all-local-supported`, `--dry-run`, `--no-browser`, `--print-config`, `--force`, `--yes`, and `--output json`.
+- [x] Task 3 has been superseded by MCP browser OAuth: `patchxnote mcp login/status/logout` now owns the browser login path, and `setup --client <id>` reuses it instead of promoting setup-session fallback.
+- [x] Task 4 config merge adapters implemented for strict JSON and TOML with backup, conflict detection, rollback, and JSONC manual-mode protection. Path helpers are consolidated in `internal/setup/paths_by_os.go` because Go treats `*_windows.go`, `*_darwin.go`, and `*_linux.go` as build-constrained files.
+- [x] Task 5 P0 local client setup wired: VS Code, Cursor, Codex, Claude Desktop, and Windsurf can auto-write after confirmation; Claude Code, Trae, Qoder, and WorkBuddy return manual instructions/deeplinks/config snippets in V1.
+- [x] Task 6 local setup verification hooks added: config verification and direct MCP initialize/tools-list smoke are implemented; setup also verifies existing auth when credentials are present.
+- [x] Task 7 interim website specs and client detail copy added under `docs/mcp-clients/`.
+- [x] Task 8 remote MCP platform gateway design added under `docs/plans/2026-08-27-remote-mcp-platform-gateway-design.md`.
+- [x] Task 9 platform PoC status captured under `docs/evidence/2026-08-27-platform-client-poc-status.zh-CN.md`; real Feishu/Tencent/enterprise WorkBuddy acceptance remains blocked by remote gateway deployment and platform test tenant credentials.
+- [x] Task 10 README, Chinese README, npm README, runbook, and package version source state updated for the setup release line.
+- [x] Task 11 final validation gates passed for this implementation pass: `go test ./...`, npm wrapper tests, client registry validation, MVP smoke, setup dry-runs on WSL and Windows, local MCP initialize/tools-list smoke, `git diff --check`, and sensitive-value scan review.
 
 ---
 
@@ -32,7 +47,7 @@
 - [ ] Ensure credentials are stored in the same OS/runtime environment that will later run `patchxnote mcp serve`.
 - [ ] Add a user confirmation step before setup modifies any editor or agent config file.
 - [ ] Add a rollback command or documented recovery path for every auto-written local client config.
-- [ ] Add a smaller remote tool surface than local stdio and keep source/model payload tools local-only until a later authorization design.
+- [x] Re-scope remote MCP to 19-tool functional parity with local stdio; control risk through OAuth consent, explicit scopes, response caps, revocation, and safe logging.
 - [ ] Add a marketplace/discovery lane separate from connectivity: website cards, VS Code/Cursor/Qoder deeplinks, Codex plugin, WorkBuddy/Feishu/Tencent platform submission, and generic MCP registries.
 - [ ] Add logo/trademark usage checks before publishing the website client grid.
 - [ ] Add client-support evidence states: `researched`, `implemented`, `locally_smoked`, `published_smoked`, `platform_accepted`.
@@ -43,7 +58,7 @@ Avoid turning the first implementation into one large all-or-nothing release.
 
 - [ ] Slice A: client registry and website card/detail pages.
 - [ ] Slice B: local setup wizard for P0 local clients, using existing npm stdio MCP.
-- [ ] Slice C: browser setup-session login and secure-storage handoff.
+- [ ] Slice C: browser OAuth login and secure-storage handoff.
 - [ ] Slice D: remote MCP gateway PoC for one domestic platform client.
 - [ ] Slice E: broader platform acceptance and marketplace/discovery submissions.
 
@@ -52,7 +67,7 @@ Suggested public release order:
 ```text
 0.2.8: website/client registry and manual client detail pages
 0.2.9: local setup wizard for VS Code, Cursor, Codex, Claude Code, and WorkBuddy manual path
-0.3.0: browser setup-session login and config merge hardening
+0.3.0: browser OAuth login and config merge hardening
 0.3.1+: remote MCP platform PoC for Feishu Aily / Doubao Work Partner / Tencent platform
 ```
 
@@ -71,9 +86,9 @@ User opens PatchXNote MCP website
  -> selects VS Code / Cursor / Codex / Claude Code / WorkBuddy / another local client
  -> copies or launches one setup command
  -> `npx -y patchxnote-agent@latest setup --client <client>` runs
- -> setup opens PatchXNote browser login
+ -> setup opens PatchXNote MCP browser OAuth login
  -> user logs in and approves Agent access
- -> setup stores Agent credentials in OS-native secure storage
+ -> setup stores MCP connector credentials in OS-native secure storage
  -> setup installs or updates the selected client's MCP config
  -> setup verifies PatchXNote MCP by listing tools and reading a safe account/record projection
  -> user can ask the selected client to read PatchXNote summaries
@@ -111,26 +126,20 @@ User opens PatchXNote MCP website
  -> selects Feishu Aily / Doubao Work Partner / Tencent Agent Development Platform / WorkBuddy enterprise mode
  -> website shows PatchXNote remote MCP option
  -> user creates or authorizes a platform connector session
- -> platform connects to `https://mcp.patchxnote.com/mcp`
- -> platform can initialize, list tools, and call a safe read-only subset
+ -> platform connects to the GoServer-hosted `/mcp` endpoint
+ -> platform can initialize, list tools, and call the same 19 PatchXNote MCP tools as local MCP
  -> platform verifies by reading recent PatchXNote summary records for the authorized user
 ```
 
 Platform remote MCP target:
 
 ```text
-https://mcp.patchxnote.com/mcp
+https://ws-lab.patch-x.cn/patchnote-test-api/mcp
 ```
 
-First platform tool subset should be conservative:
+Remote platform V1 was re-scoped on 2026-08-27 to target functional parity with all current 19 local MCP tools. See `docs/plans/2026-08-27-remote-mcp-goserver-parity-checklist.md`.
 
-- `patchxnote_get_current_user`
-- `patchxnote_list_memories`
-- `patchxnote_search_memories`
-- `patchxnote_get_memory`
-- `patchxnote_list_model_io_traces`, only if output stays bounded and does not expose source text
-
-Remote platform V1 should not expose source text, provider response, full model payloads, webhook secret configuration, or webhook sending until a separate authorization and audit design is accepted.
+Remote mode still needs environment-aware adaptations: webhook targets move from local config/keychain into GoServer account-scoped storage, and render/export tools return bounded content or a download handle instead of writing to a user's local filesystem.
 
 ## Client Priority Matrix
 
@@ -324,37 +333,34 @@ Expected:
 - Dry-run prints planned actions without modifying any client config.
 - npm wrapper delegates setup without changing existing install/mcp/login behavior.
 
-### Task 3: Add Browser Login Setup Session
+### Task 3: Add Browser OAuth Login
 
 Files:
 
 - Agent repo:
-  - Modify: `internal/auth/`
   - Modify: `internal/api/`
+  - Add: `internal/oauthflow/`
   - Modify: `internal/cli/setup.go`
-  - Add tests under `internal/auth`, `internal/api`, `internal/cli`
+  - Add tests under `internal/oauthflow`, `internal/api`, `internal/cli`
 - GoServer repo:
-  - Create or modify an Agent setup-session design doc before implementation.
-  - Add dedicated `/v1/agent/setup-sessions` style endpoints only if accepted by server contract.
+  - OAuth authorize/token/revoke and hosted `/mcp` endpoints are now the active contract.
 
 Checklist:
 
-- [ ] Prefer device-code/setup-session polling over localhost callback for first version.
-- [ ] CLI creates a setup session.
-- [ ] CLI opens PatchXNote web login URL.
-- [ ] Browser login approves Agent access for the displayed setup code.
-- [ ] CLI polls for completion with bounded timeout.
-- [ ] CLI stores received Agent credentials only in OS-native secure storage.
+- [ ] CLI discovers `/.well-known/oauth-authorization-server`.
+- [ ] CLI creates PKCE verifier/challenge and state in process memory only.
+- [ ] CLI opens PatchXNote web authorization URL.
+- [ ] Browser login redirects to a one-time `127.0.0.1:<port>/callback`.
+- [ ] CLI exchanges the authorization code with `/v1/agent/oauth/token`.
+- [ ] CLI stores received MCP connector credentials only in OS-native secure storage.
 - [ ] CLI stores credentials under the selected profile and server environment, so test/prod sessions cannot be mixed silently.
-- [ ] CLI clears any one-time setup session material after success or timeout.
-- [ ] `--no-browser` prints the login URL and code for remote terminals.
-- [ ] Setup session tokens are short-lived and single-use.
-- [ ] Setup session displays the client name, requested scopes, server environment, and expiry time before approval.
-- [ ] Setup session is bound to a one-time code and cannot be completed twice.
-- [ ] Setup session rejects mismatched client/profile/environment attempts.
-- [ ] Setup session has CSRF protection and a phishing-resistant confirmation code on the web page and CLI.
-- [ ] Setup session flow does not create or replace App/PC `mobile` or `desktop` installations.
-- [ ] Existing phone OTP login remains available as fallback.
+- [ ] CLI clears callback listener, state, verifier, and authorization code after success or timeout.
+- [ ] `--no-browser` prints the authorization URL for remote/headless terminals and waits for callback.
+- [ ] OAuth authorization codes are short-lived and single-use.
+- [ ] Authorization page displays the client name, requested scopes, server environment, and expiry time before approval.
+- [ ] OAuth state mismatch fails closed.
+- [ ] OAuth flow does not create or replace App/PC `mobile` or `desktop` installations.
+- [ ] Existing phone OTP login remains available only as legacy local Agent fallback, not setup's default path.
 
 Validation:
 
@@ -544,18 +550,17 @@ Files:
 
 Checklist:
 
-- [ ] Decide deployment owner: GoServer integrated route vs separate PatchXNote MCP Gateway service.
-- [ ] Expose HTTPS endpoint: `https://mcp.patchxnote.com/mcp`.
+- [x] Decide deployment owner: GoServer integrated route first.
+- [ ] Expose HTTPS endpoint under the GoServer base URL, currently `https://ws-lab.patch-x.cn/patchnote-test-api/mcp` for beta.
 - [ ] Support `initialize`.
 - [ ] Support `tools/list`.
 - [ ] Support `tools/call`.
 - [ ] Support Streamable HTTP first.
 - [ ] Support SSE only if a P0 platform requires it.
-- [ ] Keep platform V1 read-only.
-- [ ] Keep remote platform V1 tool count smaller than local 19-tool set.
-- [ ] Require per-user authorization or a revocable connector token.
+- [x] Keep remote platform V1 functionally equivalent to the local 19-tool MCP surface.
+- [ ] Require per-user OAuth authorization and a revocable connector token.
 - [ ] Provide an admin/user revocation path.
-- [ ] Decide whether remote auth is OAuth, device-code connector token, signed platform token, or a combination.
+- [x] Decide whether remote auth is OAuth, device-code connector token, signed platform token, or a combination: official OAuth flow that issues connector tokens.
 - [ ] Store remote connector credentials server-side only; never ask the user to paste PatchXNote access tokens into a platform.
 - [ ] Add connector/session listing so users can see and revoke which platforms are connected.
 - [ ] Bind every remote call to account, platform client, scopes, and audit request ID.
@@ -564,16 +569,16 @@ Checklist:
 - [ ] Add prompt-injection and data-exfiltration guardrails to tool descriptions and outputs.
 - [ ] Add bounded pagination and output caps.
 - [ ] Add stable MCP error mapping: unauthenticated, forbidden, not_found, rate_limited, upstream_unavailable.
-- [ ] Do not expose webhook send/configure in remote V1.
-- [ ] Do not expose model provider payload fields in remote V1.
-- [ ] Do not expose raw source text or full transcripts in remote V1.
+- [ ] Expose webhook send/configure through GoServer account-scoped storage, not local config files.
+- [ ] Expose model IO field tools with explicit scopes, bounded response size, and no logging/evidence of raw payload bodies.
+- [ ] Expose only the existing Agent source-text/safe transcript projection; do not add raw audio download or broader transcript access.
 - [ ] Do not cache full record content in the remote gateway unless a separate retention design is accepted.
 - [ ] Log only safe diagnostics: version, request ID, status, stable error code, platform client name.
 
 Validation:
 
 ```sh
-curl -fsS https://mcp.patchxnote.com/health
+curl -fsS https://ws-lab.patch-x.cn/patchnote-test-api/mcp/health
 ```
 
 Expected:
@@ -645,7 +650,7 @@ Checklist:
 - [ ] Document manual fallback for every client.
 - [ ] Document WSL UNC caveat and absolute-path fallback.
 - [ ] Document cross-OS credential caveat: run setup in the same environment that runs the MCP server.
-- [ ] Document that local full 19-tool MCP is for trusted local clients, while platform remote MCP starts with fewer read-only tools.
+- [ ] Document that both local MCP and remote platform MCP target the same 19-tool functional surface, with remote file/config behavior adapted to server-side state or bounded returned content.
 - [ ] Document how to undo a client install or restore the backup config.
 - [ ] Update npm README with setup commands.
 - [ ] Update runbook release gates for setup wizard and remote MCP.
@@ -678,7 +683,7 @@ Checklist:
 - [ ] Add WSL-vs-Windows setup detection tests.
 - [ ] Add config backup and rollback tests.
 - [ ] Add JSONC preservation or manual-mode tests.
-- [ ] Add browser setup-session timeout/deny/retry tests.
+- [ ] Add browser OAuth timeout/deny/state-mismatch/retry tests.
 - [ ] Add platform remote auth failure and revocation tests if platform gateway is implemented.
 - [ ] Run docs diff check.
 - [ ] Run sensitive-value scan.
@@ -710,7 +715,7 @@ Expected:
 
 - [ ] Website shows P0 client cards for VS Code, Cursor, Codex, Claude Code, Claude Desktop, Windsurf, Trae, Qoder, and WorkBuddy.
 - [ ] `npx -y patchxnote-agent@latest setup --client <p0-client>` either installs automatically or returns clear manual instructions.
-- [ ] Browser login stores Agent credentials in OS-native secure storage.
+- [ ] Browser login stores MCP connector credentials in OS-native secure storage.
 - [ ] MCP config contains no credentials.
 - [ ] Existing local `mcp config`, `mcp serve`, and `login` commands still work.
 - [ ] Setup verifies `initialize` and `tools/list`.
@@ -726,8 +731,8 @@ Expected:
 - [ ] Remote MCP supports initialize/tools/list/tools/call.
 - [ ] Feishu Aily or Doubao Work Partner can add PatchXNote MCP and call at least one safe read tool.
 - [ ] Tencent platform or WorkBuddy enterprise path can add PatchXNote MCP and call at least one safe read tool.
-- [ ] Platform V1 does not expose remote webhook send/configure or raw model/provider payload fields.
-- [ ] Platform V1 does not expose raw source text or full transcripts.
+- [ ] Platform V1 uses the same curated 19-tool surface where platform permissions allow; model/source/provider field tools require explicit scopes, bounded output, and safe logs.
+- [ ] Platform V1 does not expose raw audio or broader transcript/audio download surfaces.
 - [ ] Platform auth can be revoked.
 - [ ] Platform connector list/revoke is visible to the user or operator.
 - [ ] Logs and evidence contain no tokens, raw phone numbers, OTPs, raw audio, full transcripts, source text dumps, prompts, provider payloads, full MAC, SK, or webhook secrets.
@@ -742,13 +747,13 @@ Expected:
 - Windows editors launched from WSL UNC paths can trigger command-shell warnings; setup should prefer normal Windows paths or absolute binary fallback.
 - WSL can store credentials in the Linux keychain while a Windows editor later launches a Windows binary with Windows Credential Manager. Setup must detect this and guide the user to run setup in the same runtime.
 - VS Code Remote/Dev Container/Codespaces-like sessions may run MCP servers remotely rather than on the desktop host. Local setup must not assume the desktop OS is the runtime.
-- Browser login must work from remote terminals and WSL, so `--no-browser` and copyable URL/code are required.
-- Browser login can fail because default-browser launch is blocked; setup must still work with copyable URL/code.
+- Browser login must work from remote terminals and WSL, so `--no-browser` and a copyable authorization URL are required.
+- Browser login can fail because default-browser launch is blocked; setup must still work with a copyable authorization URL and callback timeout guidance.
 - Corporate proxies, npm registry blocks, GitHub Release download blocks, antivirus quarantine, and PowerShell execution policy can break first-run install; setup needs actionable fallback messages.
 - Remote platform clients may not be able to run local commands, so local setup does not satisfy Feishu Aily/Doubao/Tencent platform mode.
 - Platform OAuth support differs by product; first platform PoC may require a revocable connector token or custom header.
 - Platform clients may cache tool lists and descriptions; remote rollout must tolerate stale tool schemas during propagation.
-- Remote MCP has a broader trust boundary than local stdio; remote tool subset should start smaller.
+- Remote MCP has a broader trust boundary than local stdio; keep the 19-tool parity surface but enforce explicit scopes, response caps, revocation, and safe logs.
 - Tool descriptions must be concise; too many tools can reduce model selection accuracy in platform agents.
 - Website one-click buttons must not claim support before the actual client flow has been validated.
 - Third-party logos and product names require trademark-safe presentation.
@@ -782,12 +787,12 @@ Expected:
 ## Non-Blocking Decisions Before Implementation
 
 - [ ] Confirm website source repository or hosting target.
-- [ ] Confirm whether platform remote MCP lives inside GoServer or a separate gateway service.
-- [ ] Confirm whether remote platform V1 uses OAuth, connector token, or both.
-- [ ] Confirm whether remote model-IO field tools are excluded from V1 or hidden behind a separate explicit authorization.
+- [x] Confirm whether platform remote MCP lives inside GoServer or a separate gateway service: GoServer-integrated route first.
+- [x] Confirm whether remote platform V1 uses OAuth, connector token, or both: official OAuth authorization flow issuing revocable connector tokens.
+- [x] Confirm whether remote model-IO field tools are excluded from V1 or hidden behind a separate explicit authorization: include them for 19-tool parity, bounded by explicit OAuth scopes and result-size caps.
 - [ ] Confirm whether WorkBuddy desktop setup can be auto-written safely or should be manual in V1.
-- [ ] Confirm whether browser setup-session requires GoServer changes, website backend changes, or both.
-- [ ] Confirm whether remote MCP should share existing Agent sessions or use separate remote connector sessions.
+- [x] Confirm whether browser login requires GoServer changes, website backend changes, or both: GoServer OAuth authorize/token/revoke is the active server contract.
+- [x] Confirm whether remote MCP should share existing Agent sessions or use separate remote connector sessions: use separate MCP connector sessions.
 - [ ] Confirm whether local setup should default to `npx` config or package-pinned absolute binary config for each client.
 - [ ] Confirm client logo usage policy before public website deployment.
 - [ ] Confirm first release version after `0.2.7`.

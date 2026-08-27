@@ -29,8 +29,16 @@ async function main(argv) {
     await runLogin(parsed);
     return;
   }
+  if (parsed.command === "setup") {
+    await runSetup(parsed);
+    return;
+  }
   if (parsed.command === "mcp" && parsed.subcommand === "config") {
     printUniversalMCPConfig();
+    return;
+  }
+  if (parsed.command === "mcp" && ["login", "status", "logout"].includes(parsed.subcommand)) {
+    await runMCPSubcommand(parsed);
     return;
   }
   if (parsed.command === "mcp" && parsed.subcommand === "serve") {
@@ -74,11 +82,27 @@ async function runLogin(parsed) {
   process.exitCode = code;
 }
 
+async function runSetup(parsed) {
+  const plan = await ensureBinary(parsed.options, { stderr: process.stderr });
+  const code = await spawnAndWait(plan.install_path, ["setup", ...parsed.passthroughArgs], {
+    stdio: "inherit"
+  });
+  process.exitCode = code;
+}
+
 async function runMCPServe(parsed) {
   const plan = await ensureBinary(parsed.options, { stderr: process.stderr });
   const code = await spawnAndWait(plan.install_path, ["mcp", "serve", ...parsed.passthroughArgs], {
     stdio: ["pipe", "inherit", "inherit"],
     pipeStdin: true
+  });
+  process.exitCode = code;
+}
+
+async function runMCPSubcommand(parsed) {
+  const plan = await ensureBinary(parsed.options, { stderr: process.stderr });
+  const code = await spawnAndWait(plan.install_path, ["mcp", parsed.subcommand, ...parsed.passthroughArgs], {
+    stdio: "inherit"
   });
   process.exitCode = code;
 }
@@ -371,13 +395,21 @@ function parseArgs(argv) {
     const launcher = parseLauncherOptions(rest, { allowPassthrough: true, rejectPrintConfig: true });
     return { command, options: launcher.options, passthroughArgs: launcher.passthroughArgs };
   }
+  if (command === "setup") {
+    const launcher = parseLauncherOptions(rest, {
+      allowPassthrough: true,
+      passThroughDryRun: true,
+      passThroughPrintConfig: true
+    });
+    return { command, options: launcher.options, passthroughArgs: launcher.passthroughArgs };
+  }
   if (command === "mcp") {
     const [subcommand, ...subcommandArgs] = rest;
-    if (!["serve", "config"].includes(subcommand)) {
+    if (!["serve", "config", "login", "status", "logout"].includes(subcommand)) {
       throw new Error(mcpUsage());
     }
     const launcher = parseLauncherOptions(subcommandArgs, {
-      allowPassthrough: subcommand === "serve",
+      allowPassthrough: subcommand !== "config",
       rejectPrintConfig: true
     });
     return { command, subcommand, options: launcher.options, passthroughArgs: launcher.passthroughArgs };
@@ -432,8 +464,16 @@ function parseLauncherOptions(rest, settings = {}) {
         }
         throw new Error(`unknown option ${arg}`);
       case "--dry-run":
+        if (settings.passThroughDryRun) {
+          passthroughArgs.push(arg);
+          break;
+        }
         throw new Error("--dry-run is only valid for install/update/uninstall");
       case "--print-config":
+        if (settings.passThroughPrintConfig) {
+          passthroughArgs.push(arg);
+          break;
+        }
         if (settings.rejectPrintConfig) {
           throw new Error("--print-config is not valid for this command");
         }
@@ -629,11 +669,11 @@ function verifyChecksum(binary, assetName, checksumsText) {
 }
 
 function usage() {
-  return "usage: patchxnote-agent <install|update|uninstall|login|mcp> [options]";
+  return "usage: patchxnote-agent <install|update|uninstall|login|setup|mcp> [options]";
 }
 
 function mcpUsage() {
-  return "usage: patchxnote-agent mcp <serve|config> [options]";
+  return "usage: patchxnote-agent mcp <serve|config|login|status|logout> [options]";
 }
 
 if (require.main === module) {

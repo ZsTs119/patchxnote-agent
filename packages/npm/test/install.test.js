@@ -55,10 +55,33 @@ assert.deepStrictEqual(parseArgs(["mcp", "serve", "--install-dir", "/tmp/px", "-
   options: { installDir: "/tmp/px" },
   passthroughArgs: ["--profile", "work"]
 });
+assert.deepStrictEqual(parseArgs(["mcp", "login", "--install-dir", "/tmp/px", "--callback-timeout", "2s", "--output", "json"]), {
+  command: "mcp",
+  subcommand: "login",
+  options: { installDir: "/tmp/px" },
+  passthroughArgs: ["--callback-timeout", "2s", "--output", "json"]
+});
+assert.deepStrictEqual(parseArgs(["mcp", "status", "--install-dir", "/tmp/px", "--output", "json"]), {
+  command: "mcp",
+  subcommand: "status",
+  options: { installDir: "/tmp/px" },
+  passthroughArgs: ["--output", "json"]
+});
+assert.deepStrictEqual(parseArgs(["mcp", "logout", "--install-dir", "/tmp/px", "--local-only"]), {
+  command: "mcp",
+  subcommand: "logout",
+  options: { installDir: "/tmp/px" },
+  passthroughArgs: ["--local-only"]
+});
 assert.deepStrictEqual(parseArgs(["login", "--install-dir", "/tmp/px", "--profile", "work"]), {
   command: "login",
   options: { installDir: "/tmp/px" },
   passthroughArgs: ["--profile", "work"]
+});
+assert.deepStrictEqual(parseArgs(["setup", "--install-dir", "/tmp/px", "--client", "cursor", "--dry-run", "--print-config"]), {
+  command: "setup",
+  options: { installDir: "/tmp/px" },
+  passthroughArgs: ["--client", "cursor", "--dry-run", "--print-config"]
 });
 assert.deepStrictEqual(parseLauncherOptions(["--platform", "linux", "--arch", "x64", "--from-local", "/tmp/bin"]), {
   options: { platform: "linux", arch: "x64", fromLocal: "/tmp/bin" },
@@ -274,6 +297,45 @@ assert.match(loginResult.stdout, /fake login/);
 assert.deepStrictEqual(readJSONLines(loginLog).at(-1), ["login", "--profile", "work"]);
 assert.doesNotMatch(loginResult.stdout + loginResult.stderr, /access_token|refresh_token|otp|sk_|protocol_mac/i);
 
+const setupDir = path.join(fixtureRoot, "setup-bin");
+const setupLog = path.join(fixtureRoot, "setup.log");
+const setupResult = runWrapper([
+  "setup",
+  "--from-local",
+  goodBinary,
+  "--install-dir",
+  setupDir,
+  "--client",
+  "cursor",
+  "--dry-run"
+], { logPath: setupLog });
+assert.strictEqual(setupResult.status, 0, setupResult.stderr);
+assert.match(setupResult.stdout, /fake setup/);
+assert.deepStrictEqual(readJSONLines(setupLog).at(-1), ["setup", "--client", "cursor", "--dry-run"]);
+assert.doesNotMatch(setupResult.stdout + setupResult.stderr, /access_token|refresh_token|otp|sk_|protocol_mac/i);
+
+const mcpCommandDir = path.join(fixtureRoot, "PatchX Note Agent", "mcp-bin");
+const mcpCommandLog = path.join(fixtureRoot, "mcp-command.log");
+for (const [subcommand, args, expected] of [
+  ["login", ["--callback-timeout", "2s", "--output", "json"], ["mcp", "login", "--callback-timeout", "2s", "--output", "json"]],
+  ["status", ["--output", "json"], ["mcp", "status", "--output", "json"]],
+  ["logout", ["--local-only"], ["mcp", "logout", "--local-only"]]
+]) {
+  const result = runWrapper([
+    "mcp",
+    subcommand,
+    "--from-local",
+    goodBinary,
+    "--install-dir",
+    mcpCommandDir,
+    ...args
+  ], { logPath: mcpCommandLog });
+  assert.strictEqual(result.status, 0, result.stderr);
+  assert.match(result.stdout, new RegExp(`fake mcp ${subcommand}`));
+  assert.deepStrictEqual(readJSONLines(mcpCommandLog).at(-1), expected);
+  assert.doesNotMatch(result.stdout + result.stderr, /access_token|refresh_token|otp|sk_|protocol_mac/i);
+}
+
 console.log("installer tests passed");
 
 function runWrapper(args, options = {}) {
@@ -353,8 +415,16 @@ func main() {
 		serveMCP()
 		return
 	}
+	if len(args) >= 2 && args[0] == "mcp" && (args[1] == "login" || args[1] == "status" || args[1] == "logout") {
+		fmt.Printf("fake mcp %s\\n", args[1])
+		return
+	}
 	if len(args) >= 1 && args[0] == "login" {
 		fmt.Println("fake login")
+		return
+	}
+	if len(args) >= 1 && args[0] == "setup" {
+		fmt.Println("fake setup")
 		return
 	}
 	fmt.Fprintf(os.Stderr, "unexpected args: %v\\n", args)

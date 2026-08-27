@@ -27,6 +27,10 @@ type agentAPI interface {
 	GetMemoryModelIO(ctx context.Context, accessToken string, platform string, memoryID string) (api.AgentModelIOExport, error)
 	GetModelRunIOTrace(ctx context.Context, accessToken string, platform string, requestID string) (api.AgentModelIOExport, error)
 	ListModelIOTraces(ctx context.Context, accessToken string, params api.ListModelIOTracesParams) (api.AgentModelIOTracePage, error)
+	GetOAuthAuthorizationServer(ctx context.Context) (api.OAuthAuthorizationServerMetadata, error)
+	ExchangeOAuthCode(ctx context.Context, request api.OAuthTokenRequest) (api.OAuthTokenResponse, error)
+	RefreshOAuthToken(ctx context.Context, request api.OAuthTokenRequest) (api.OAuthTokenResponse, error)
+	RevokeOAuthToken(ctx context.Context, token string) error
 	Logout(ctx context.Context, accessToken string) error
 }
 

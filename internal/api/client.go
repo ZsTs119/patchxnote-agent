@@ -104,6 +104,58 @@ func (c *Client) RefreshAgentSession(ctx context.Context, request AgentRefreshRe
 	return response, err
 }
 
+func (c *Client) CreateAgentSetupSession(ctx context.Context, request AgentSetupSessionCreateRequest, idempotencyKey string) (AgentSetupSessionCreated, error) {
+	if strings.TrimSpace(idempotencyKey) == "" {
+		return AgentSetupSessionCreated{}, fmt.Errorf("idempotency key is required")
+	}
+	var response AgentSetupSessionCreated
+	err := c.doJSON(ctx, http.MethodPost, "/v1/agent/setup-sessions", nil, "", idempotencyKey, request, &response, false, http.StatusCreated, http.StatusAccepted)
+	return response, err
+}
+
+func (c *Client) GetAgentSetupSession(ctx context.Context, sessionID string) (AgentSetupSessionStatus, error) {
+	if strings.TrimSpace(sessionID) == "" {
+		return AgentSetupSessionStatus{}, fmt.Errorf("setup session id is required")
+	}
+	var response AgentSetupSessionStatus
+	err := c.doJSON(ctx, http.MethodGet, "/v1/agent/setup-sessions/"+url.PathEscape(sessionID), nil, "", "", nil, &response, false, http.StatusOK)
+	return response, err
+}
+
+func (c *Client) GetOAuthAuthorizationServer(ctx context.Context) (OAuthAuthorizationServerMetadata, error) {
+	var response OAuthAuthorizationServerMetadata
+	err := c.doJSON(ctx, http.MethodGet, "/.well-known/oauth-authorization-server", nil, "", "", nil, &response, true, http.StatusOK)
+	return response, err
+}
+
+func (c *Client) ExchangeOAuthCode(ctx context.Context, request OAuthTokenRequest) (OAuthTokenResponse, error) {
+	values := url.Values{}
+	values.Set("grant_type", "authorization_code")
+	values.Set("code", request.Code)
+	values.Set("redirect_uri", request.RedirectURI)
+	values.Set("client_id", request.ClientID)
+	values.Set("code_verifier", request.CodeVerifier)
+	var response OAuthTokenResponse
+	err := c.doForm(ctx, "/v1/agent/oauth/token", values, &response, http.StatusOK)
+	return response, err
+}
+
+func (c *Client) RefreshOAuthToken(ctx context.Context, request OAuthTokenRequest) (OAuthTokenResponse, error) {
+	values := url.Values{}
+	values.Set("grant_type", "refresh_token")
+	values.Set("refresh_token", request.RefreshToken)
+	values.Set("client_id", request.ClientID)
+	var response OAuthTokenResponse
+	err := c.doForm(ctx, "/v1/agent/oauth/token", values, &response, http.StatusOK)
+	return response, err
+}
+
+func (c *Client) RevokeOAuthToken(ctx context.Context, token string) error {
+	values := url.Values{}
+	values.Set("token", token)
+	return c.doForm(ctx, "/v1/agent/oauth/revoke", values, nil, http.StatusOK)
+}
+
 func (c *Client) CurrentUser(ctx context.Context, accessToken string) (CurrentAccount, error) {
 	var response CurrentAccount
 	err := c.doJSON(ctx, http.MethodGet, "/v1/agent/me", nil, accessToken, "", nil, &response, true, http.StatusOK)
@@ -269,6 +321,42 @@ func (c *Client) doJSON(
 		}
 	}
 	return lastErr
+}
+
+func (c *Client) doForm(
+	ctx context.Context,
+	endpointPath string,
+	values url.Values,
+	out any,
+	expectedStatus ...int,
+) error {
+	requestURL := c.resolveURL(endpointPath, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, requestURL, strings.NewReader(values.Encode()))
+	if err != nil {
+		return fmt.Errorf("build api request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+	if c.userAgent != "" {
+		req.Header.Set("User-Agent", c.userAgent)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("send api request: %w", err)
+	}
+	if !statusIn(resp.StatusCode, expectedStatus) {
+		return parseOAuthOrAPIError(resp)
+	}
+	defer resp.Body.Close()
+
+	if out == nil || resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+		return fmt.Errorf("decode api response: %w", err)
+	}
+	return nil
 }
 
 func (c *Client) doJSONOnce(

@@ -30,7 +30,7 @@ func TestRootHelpIncludesCommandAndGlobalFlags(t *testing.T) {
 		t.Fatalf("expected no stderr, got %q", stderr)
 	}
 
-	for _, want := range []string{"auth", "login", "logout", "version", "--config", "--profile", "--output", "--server-base-url"} {
+	for _, want := range []string{"auth", "login", "logout", "setup", "version", "--config", "--profile", "--output", "--server-base-url"} {
 		if !strings.Contains(stdout, want) {
 			t.Fatalf("expected help output to contain %q, got:\n%s", want, stdout)
 		}

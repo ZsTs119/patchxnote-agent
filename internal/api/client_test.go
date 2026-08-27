@@ -139,6 +139,255 @@ func TestRefreshAgentSession(t *testing.T) {
 	}
 }
 
+func TestOAuthMetadataAndFormMethods(t *testing.T) {
+	var metadataCalled bool
+	var exchangeCalled bool
+	var refreshCalled bool
+	var revokeCalled bool
+	oldRefresh := strings.Repeat("r", 43)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		route := strings.TrimPrefix(r.URL.Path, "/patchnote-test-api")
+		switch route {
+		case "/.well-known/oauth-authorization-server":
+			metadataCalled = true
+			if r.Method != http.MethodGet {
+				t.Fatalf("unexpected metadata method: %s", r.Method)
+			}
+			if r.Header.Get("Authorization") != "" {
+				t.Fatal("metadata request must not send authorization")
+			}
+			writeJSONResponse(t, w, http.StatusOK, OAuthAuthorizationServerMetadata{
+				Issuer:                        serverURLForTest(r),
+				AuthorizationEndpoint:         serverURLForTest(r) + "/v1/agent/oauth/authorize",
+				TokenEndpoint:                 serverURLForTest(r) + "/v1/agent/oauth/token",
+				RevocationEndpoint:            serverURLForTest(r) + "/v1/agent/oauth/revoke",
+				ResponseTypesSupported:        []string{"code"},
+				GrantTypesSupported:           []string{"authorization_code", "refresh_token"},
+				CodeChallengeMethodsSupported: []string{"S256"},
+				ScopesSupported:               []string{"agent:account.read"},
+			})
+		case "/v1/agent/oauth/token":
+			if r.Method != http.MethodPost {
+				t.Fatalf("unexpected token method: %s", r.Method)
+			}
+			if r.Header.Get("Authorization") != "" {
+				t.Fatal("token request must not send authorization")
+			}
+			if got := r.Header.Get("Content-Type"); !strings.HasPrefix(got, "application/x-www-form-urlencoded") {
+				t.Fatalf("unexpected content type: %s", got)
+			}
+			if err := r.ParseForm(); err != nil {
+				t.Fatalf("parse form: %v", err)
+			}
+			switch r.PostForm.Get("grant_type") {
+			case "authorization_code":
+				exchangeCalled = true
+				if r.PostForm.Get("code") != strings.Repeat("c", 43) ||
+					r.PostForm.Get("redirect_uri") != "http://127.0.0.1:49152/callback" ||
+					r.PostForm.Get("client_id") != "patchxnote-local-dev" ||
+					r.PostForm.Get("code_verifier") != strings.Repeat("v", 43) {
+					t.Fatalf("unexpected exchange form: %s", r.PostForm.Encode())
+				}
+				if r.PostForm.Get("client_secret") != "" || r.PostForm.Get("access_token") != "" {
+					t.Fatalf("exchange form included forbidden field: %s", r.PostForm.Encode())
+				}
+				writeJSONResponse(t, w, http.StatusOK, OAuthTokenResponse{
+					AccessToken:           strings.Repeat("a", 43),
+					TokenType:             "Bearer",
+					ExpiresIn:             900,
+					RefreshToken:          oldRefresh,
+					RefreshTokenExpiresIn: 2592000,
+					Scope:                 "agent:account.read",
+					ConnectorSessionID:    "mcpconn_fixture",
+				})
+			case "refresh_token":
+				refreshCalled = true
+				if r.PostForm.Get("refresh_token") != oldRefresh ||
+					r.PostForm.Get("client_id") != "patchxnote-local-dev" ||
+					r.PostForm.Get("code") != "" || r.PostForm.Get("code_verifier") != "" {
+					t.Fatalf("unexpected refresh form: %s", r.PostForm.Encode())
+				}
+				writeJSONResponse(t, w, http.StatusOK, OAuthTokenResponse{
+					AccessToken:           strings.Repeat("b", 43),
+					TokenType:             "Bearer",
+					ExpiresIn:             900,
+					RefreshToken:          strings.Repeat("n", 43),
+					RefreshTokenExpiresIn: 2592000,
+					Scope:                 "agent:account.read",
+					ConnectorSessionID:    "mcpconn_fixture",
+				})
+			default:
+				t.Fatalf("unexpected grant type: %s", r.PostForm.Get("grant_type"))
+			}
+		case "/v1/agent/oauth/revoke":
+			revokeCalled = true
+			if r.Method != http.MethodPost {
+				t.Fatalf("unexpected revoke method: %s", r.Method)
+			}
+			if r.Header.Get("Authorization") != "" {
+				t.Fatal("revoke request must not send authorization")
+			}
+			if err := r.ParseForm(); err != nil {
+				t.Fatalf("parse revoke form: %v", err)
+			}
+			if r.PostForm.Get("token") != oldRefresh {
+				t.Fatal("unexpected revoke token body")
+			}
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	client := newTestClient(t, server.URL+"/patchnote-test-api", 0)
+	metadata, err := client.GetOAuthAuthorizationServer(context.Background())
+	if err != nil {
+		t.Fatalf("oauth metadata: %v", err)
+	}
+	if metadata.TokenEndpoint == "" || len(metadata.GrantTypesSupported) != 2 {
+		t.Fatalf("unexpected metadata: %+v", metadata)
+	}
+
+	exchanged, err := client.ExchangeOAuthCode(context.Background(), OAuthTokenRequest{
+		Code:         strings.Repeat("c", 43),
+		RedirectURI:  "http://127.0.0.1:49152/callback",
+		ClientID:     "patchxnote-local-dev",
+		CodeVerifier: strings.Repeat("v", 43),
+	})
+	if err != nil {
+		t.Fatalf("exchange oauth code: %v", err)
+	}
+	if exchanged.TokenType != "Bearer" || exchanged.RefreshToken != oldRefresh {
+		t.Fatalf("unexpected exchange response: %+v", exchanged)
+	}
+
+	refreshed, err := client.RefreshOAuthToken(context.Background(), OAuthTokenRequest{
+		ClientID:     "patchxnote-local-dev",
+		RefreshToken: oldRefresh,
+	})
+	if err != nil {
+		t.Fatalf("refresh oauth token: %v", err)
+	}
+	if refreshed.RefreshToken == oldRefresh || refreshed.RefreshToken == "" {
+		t.Fatalf("expected rotated refresh token, got %+v", refreshed)
+	}
+
+	if err := client.RevokeOAuthToken(context.Background(), oldRefresh); err != nil {
+		t.Fatalf("revoke oauth token: %v", err)
+	}
+	if !metadataCalled || !exchangeCalled || !refreshCalled || !revokeCalled {
+		t.Fatalf("expected all oauth calls metadata=%t exchange=%t refresh=%t revoke=%t", metadataCalled, exchangeCalled, refreshCalled, revokeCalled)
+	}
+}
+
+func TestOAuthErrorDoesNotEchoTokenResponseBody(t *testing.T) {
+	secretLike := strings.Repeat("s", 43)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"error":"invalid_grant","error_description":"` + secretLike + `"}`))
+	}))
+	defer server.Close()
+
+	client := newTestClient(t, server.URL, 0)
+	_, err := client.ExchangeOAuthCode(context.Background(), OAuthTokenRequest{
+		Code:         strings.Repeat("c", 43),
+		RedirectURI:  "http://127.0.0.1:49152/callback",
+		ClientID:     "patchxnote-local-dev",
+		CodeVerifier: strings.Repeat("v", 43),
+	})
+	if err == nil {
+		t.Fatal("expected oauth error")
+	}
+	var apiErr *Error
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *api.Error, got %T", err)
+	}
+	if apiErr.Code != "invalid_grant" {
+		t.Fatalf("unexpected oauth error: %+v", apiErr)
+	}
+	if strings.Contains(err.Error(), secretLike) {
+		t.Fatalf("oauth error string leaked response body: %v", err)
+	}
+}
+
+func TestAgentSetupSessionMethods(t *testing.T) {
+	var createCalled bool
+	var getCalled bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/agent/setup-sessions":
+			createCalled = true
+			if r.Method != http.MethodPost {
+				t.Fatalf("unexpected create method: %s", r.Method)
+			}
+			if r.Header.Get("Idempotency-Key") != "idem_setup_fixture" {
+				t.Fatalf("missing setup idempotency key: %s", r.Header.Get("Idempotency-Key"))
+			}
+			var request AgentSetupSessionCreateRequest
+			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+				t.Fatalf("decode setup request: %v", err)
+			}
+			if request.ClientID != "cursor" || request.Profile != "default" {
+				t.Fatalf("unexpected setup request: %+v", request)
+			}
+			writeJSONResponse(t, w, http.StatusCreated, AgentSetupSessionCreated{
+				SessionID:           "setup_fixture",
+				Status:              "pending",
+				UserCode:            "PXNOTE-1234",
+				VerificationURI:     "https://patchxnote.example/setup",
+				VerificationURIFull: "https://patchxnote.example/setup?code=PXNOTE-1234",
+				ExpiresInSeconds:    600,
+				PollIntervalSeconds: 2,
+			})
+		case "/v1/agent/setup-sessions/setup_fixture":
+			getCalled = true
+			if r.Method != http.MethodGet {
+				t.Fatalf("unexpected get method: %s", r.Method)
+			}
+			writeJSONResponse(t, w, http.StatusOK, AgentSetupSessionStatus{
+				SessionID: "setup_fixture",
+				Status:    "approved",
+				Session: &AgentSessionResponse{
+					AccessToken:             strings.Repeat("a", 32),
+					AccessExpiresInSeconds:  3600,
+					RefreshToken:            strings.Repeat("r", 43),
+					RefreshExpiresInSeconds: 2592000,
+					Account:                 CurrentAccount{ID: "acct_fixture", Status: "active"},
+					Scopes:                  []string{"agent:account.read"},
+				},
+			})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	client := newTestClient(t, server.URL, 0)
+	created, err := client.CreateAgentSetupSession(context.Background(), AgentSetupSessionCreateRequest{
+		ClientID:   "cursor",
+		ClientName: "Cursor",
+		Profile:    "default",
+	}, "idem_setup_fixture")
+	if err != nil {
+		t.Fatalf("create setup session: %v", err)
+	}
+	if created.SessionID != "setup_fixture" || created.UserCode == "" {
+		t.Fatalf("unexpected created session: %+v", created)
+	}
+	status, err := client.GetAgentSetupSession(context.Background(), created.SessionID)
+	if err != nil {
+		t.Fatalf("get setup session: %v", err)
+	}
+	if status.Status != "approved" || status.Session == nil || status.Session.RefreshToken == "" {
+		t.Fatalf("unexpected setup status: %+v", status)
+	}
+	if !createCalled || !getCalled {
+		t.Fatalf("expected create/get calls create=%t get=%t", createCalled, getCalled)
+	}
+}
+
 func TestReadProjectionSuccessAndPagination(t *testing.T) {
 	credentialMaterial := strings.Repeat("b", 32)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -523,4 +772,8 @@ func writeJSONResponse(t *testing.T, w http.ResponseWriter, statusCode int, valu
 	if err := json.NewEncoder(w).Encode(value); err != nil {
 		t.Fatalf("write json response: %v", err)
 	}
+}
+
+func serverURLForTest(r *http.Request) string {
+	return "http://" + r.Host + "/patchnote-test-api"
 }

@@ -196,6 +196,22 @@ func (f *refreshErrorAPI) ListModelIOTraces(context.Context, string, api.ListMod
 	return api.AgentModelIOTracePage{}, nil
 }
 
+func (f *refreshErrorAPI) GetOAuthAuthorizationServer(context.Context) (api.OAuthAuthorizationServerMetadata, error) {
+	return api.OAuthAuthorizationServerMetadata{}, nil
+}
+
+func (f *refreshErrorAPI) ExchangeOAuthCode(context.Context, api.OAuthTokenRequest) (api.OAuthTokenResponse, error) {
+	return api.OAuthTokenResponse{}, nil
+}
+
+func (f *refreshErrorAPI) RefreshOAuthToken(context.Context, api.OAuthTokenRequest) (api.OAuthTokenResponse, error) {
+	return api.OAuthTokenResponse{}, f.err
+}
+
+func (f *refreshErrorAPI) RevokeOAuthToken(context.Context, string) error {
+	return nil
+}
+
 func (f *refreshErrorAPI) Logout(context.Context, string) error {
 	return nil
 }

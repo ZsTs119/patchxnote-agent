@@ -7,6 +7,7 @@ import (
 
 	"github.com/ZsTs119/patchxnote-agent/internal/config"
 	"github.com/ZsTs119/patchxnote-agent/internal/keychain"
+	"github.com/ZsTs119/patchxnote-agent/internal/oauthflow"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -19,6 +20,7 @@ type Deps struct {
 	CredentialStore keychain.Store
 	APIFactory      apiFactory
 	Stdin           io.Reader
+	BrowserOpen     oauthflow.BrowserOpener
 }
 
 type rootState struct {
@@ -27,6 +29,7 @@ type rootState struct {
 	pathEnv         config.PathEnv
 	credentialStore keychain.Store
 	apiFactory      apiFactory
+	browserOpen     oauthflow.BrowserOpener
 }
 
 func Execute() error {
@@ -53,6 +56,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 		pathEnv:         deps.PathEnv,
 		credentialStore: deps.CredentialStore,
 		apiFactory:      deps.APIFactory,
+		browserOpen:     deps.BrowserOpen,
 	}
 
 	cmd := &cobra.Command{
@@ -80,6 +84,7 @@ func NewRootCommandWithDeps(deps Deps) *cobra.Command {
 		newLogoutCommand(state),
 		newMCPCommand(state),
 		newModelIOCommand(state),
+		newSetupCommand(state),
 		newVersionCommand(state),
 		newWebhookCommand(state),
 	)

@@ -7,7 +7,9 @@
 - GitHub 仓库：`https://github.com/ZsTs119/patchxnote-agent`
 - npm 包：`patchxnote-agent`
 - 用户通用 MCP 配置命令：`npx -y patchxnote-agent@latest mcp config`
+- 用户 MCP 浏览器 OAuth 登录命令：`npx -y patchxnote-agent@latest mcp login`
 - 用户通用 MCP 启动命令：`npx -y patchxnote-agent@latest mcp serve`
+- 用户本地客户端 setup 命令：`npx -y patchxnote-agent@latest setup --client cursor`
 - 用户 fallback 安装命令：`npx -y patchxnote-agent install`
 - 本地二进制：`patchxnote`
 - MCP Server 命令：`patchxnote mcp serve`
@@ -18,6 +20,8 @@
 - GitHub Release workflow：`.github/workflows/release.yml`
 - macOS 安装冒烟 workflow：`.github/workflows/macos-install-smoke.yml`
 - 当前公测服务端：PatchXNote 公测 API，具体默认值以 `internal/config/config.go` 为准
+- 当前 `0.2.8` 本地候选能力：`mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client`。
+- 当前 `0.2.8` 本地验收事实：见 `docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md`。这只代表发布前本地候选验收通过，不代表 npm registry 包、单个编辑器 UI、或平台型客户端已经验收。
 
 历史兼容事实：
 
@@ -53,6 +57,7 @@
 - 系统原生钥匙串集成
 - 本地缓存和当前会话 search
 - GitHub Release / npm 发布链路
+- 本地 MCP 客户端 setup、配置备份、配置回滚和客户端 registry
 
 本仓库不负责：
 
@@ -102,6 +107,7 @@ V1 公测的服务端数据访问默认只允许只读能力。写能力必须�
 - MCP tools：`internal/mcp/tools.go`
 - 本地缓存/search：`internal/cache/*.go`
 - keychain：`internal/keychain/*.go`
+- MCP 客户端 setup：`internal/setup/*.go`
 - npm 安装壳：`packages/npm/bin/patchxnote-agent.js`
 
 新增 MCP tool 必须包含：
@@ -154,10 +160,57 @@ node packages/npm/test/install.test.js
 
 ```sh
 npx -y patchxnote-agent@latest mcp config
+npx -y patchxnote-agent@latest mcp status --output json
+npx -y patchxnote-agent@latest mcp logout --local-only --output json
 npx -y patchxnote-agent@latest mcp serve
 ```
 
-本地源码验证可以使用 `packages/npm/bin/patchxnote-agent.js` 和 `--from-local` 指向当前构建或 fake binary；发布后必须再用 npm registry 上的包验证。`mcp serve` 的 stdout 只能来自 Go binary 的 JSON-RPC，安装、版本探测、修复和错误诊断只能走 stderr。
+新增或修改客户端 setup 时还要跑：
+
+```sh
+go test ./internal/cli ./internal/setup
+node packages/npm/test/install.test.js
+node docs/mcp-clients/validate-clients.mjs
+patchxnote setup --client cursor --dry-run --print-config
+```
+
+setup 写入客户端配置必须满足：
+
+- 写入前有用户确认，或显式传入 `--yes`。
+- 修改前创建时间戳备份。
+- 只新增或替换 `patchxnote` MCP server，不删除其他 server。
+- JSONC 或未确认格式保持手动模式。
+- stdout/stderr 不输出手机号、验证码、access token、refresh token、OAuth code、PKCE verifier、webhook secret、完整转写或 provider payload。
+- 运行时提示 Windows、WSL、VS Code Remote、Dev Container、Linux headless 的 keychain 不共享风险。
+
+MCP 浏览器 OAuth 变更还要确认：
+
+- `patchxnote mcp login` 从 GoServer metadata 发现 authorize/token/revoke endpoint，并验证 issuer、origin 和 path prefix。
+- `setup --client <id>` 复用 `mcp login`，不再默认降级到终端手机 OTP。
+- `mcp serve` 不会在编辑器启动时打开浏览器；缺少 MCP OAuth 凭据时保留 legacy local MCP fallback。
+- MCP OAuth 凭据和 legacy Agent OTP 凭据分开保存；`patchxnote logout` 不删除 MCP OAuth，`patchxnote mcp logout` 不删除 legacy Agent OTP。
+- 远程 `/mcp` 当前按公测 GoServer base URL 下的 `/mcp` 验收；飞书/豆包/腾讯/WorkBuddy 平台型客户端必须等平台控制台真实验收后再改官网状态。
+
+涉及浏览器 OAuth、远程 `/mcp` 代理、或 npm wrapper MCP 子命令时，发布前必须至少做一次 Windows-native 本地真实验收，并记录到 `docs/evidence/`：
+
+```powershell
+$profile = "mcp-oauth-windows-acceptance"
+$baseUrl = "https://ws-lab.patch-x.cn/patchnote-test-api"
+patchxnote mcp logout --local-only --profile $profile --server-base-url $baseUrl
+patchxnote mcp login --profile $profile --server-base-url $baseUrl
+patchxnote mcp status --profile $profile --server-base-url $baseUrl --output json --verify
+```
+
+验收要点：
+
+- `mcp login` 默认必须尝试自动打开浏览器；只有 `--no-browser` 或 opener 失败时才打印手动 URL。
+- 用户只在 GoServer 浏览器页面输入手机号和 OTP，不能把 OTP、OAuth code、PKCE verifier、access token 或 refresh token 粘贴到终端、聊天、文档或 evidence。
+- 登录成功后至少通过 stdio MCP 跑 `initialize`、`tools/list`、`tools/call patchxnote_get_current_user`。
+- 如果验证账号内容读取能力，只记录工具名、平台、条数、字段名、字节数和通过/失败状态，不记录原文转写、完整模型响应、provider payload 或结构化结果正文。
+- Windows 桌面编辑器验收必须用 Windows 进程，因为 Windows Credential Manager、WSL/Linux Secret Service、VS Code Remote、Dev Container 和远端 Linux 主机默认不共享凭据。
+- WSL/headless 验收可以使用 `--no-browser`，但不能替代 Windows 桌面编辑器的自动浏览器打开验收。
+
+本地源码验证可以使用 `packages/npm/bin/patchxnote-agent.js` 和 `--from-local` 指向当前构建或 fake binary；发布后必须再用 npm registry 上的包验证。`mcp login/status/logout` 必须能被 npm wrapper 转发；`mcp serve` 的 stdout 只能来自 Go binary 的 JSON-RPC，安装、版本探测、修复和错误诊断只能走 stderr。
 
 WSL 环境目前可能没有 Linux Node；Windows npm 直接在 WSL UNC 路径下执行 `npm pack` 可能会把路径拼成重复的 `Ubuntu-22.04`。遇到这个问题时，把 `packages/npm` 复制到 Windows 临时目录再跑：
 
@@ -208,7 +261,8 @@ PY
 - `git status --short` 干净，或者只包含本次发布变更。
 - `packages/npm/package.json` 的 `version` 是目标版本。
 - README / 中文 README / npm README 中的 pin 版本同步。
-- README / 中文 README / npm README 中的通用 `mcp config`、`mcp serve`、`login` 命令同步。
+- README / 中文 README / npm README 中的通用 `mcp config`、`mcp login/status/logout`、`mcp serve`、legacy `login`、`setup --client` 命令同步。
+- 如本次涉及 setup，`docs/mcp-clients/clients.json`、官网规格和客户端详情页文案同步。
 - `.github/workflows/publish-npm.yml` 没有 `NODE_AUTH_TOKEN` 或 `NPM_TOKEN`。
 - `gh secret list --repo ZsTs119/patchxnote-agent` 不应包含 npm 发布 token。
 - npm 包 `patchxnote-agent` 的 Trusted Publisher 指向：
@@ -295,6 +349,8 @@ You cannot publish over the previously published versions: X.Y.Z.
 ```sh
 npm view patchxnote-agent version dist-tags.latest repository.url --registry https://registry.npmjs.org
 npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z mcp config
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z mcp status --output json
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z setup --client cursor --dry-run --print-config
 npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z install --dry-run --print-config
 ```
 
@@ -308,6 +364,20 @@ npx -y --registry https://registry.npmjs.org patchxnote-agent install --install-
 & (Join-Path $tmp "patchxnote.exe") version --output json
 Pop-Location
 ```
+
+Windows registry 包真实 MCP 验收：
+
+```powershell
+$tmp = Join-Path $env:TEMP ("patchxnote-agent-registry-" + [guid]::NewGuid().ToString())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+Push-Location $tmp
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z mcp login --profile mcp-oauth-registry-acceptance --server-base-url https://ws-lab.patch-x.cn/patchnote-test-api
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z mcp status --profile mcp-oauth-registry-acceptance --server-base-url https://ws-lab.patch-x.cn/patchnote-test-api --output json --verify
+npx -y --registry https://registry.npmjs.org patchxnote-agent@X.Y.Z mcp config
+Pop-Location
+```
+
+再用同一个 profile 通过 `mcp serve` 发送 JSON-RPC `initialize`、`tools/list` 和一个安全只读 `tools/call`。输出证据只保留协议版本、工具数量、通过/失败和脱敏账号投影，不保留 token、OTP、OAuth URL、原文内容或模型 payload。
 
 Linux Release 资产验证：
 
@@ -339,6 +409,9 @@ gh run list --repo ZsTs119/patchxnote-agent --workflow macos-install-smoke.yml -
 - Linux release-asset smoke 结果
 - macOS install/MCP smoke run id
 - npm provenance / OIDC 状态
+- setup dry-run / client registry 验证状态，如本次发布包含 setup
+- 本地候选浏览器 OAuth / 远程 MCP / npm wrapper `--from-local` 验收记录
+- registry 包浏览器 OAuth / `mcp status --verify` / `mcp serve` 验收记录
 - 剩余风险或人工操作
 
 ## 文档同步流程
@@ -348,11 +421,13 @@ gh run list --repo ZsTs119/patchxnote-agent --workflow macos-install-smoke.yml -
 1. `README.md`
 2. `README.zh-CN.md`
 3. `packages/npm/README.md`
-4. `SECURITY.md`，仅当安全范围或上报范围变化
-5. `docs/engineering-rules.md`，仅当长期工程规则变化
-6. `docs/plans/2026-08-06-agent-v1-mvp.md`，记录阶段事实和验收
-7. GoServer 飞书指南：`../patchxNoteGoServer/docs/integrations/patchnote-agent-feishu-guide.zh-CN.md`
-8. GoServer 飞书内部备注：`../patchxNoteGoServer/docs/integrations/patchnote-agent-feishu-guide-internal-notes.zh-CN.md`
+4. `docs/mcp-clients/clients.json`，仅当客户端状态、命令、官网卡片或平台状态变化
+5. `docs/mcp-clients/*.md`，仅当 setup/官网/客户端详情页变化
+6. `SECURITY.md`，仅当安全范围或上报范围变化
+7. `docs/engineering-rules.md`，仅当长期工程规则变化
+8. `docs/plans/2026-08-06-agent-v1-mvp.md`，记录阶段事实和验收
+9. GoServer 飞书指南：`../patchxNoteGoServer/docs/integrations/patchnote-agent-feishu-guide.zh-CN.md`
+10. GoServer 飞书内部备注：`../patchxNoteGoServer/docs/integrations/patchnote-agent-feishu-guide-internal-notes.zh-CN.md`
 
 GoServer 飞书指南文件名当前仍是 `patchnote-agent-feishu-guide.zh-CN.md`，这是历史文件名。不要只因为品牌改为 PatchXNote 就随意重命名，除非同步所有引用。
 
@@ -416,7 +491,7 @@ grep -RInE "access_token|refresh_token|Bearer |otp|sk_|protocol_mac|NPM_TOKEN|NO
 - Windows npm 在 WSL UNC 路径下可能解析路径错误。打包测试用 Windows 临时目录。
 - GoServer 没有存的字段，Agent 不能展示成工具能力。
 - MCP stdio 的 stdout 只能输出 JSON-RPC，日志和诊断必须走 stderr。
-- 用户宣传命令推荐不 pin 版本：`npx -y patchxnote-agent@latest mcp config` 和 `npx -y patchxnote-agent@latest login`。排障、回滚和绝对路径 fallback 文档可以 pin 具体版本。
+- 用户宣传命令推荐不 pin 版本：`npx -y patchxnote-agent@latest mcp login`、`npx -y patchxnote-agent@latest setup --client cursor`、`npx -y patchxnote-agent@latest mcp config` 和 legacy `npx -y patchxnote-agent@latest login`。排障、回滚和绝对路径 fallback 文档可以 pin 具体版本。
 
 ## 回滚策略
 
@@ -446,6 +521,11 @@ npm deprecate patchxnote-agent@BAD_VERSION "Please upgrade to X.Y.Z or newer."
 - [ ] `go test ./...` PASS
 - [ ] `scripts/e2e/mvp-smoke.sh` PASS
 - [ ] npm wrapper 测试 PASS，如本次涉及 installer
+- [ ] 客户端 registry 校验 PASS，如本次涉及 setup/官网
+- [ ] setup dry-run PASS，如本次涉及 setup
+- [ ] Windows-native 浏览器 OAuth 本地候选验收 PASS，如本次涉及 `mcp login`、远程 `/mcp` 或 npm wrapper MCP 子命令
+- [ ] npm wrapper `--from-local` 候选安装和 `mcp serve` 验收 PASS，如本次涉及 npm wrapper
+- [ ] setup 写配置 fixture 覆盖备份、冲突和回滚，如本次涉及 setup
 - [ ] npm `mcp config` 输出为纯 JSON
 - [ ] npm `mcp serve` stdout 未被安装日志、版本探测或错误诊断污染
 - [ ] README / 中文 README / npm README 已同步

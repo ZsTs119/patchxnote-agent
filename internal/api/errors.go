@@ -39,6 +39,39 @@ type errorBody struct {
 	Details   map[string]any `json:"details,omitempty"`
 }
 
+func parseOAuthOrAPIError(resp *http.Response) *Error {
+	apiErr := &Error{
+		StatusCode: resp.StatusCode,
+		RequestID:  resp.Header.Get("X-Request-ID"),
+		RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After")),
+	}
+
+	defer resp.Body.Close()
+	var raw map[string]json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		return apiErr
+	}
+	if value, ok := raw["error"]; ok {
+		var code string
+		if err := json.Unmarshal(value, &code); err == nil {
+			apiErr.Code = code
+			var description string
+			if err := json.Unmarshal(raw["error_description"], &description); err == nil {
+				apiErr.Message = description
+			}
+			return apiErr
+		}
+		var envelope errorEnvelope
+		if err := mapToStruct(raw, &envelope); err == nil {
+			apiErr.Code = envelope.Error.Code
+			apiErr.Message = envelope.Error.Message
+			apiErr.RequestID = envelope.Error.RequestID
+			apiErr.Retryable = envelope.Error.Retryable
+		}
+	}
+	return apiErr
+}
+
 func parseAPIError(resp *http.Response) *Error {
 	apiErr := &Error{
 		StatusCode: resp.StatusCode,
@@ -57,6 +90,14 @@ func parseAPIError(resp *http.Response) *Error {
 	apiErr.RequestID = envelope.Error.RequestID
 	apiErr.Retryable = envelope.Error.Retryable
 	return apiErr
+}
+
+func mapToStruct(input map[string]json.RawMessage, out any) error {
+	body, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, out)
 }
 
 func parseRetryAfter(value string) time.Duration {

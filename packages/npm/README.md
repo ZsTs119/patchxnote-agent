@@ -9,7 +9,23 @@ PatchXNote Agent is the local AI assistant connector for PatchXNote. It lets an 
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
-Connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent@latest mcp config, add the printed MCP JSON config to this AI assistant, then guide me through npx -y patchxnote-agent@latest login in the editor terminal. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+Connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent@latest setup --client <my-client>, keep MCP config secret-free, and guide me through login in the same runtime that will launch the MCP server. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+```
+
+Run setup for a supported local client:
+
+```sh
+npx -y patchxnote-agent@latest setup --client cursor
+npx -y patchxnote-agent@latest setup --client vscode
+npx -y patchxnote-agent@latest setup --client codex
+```
+
+Log in with browser OAuth, then check or clear the MCP login state:
+
+```sh
+npx -y patchxnote-agent@latest mcp login
+npx -y patchxnote-agent@latest mcp status
+npx -y patchxnote-agent@latest mcp logout --local-only
 ```
 
 Print the generic MCP config manually:
@@ -24,11 +40,17 @@ The generated config uses this universal local stdio MCP command:
 npx -y patchxnote-agent@latest mcp serve
 ```
 
-Log in from the editor terminal:
+The older terminal Agent login remains available for legacy local CLI/MCP fallback:
 
 ```sh
 npx -y patchxnote-agent@latest login
 ```
+
+`setup` reuses the same `mcp login` browser OAuth flow. The GoServer website owns phone OTP input; the local Agent owns the loopback callback, token exchange, secure storage, and stdio bridge. `mcp serve` never opens a browser during editor startup. It stores credentials in the OS-native keychain and keeps MCP config free of phone numbers, OTP codes, access tokens, and refresh tokens.
+
+P0 local client IDs: `vscode`, `cursor`, `codex`, `claude-code`, `claude-desktop`, `windsurf`, `trae`, `qoder`, `workbuddy`.
+
+Platform clients such as Feishu Aily, Doubao Work Partner, Tencent Agent Development Platform, and enterprise WorkBuddy need the hosted remote MCP gateway plus platform-console acceptance; local `npx` setup is for desktop and terminal clients.
 
 If a client rejects `npx` or times out during first binary download, run the stable absolute-path fallback:
 

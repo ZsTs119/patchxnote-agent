@@ -10,11 +10,16 @@ NPM_DRY_RUN="$TMP_DIR/npm-dry-run.txt"
 NPM_PACK_JSON="$TMP_DIR/npm-pack.json"
 NPM_PACK_LIST="$TMP_DIR/npm-pack-list.txt"
 NPM_MCP_CONFIG="$TMP_DIR/npm-mcp-config.json"
+NPM_MCP_LOGIN_HELP="$TMP_DIR/npm-mcp-login-help.txt"
 NPM_MCP_STDOUT="$TMP_DIR/npm-mcp-stdout.txt"
 NPM_MCP_STDERR="$TMP_DIR/npm-mcp-stderr.txt"
+NPM_SETUP_DRY_RUN="$TMP_DIR/npm-setup-dry-run.txt"
 NPM_PACKED_MCP_CONFIG="$TMP_DIR/npm-packed-mcp-config.json"
 NPM_PACKED_MCP_STDOUT="$TMP_DIR/npm-packed-mcp-stdout.txt"
 NPM_PACKED_MCP_STDERR="$TMP_DIR/npm-packed-mcp-stderr.txt"
+MCP_LOGIN_HELP="$TMP_DIR/mcp-login-help.txt"
+MCP_STATUS_JSON="$TMP_DIR/mcp-status.json"
+MCP_LOGOUT_JSON="$TMP_DIR/mcp-logout.json"
 NPM_WRAPPER="$ROOT/packages/npm/bin/patchxnote-agent.js"
 PACKAGE_VERSION="$(sed -n 's/.*"version": "\([^"]*\)".*/\1/p' "$ROOT/packages/npm/package.json" | head -1)"
 
@@ -22,7 +27,7 @@ mkdir -p "$BIN_DIR"
 
 cd "$ROOT"
 
-go build -o "$BIN" ./cmd/patchxnote
+go build -ldflags "-X github.com/ZsTs119/patchxnote-agent/internal/version.Version=$PACKAGE_VERSION" -o "$BIN" ./cmd/patchxnote
 
 NODE_BIN="${PATCHXNOTE_E2E_NODE:-}"
 if [ -z "$NODE_BIN" ] && command -v node >/dev/null 2>&1; then
@@ -149,6 +154,18 @@ func main() {
 		}
 		return
 	}
+	if len(args) >= 2 && args[0] == "mcp" && (args[1] == "login" || args[1] == "status" || args[1] == "logout") {
+		if len(args) >= 3 && args[2] == "--help" {
+			fmt.Println("fake mcp login help --callback-timeout")
+			return
+		}
+		fmt.Printf("fake mcp %s\n", args[1])
+		return
+	}
+	if len(args) >= 1 && args[0] == "setup" {
+		fmt.Println("fake setup")
+		return
+	}
 	fmt.Fprintf(os.Stderr, "unexpected args: %v\n", args)
 	os.Exit(2)
 }
@@ -164,6 +181,12 @@ GO
   printf "%s" "$fake_dir/patchxnote.exe"
 }
 
+MVP_HOME="$TMP_DIR/home"
+mkdir -p "$MVP_HOME"
+HOME="$MVP_HOME" PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true "$BIN" mcp login --help > "$MCP_LOGIN_HELP"
+HOME="$MVP_HOME" PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true PATCHXNOTE_PROFILE=mvp-smoke-empty "$BIN" --output json mcp status > "$MCP_STATUS_JSON"
+HOME="$MVP_HOME" PATCHXNOTE_AUTH_INSECURE_FILE_KEYCHAIN=true PATCHXNOTE_PROFILE=mvp-smoke-empty "$BIN" --output json mcp logout --local-only > "$MCP_LOGOUT_JSON"
+
 if [ -n "$NODE_BIN" ]; then
   "$NODE_BIN" "$(node_path "$NPM_WRAPPER")" install \
     --dry-run \
@@ -174,6 +197,46 @@ if [ -n "$NODE_BIN" ]; then
   "$NODE_BIN" "$(node_path "$NPM_WRAPPER")" mcp config > "$NPM_MCP_CONFIG"
   "$NODE_BIN" -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$(node_path "$NPM_MCP_CONFIG")"
   if grep -n -E "MCP config:|access_token|refresh_token|otp|sk_|protocol_mac" "$NPM_MCP_CONFIG"; then
+    exit 1
+  fi
+
+  if node_is_windows; then
+    LOGIN_FAKE_BINARY="$(build_windows_fake_patchxnote)"
+    LOGIN_FAKE_INSTALL="$(dirname "$LOGIN_FAKE_BINARY")/login install"
+    "$NODE_BIN" "$(node_path "$NPM_WRAPPER")" mcp login \
+      --from-local "$(node_path "$LOGIN_FAKE_BINARY")" \
+      --install-dir "$(node_path "$LOGIN_FAKE_INSTALL")" \
+      --help > "$NPM_MCP_LOGIN_HELP"
+  else
+    "$NODE_BIN" "$(node_path "$NPM_WRAPPER")" mcp login \
+      --from-local "$BIN" \
+      --install-dir "$TMP_DIR/npm-install-login" \
+      --help > "$NPM_MCP_LOGIN_HELP"
+  fi
+  grep -q "callback-timeout" "$NPM_MCP_LOGIN_HELP"
+  if grep -n -E "access_token|refresh_token|otp|sk_|protocol_mac" "$NPM_MCP_LOGIN_HELP"; then
+    exit 1
+  fi
+
+  if node_is_windows; then
+    SETUP_FAKE_BINARY="$(build_windows_fake_patchxnote)"
+    SETUP_FAKE_INSTALL="$(dirname "$SETUP_FAKE_BINARY")/setup install"
+    "$NODE_BIN" "$(node_path "$NPM_WRAPPER")" setup \
+      --from-local "$(node_path "$SETUP_FAKE_BINARY")" \
+      --install-dir "$(node_path "$SETUP_FAKE_INSTALL")" \
+      --client cursor \
+      --dry-run \
+      --print-config > "$NPM_SETUP_DRY_RUN"
+  else
+    "$NODE_BIN" "$(node_path "$NPM_WRAPPER")" setup \
+      --from-local "$BIN" \
+      --install-dir "$TMP_DIR/npm-install-setup" \
+      --client cursor \
+      --dry-run \
+      --print-config > "$NPM_SETUP_DRY_RUN"
+  fi
+  grep -q "setup" "$NPM_SETUP_DRY_RUN"
+  if grep -n -E "access_token|refresh_token|otp|sk_|protocol_mac" "$NPM_SETUP_DRY_RUN"; then
     exit 1
   fi
 
@@ -239,6 +302,7 @@ else
   printf "node unavailable; npm pack skipped\n" > "$NPM_PACK_JSON"
   printf "node unavailable; npm pack skipped\n" > "$NPM_PACK_LIST"
   printf "node unavailable; npm wrapper mcp config skipped\n" > "$NPM_MCP_CONFIG"
+  printf "node unavailable; npm wrapper mcp login help skipped\n" > "$NPM_MCP_LOGIN_HELP"
   printf "node unavailable; npm wrapper mcp serve skipped\n" > "$NPM_MCP_STDOUT"
   printf "" > "$NPM_MCP_STDERR"
   printf "node unavailable; packed npm wrapper mcp config skipped\n" > "$NPM_PACKED_MCP_CONFIG"
@@ -246,11 +310,20 @@ else
   printf "" > "$NPM_PACKED_MCP_STDERR"
 fi
 
+if [ -n "$NODE_BIN" ]; then
+  "$NODE_BIN" -e 'const fs=require("fs"); const s=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if (s.authenticated !== false || s.reason !== "no_credential") throw new Error(JSON.stringify(s));' "$(node_path "$MCP_STATUS_JSON")"
+  "$NODE_BIN" -e 'const fs=require("fs"); const s=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if (s.logged_out !== true) throw new Error(JSON.stringify(s));' "$(node_path "$MCP_LOGOUT_JSON")"
+else
+  grep -q '"authenticated": false' "$MCP_STATUS_JSON"
+  grep -q '"reason": "no_credential"' "$MCP_STATUS_JSON"
+  grep -q '"logged_out": true' "$MCP_LOGOUT_JSON"
+fi
+
 PATCHXNOTE_E2E_BINARY="$BIN" \
 PATCHXNOTE_E2E_ARTIFACT="$EVIDENCE" \
   go test -count=1 ./test/e2e -run TestMVP
 
-if grep -n -E "000000|access_token|refresh_token|protocol_mac|sk_|raw_audio|transcript|prompt|response_payload" "$NPM_DRY_RUN" "$NPM_PACK_JSON" "$NPM_PACK_LIST" "$NPM_MCP_CONFIG" "$NPM_MCP_STDOUT" "$NPM_MCP_STDERR" "$NPM_PACKED_MCP_CONFIG" "$NPM_PACKED_MCP_STDOUT" "$NPM_PACKED_MCP_STDERR" "$EVIDENCE" >/tmp/patchxnote-agent-e2e-scan.txt 2>/dev/null; then
+if grep -n -E "000000|access_token|refresh_token|authorization_code|protocol_mac|sk_|raw_audio|transcript|prompt|response_payload" "$MCP_LOGIN_HELP" "$MCP_STATUS_JSON" "$MCP_LOGOUT_JSON" "$NPM_DRY_RUN" "$NPM_SETUP_DRY_RUN" "$NPM_PACK_JSON" "$NPM_PACK_LIST" "$NPM_MCP_CONFIG" "$NPM_MCP_LOGIN_HELP" "$NPM_MCP_STDOUT" "$NPM_MCP_STDERR" "$NPM_PACKED_MCP_CONFIG" "$NPM_PACKED_MCP_STDOUT" "$NPM_PACKED_MCP_STDERR" "$EVIDENCE" >/tmp/patchxnote-agent-e2e-scan.txt 2>/dev/null; then
   cat /tmp/patchxnote-agent-e2e-scan.txt
   exit 1
 fi
