@@ -11,8 +11,8 @@
       "serve"
     ],
     "candidate_version": "0.2.8",
-    "candidate_evidence_state": "locally_smoked",
-    "candidate_evidence": "docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md"
+    "candidate_evidence_state": "published_smoked",
+    "candidate_evidence": "docs/evidence/2026-08-27-release-0.2.8.zh-CN.md"
   },
   "remote_gateway": {
     "planned_url": "https://ws-lab.patch-x.cn/patchnote-test-api/mcp",

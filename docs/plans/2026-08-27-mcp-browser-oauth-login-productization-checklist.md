@@ -77,7 +77,8 @@ Passed real Windows local acceptance:
 
 Still not accepted:
 
-- [ ] Published npm registry package acceptance, because `0.2.8` has not been published yet.
+- [x] Published npm registry package acceptance for install/config/status/serve, using `patchxnote-agent@0.2.8`.
+- [ ] Fresh published-package browser OAuth login success on a clean profile. The published package generated/opened the authorization path, but the callback timed out before the user completed browser authorization.
 - [ ] Real VS Code/Cursor/Codex/Claude/Windsurf/Trae/Qoder/WorkBuddy client UI acceptance.
 - [ ] Feishu Aily / Doubao Work Partner / Tencent Agent Platform / enterprise WorkBuddy hosted platform-console acceptance.
 - [ ] WSL automatic browser-open acceptance. WSL can use `--no-browser`, but it does not replace Windows desktop editor acceptance because the credential stores are separate.
@@ -85,6 +86,7 @@ Still not accepted:
 Evidence:
 
 - `docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md`
+- `docs/evidence/2026-08-27-release-0.2.8.zh-CN.md`
 
 ## Confirmed Decisions
 
