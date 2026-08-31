@@ -46,11 +46,11 @@ npx -y patchxnote-agent@latest mcp config
 | 数据访问 | 查看账号、录音卡、额度、记录列表、AI 整理结果。 |
 | Webhook | 本地配置别名，手动发送到飞书、钉钉或其他 webhook。 |
 | 安全边界 | 服务端数据只读；原始音频、硬件、支付和 Admin API 不开放。 |
-| 包状态 | 下一版 beta 源码态 `0.2.8`，默认连接 PatchXNote 公测 API。 |
+| 包状态 | 当前公测版本 `0.2.8`，默认连接 PatchXNote 公测 API。 |
 
 ## 功能
 
-| 能力 | `0.2.8` 源码态是否支持 | 说明 |
+| 能力 | `0.2.8` 是否支持 | 说明 |
 | --- | --- | --- |
 | 手机验证码 Agent 登录 | 支持 | 使用 Agent 专用登录态，不影响 App/PC 的 mobile/desktop 安装位。 |
 | Agent 会话自动刷新 | 支持 | 从本机安全钥匙串自动轮换 Agent access token 和 refresh token。 |
@@ -76,7 +76,7 @@ npx -y patchxnote-agent@latest mcp config
 - 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
 
-> `0.2.8` 是下一版公测 beta 源码态。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
+> `0.2.8` 是当前公测版本。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
 
 ## 快速开始
 
@@ -129,7 +129,7 @@ npx -y patchxnote-agent@latest install --print-config
 如果需要固定当前已发布公测版本用于排障或回滚：
 
 ```sh
-npx -y patchxnote-agent@0.2.7 install --print-config
+npx -y patchxnote-agent@0.2.8 install --print-config
 ```
 
 公测版本默认连接 PatchXNote 公测 API：
@@ -225,7 +225,7 @@ MCP 配置中不会保存 access token、refresh token、验证码、手机号�
 
 ![PatchXNote Agent 工具能力](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.8` 源码态仍暴露和当前本地服务一致的 **19 个本地 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
+PatchXNote Agent `0.2.8` 暴露和当前本地服务一致的 **19 个本地 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
 
 ### 账号和记录查询
 
@@ -361,7 +361,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 ## 当前限制
 
-`0.2.8` 是下一版 beta 源码态。
+`0.2.8` 是当前公测版本。
 
 - 默认服务端指向 PatchXNote 公测 API，不代表生产 SLA。
 - `mcp serve` 在编辑器启动时不会自动弹浏览器。请先运行 `mcp login`，或让 `setup --client <id>` 复用同一套 OAuth 流程。

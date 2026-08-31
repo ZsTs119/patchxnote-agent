@@ -46,11 +46,11 @@ npx -y patchxnote-agent@latest mcp config
 | Data access | Shows account, recorder cards, quota, records, and AI-generated results. |
 | Webhook | Locally configures named targets and manually sends to Feishu, DingTalk, or another webhook. |
 | Safety boundary | Server data is read-only; raw audio, hardware, payment, and Admin APIs are not exposed. |
-| Package status | Next beta source for `0.2.8`, defaulting to the PatchXNote public beta API. |
+| Package status | Current public beta release `0.2.8`, defaulting to the PatchXNote public beta API. |
 
 ## Features
 
-| Capability | Available in `0.2.8` source | Notes |
+| Capability | Available in `0.2.8` | Notes |
 | --- | --- | --- |
 | Phone OTP Agent login | Yes | Uses Agent-specific server auth, not App/PC mobile or desktop installation slots. |
 | Agent session refresh | Yes | Automatically rotates Agent access and refresh tokens from the local keychain. |
@@ -76,7 +76,7 @@ npx -y patchxnote-agent@latest mcp config
 - A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.2.8` is the next public beta source state. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
+> `0.2.8` is the current public beta release. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
 ## Quickstart
 
@@ -129,7 +129,7 @@ npx -y patchxnote-agent@latest install --print-config
 To pin the current published public beta version for troubleshooting or rollback:
 
 ```sh
-npx -y patchxnote-agent@0.2.7 install --print-config
+npx -y patchxnote-agent@0.2.8 install --print-config
 ```
 
 The public beta build defaults to the PatchXNote public beta API:
@@ -225,7 +225,7 @@ MCP config never contains access tokens, refresh tokens, OTP codes, phone number
 
 ![PatchXNote Agent tools](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.8` source still exposes the same **19 local MCP tools** as the current public local server. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
+PatchXNote Agent `0.2.8` exposes the same **19 local MCP tools** as the current public local server. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
 
 ### Account And Record Lookup
 
@@ -361,7 +361,7 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.2.8` is the next beta source state.
+`0.2.8` is the current public beta release.
 
 - The default server points to the PatchXNote public beta API and does not imply a production SLA.
 - `mcp serve` never opens a browser during editor startup. Run `mcp login` first, or let `setup --client <id>` reuse that same OAuth flow.
