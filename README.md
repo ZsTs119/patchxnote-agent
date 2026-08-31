@@ -41,8 +41,10 @@ npx -y patchxnote-agent@latest mcp config
 | Area | Agent V1 behavior |
 | --- | --- |
 | Runtime | Installs or verifies a versioned native `patchxnote` binary through an npm wrapper. |
-| AI connection | Runs a local stdio MCP server with `npx -y patchxnote-agent@latest mcp serve` or the absolute `patchxnote mcp serve` fallback. |
-| Login | MCP browser OAuth is available through `patchxnote mcp login`; terminal `patchxnote login` remains for the legacy local Agent path. |
+| Browser MCP login | `patchxnote mcp login` opens the PatchXNote OAuth page, receives the loopback callback, and stores MCP connector credentials in the OS-native keychain. |
+| Terminal CLI login | `patchxnote login` remains available for terminal-only use and the legacy local Agent path. |
+| Local MCP service | `patchxnote mcp serve` runs the local stdio MCP server for editors and desktop agents. |
+| Hosted MCP gateway | GoServer-hosted `/mcp` is the remote/platform path; platform-console acceptance is tracked separately. |
 | Data access | Shows account, recorder cards, quota, records, and AI-generated results. |
 | Webhook | Locally configures named targets and manually sends to Feishu, DingTalk, or another webhook. |
 | Safety boundary | Server data is read-only; raw audio, hardware, payment, and Admin APIs are not exposed. |
@@ -52,9 +54,11 @@ npx -y patchxnote-agent@latest mcp config
 
 | Capability | Available in `0.2.8` | Notes |
 | --- | --- | --- |
-| Phone OTP Agent login | Yes | Uses Agent-specific server auth, not App/PC mobile or desktop installation slots. |
+| Browser OAuth MCP login | Yes | `patchxnote mcp login` opens the PatchXNote authorization page, completes phone OTP on the GoServer page, then stores MCP credentials locally. |
+| Terminal phone OTP Agent login | Yes | `patchxnote login` keeps the terminal login path for CLI-first users and fallback environments. |
 | Agent session refresh | Yes | Automatically rotates Agent access and refresh tokens from the local keychain. |
 | Local MCP server | Yes | Lets MCP-capable AI assistants call PatchXNote Agent. |
+| Hosted remote MCP gateway | Beta | Used for platform agents that cannot execute local `npx`; each platform still needs real console acceptance. |
 | Local client setup wizard | Yes | `patchxnote setup --client <id>` plans, confirms, backs up, writes supported client config, and falls back to manual instructions where needed. |
 | Account, recorder cards, quota | Yes | Shows account status, recorder-card list, quota, and current-month model usage. |
 | Record list and search | Yes | Lists readable record entries by `mobile` or `desktop`, including saved results and model-generated outputs, then searches basics cached in the current MCP session. |
@@ -78,6 +82,17 @@ npx -y patchxnote-agent@latest mcp config
 
 > `0.2.8` is the current public beta release. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
+## Login And MCP Modes
+
+PatchXNote Agent now has two productized login surfaces and two MCP service shapes:
+
+| Mode | Entry | Use when | Notes |
+| --- | --- | --- | --- |
+| Browser MCP login | `npx -y patchxnote-agent@latest mcp login` | The user is installing PatchXNote into a desktop editor or local MCP host. | Opens a browser to the PatchXNote authorization page, completes phone OTP there, receives the loopback callback, exchanges the code, and stores credentials in the OS keychain. |
+| Terminal CLI login | `npx -y patchxnote-agent@latest login` | The user prefers a terminal-only flow, is on a headless runtime, or needs the legacy local Agent fallback. | Keeps the phone OTP conversation inside the terminal. Do not paste OTP codes or tokens into an AI chat. |
+| Local MCP service | `npx -y patchxnote-agent@latest mcp serve` | VS Code, Cursor, Codex, Claude Desktop, Windsurf, Trae, Qoder, WorkBuddy, and other local stdio MCP clients. | MCP config stays secret-free. `mcp serve` does not open a browser during editor startup. |
+| Hosted remote MCP gateway | `https://ws-lab.patch-x.cn/patchnote-test-api/mcp` | Feishu Aily, Doubao Work Partner, Tencent Agent Development Platform, enterprise WorkBuddy, and other platform clients that cannot run local commands. | Server route is the platform-facing MCP shape; real platform-console acceptance is still tracked separately. |
+
 ## Quickstart
 
 ![PatchXNote Agent quickstart](./docs/assets/patchxnote-agent-quickstart.png)
@@ -91,7 +106,7 @@ npx -y patchxnote-agent@latest setup --client codex
 npx -y patchxnote-agent@latest setup --client workbuddy
 ```
 
-Setup checks the MCP browser OAuth login, keeps credentials in the OS keychain, writes or prints the client MCP configuration, and creates a backup before modifying supported config files.
+Setup checks the MCP browser OAuth login, keeps credentials in the OS keychain, writes or prints the client MCP configuration, and creates a backup before modifying supported config files. This is the recommended path for local editor integrations.
 
 You can also log in explicitly before adding the client:
 
@@ -114,7 +129,7 @@ npx -y patchxnote-agent@latest mcp serve
 
 On first start, the npm wrapper downloads the matching `patchxnote` binary from GitHub Releases, verifies `checksums.txt`, installs it into a user-writable directory, and then delegates to `patchxnote mcp serve`. MCP stdout stays reserved for JSON-RPC.
 
-The older terminal Agent login remains available only for legacy local CLI/MCP fallback:
+The terminal Agent login remains available for terminal-only users and legacy local CLI/MCP fallback:
 
 ```sh
 npx -y patchxnote-agent@latest login
@@ -275,15 +290,24 @@ AI result tools are explicit inspection tools. They may expose source text or AI
 
 ## CLI Commands
 
-Install and login:
+Browser MCP login and local MCP service:
 
 ```sh
 patchxnote version
+patchxnote mcp login
+patchxnote mcp status
+patchxnote mcp config
+patchxnote setup --client cursor
+patchxnote mcp serve
+patchxnote mcp logout
+```
+
+Terminal CLI login:
+
+```sh
 patchxnote login
 patchxnote auth status
-patchxnote setup --client cursor
 patchxnote logout
-patchxnote mcp serve
 ```
 
 List AI processing runs and export results:
@@ -323,8 +347,11 @@ Useful global flags:
 The npm package is a small installer/launcher wrapper:
 
 ```sh
+npx -y patchxnote-agent@latest mcp login
+npx -y patchxnote-agent@latest mcp status
 npx -y patchxnote-agent@latest mcp config
 npx -y patchxnote-agent@latest mcp serve
+npx -y patchxnote-agent@latest mcp logout --local-only
 npx -y patchxnote-agent@latest login
 npx -y patchxnote-agent@latest setup --client cursor
 npx -y patchxnote-agent@latest install

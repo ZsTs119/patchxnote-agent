@@ -20,6 +20,15 @@ npx -y patchxnote-agent@latest setup --client vscode
 npx -y patchxnote-agent@latest setup --client codex
 ```
 
+PatchXNote Agent currently exposes two login surfaces and two MCP service shapes:
+
+| Mode | Entry | Use when |
+| --- | --- | --- |
+| Browser MCP login | `npx -y patchxnote-agent@latest mcp login` | Recommended for desktop editors and local MCP hosts. |
+| Terminal CLI login | `npx -y patchxnote-agent@latest login` | Terminal-only users, headless runtimes, or the legacy local Agent path. |
+| Local MCP service | `npx -y patchxnote-agent@latest mcp serve` | VS Code, Cursor, Codex, Claude Desktop, Windsurf, Trae, Qoder, WorkBuddy, and other stdio MCP clients. |
+| Hosted remote MCP gateway | `https://ws-lab.patch-x.cn/patchnote-test-api/mcp` | Feishu Aily, Doubao Work Partner, Tencent Agent Development Platform, enterprise WorkBuddy, and other platform clients that cannot run local commands. |
+
 Log in with browser OAuth, then check or clear the MCP login state:
 
 ```sh
@@ -46,7 +55,7 @@ The older terminal Agent login remains available for legacy local CLI/MCP fallba
 npx -y patchxnote-agent@latest login
 ```
 
-`setup` reuses the same `mcp login` browser OAuth flow. The GoServer website owns phone OTP input; the local Agent owns the loopback callback, token exchange, secure storage, and stdio bridge. `mcp serve` never opens a browser during editor startup. It stores credentials in the OS-native keychain and keeps MCP config free of phone numbers, OTP codes, access tokens, and refresh tokens.
+`setup` reuses the same `mcp login` browser OAuth flow. The GoServer website owns phone OTP input; the local Agent owns the loopback callback, token exchange, secure storage, and stdio bridge. `mcp serve` never opens a browser during editor startup. It stores credentials in the OS-native keychain and keeps MCP config free of phone numbers, OTP codes, access tokens, refresh tokens, webhook secrets, and base URL by default.
 
 P0 local client IDs: `vscode`, `cursor`, `codex`, `claude-code`, `claude-desktop`, `windsurf`, `trae`, `qoder`, `workbuddy`.
 

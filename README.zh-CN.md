@@ -41,8 +41,10 @@ npx -y patchxnote-agent@latest mcp config
 | 维度 | Agent V1 行为 |
 | --- | --- |
 | 运行方式 | 通过 npm 安装壳下载、安装或校验版本化的原生 `patchxnote` 二进制。 |
-| 连接 AI | 通过 `npx -y patchxnote-agent@latest mcp serve` 或绝对路径 fallback 启动本地 stdio MCP server。 |
-| 登录 | MCP 浏览器 OAuth 通过 `patchxnote mcp login` 完成；终端 `patchxnote login` 只保留给旧的本地 Agent 路径。 |
+| 浏览器弹窗登录 | `patchxnote mcp login` 打开 PatchXNote OAuth 授权页，接收本机 loopback callback，并把 MCP 连接凭据保存到系统安全存储。 |
+| CLI 终端登录 | `patchxnote login` 保留给终端优先使用场景和旧的本地 Agent 路径。 |
+| 本地 MCP 服务 | `patchxnote mcp serve` 启动本地 stdio MCP server，供编辑器和桌面 Agent 调用。 |
+| 远程 MCP 网关 | GoServer 托管的 `/mcp` 是平台型智能体接入路径；平台控制台真实验收单独跟踪。 |
 | 数据访问 | 查看账号、录音卡、额度、记录列表、AI 整理结果。 |
 | Webhook | 本地配置别名，手动发送到飞书、钉钉或其他 webhook。 |
 | 安全边界 | 服务端数据只读；原始音频、硬件、支付和 Admin API 不开放。 |
@@ -52,9 +54,11 @@ npx -y patchxnote-agent@latest mcp config
 
 | 能力 | `0.2.8` 是否支持 | 说明 |
 | --- | --- | --- |
-| 手机验证码 Agent 登录 | 支持 | 使用 Agent 专用登录态，不影响 App/PC 的 mobile/desktop 安装位。 |
+| 浏览器 OAuth MCP 登录 | 支持 | `patchxnote mcp login` 打开 PatchXNote 授权页，在 GoServer 页面完成手机号验证码登录，并把 MCP 凭据保存到本机。 |
+| 终端手机号验证码 Agent 登录 | 支持 | `patchxnote login` 保留给 CLI 优先用户和 fallback 环境。 |
 | Agent 会话自动刷新 | 支持 | 从本机安全钥匙串自动轮换 Agent access token 和 refresh token。 |
 | 本地 MCP server | 支持 | 让支持 MCP 的 AI 助手调用 PatchXNote Agent。 |
+| 远程 MCP 网关 | 公测 | 给不能执行本地 `npx` 的平台型智能体使用；每个平台仍需要单独做控制台验收。 |
 | 本地客户端 setup 向导 | 支持 | `patchxnote setup --client <id>` 会规划、确认、备份并写入已支持客户端配置；不安全或未验收的客户端返回手动说明。 |
 | 账号、录音卡、额度 | 支持 | 查看当前账号状态、录音卡列表、额度和当月模型用量。 |
 | 记录列表和搜索 | 支持 | 按 `mobile` 或 `desktop` 查看可读记录入口，包括已保存结果和模型整理输出，也可以搜索当前会话已缓存的记录基础信息。 |
@@ -78,6 +82,17 @@ npx -y patchxnote-agent@latest mcp config
 
 > `0.2.8` 是当前公测版本。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
 
+## 登录和 MCP 形态
+
+PatchXNote Agent 现在有两种正式登录入口、两种 MCP 服务形态：
+
+| 形态 | 入口 | 适用场景 | 说明 |
+| --- | --- | --- | --- |
+| 浏览器弹窗登录 | `npx -y patchxnote-agent@latest mcp login` | 用户正在把 PatchXNote 接入桌面编辑器或本地 MCP Host。 | 打开浏览器进入 PatchXNote 授权页，在网页完成手机号验证码登录，Agent 接收本机 loopback callback、换取登录态，并保存到系统安全存储。 |
+| CLI 终端登录 | `npx -y patchxnote-agent@latest login` | 用户希望全程在终端操作、运行在 headless 环境，或需要旧的本地 Agent fallback。 | 手机号验证码输入留在终端里完成。不要把验证码、access token 或 refresh token 粘贴到 AI 对话里。 |
+| 本地 MCP 服务 | `npx -y patchxnote-agent@latest mcp serve` | VS Code、Cursor、Codex、Claude Desktop、Windsurf、Trae、Qoder、WorkBuddy 等本地 stdio MCP 客户端。 | MCP 配置保持无密钥；编辑器启动 `mcp serve` 时不会再弹浏览器。 |
+| 远程 MCP 网关 | `https://ws-lab.patch-x.cn/patchnote-test-api/mcp` | 飞书 Aily、豆包工作伙伴、腾讯 Agent 平台、企业版 WorkBuddy 等不能执行本地命令的平台型客户端。 | 这是服务端托管的 MCP 接入形态；平台控制台真实验收仍单独跟踪。 |
+
 ## 快速开始
 
 ![三步接入 PatchXNote Agent](./docs/assets/patchxnote-agent-quickstart.png)
@@ -91,7 +106,7 @@ npx -y patchxnote-agent@latest setup --client codex
 npx -y patchxnote-agent@latest setup --client workbuddy
 ```
 
-setup 会检查 MCP 浏览器 OAuth 登录、把凭据保存在 OS 安全存储里、写入或打印客户端 MCP 配置，并且在修改已支持配置文件前创建备份。
+setup 会检查 MCP 浏览器 OAuth 登录、把凭据保存在 OS 安全存储里、写入或打印客户端 MCP 配置，并且在修改已支持配置文件前创建备份。这是本地编辑器接入的推荐路径。
 
 你也可以先显式登录再添加客户端：
 
@@ -114,7 +129,7 @@ npx -y patchxnote-agent@latest mcp serve
 
 第一次启动时，npm wrapper 会从 GitHub Releases 下载匹配平台的 `patchxnote` 二进制，校验 `checksums.txt`，安装到用户可写目录，然后委托给 `patchxnote mcp serve`。MCP 的 stdout 仍然只保留给 JSON-RPC。
 
-旧的终端 Agent 登录仍可用于 legacy 本地 CLI/MCP fallback：
+终端 Agent 登录仍可用于终端优先用户和 legacy 本地 CLI/MCP fallback：
 
 ```sh
 npx -y patchxnote-agent@latest login
@@ -275,15 +290,24 @@ AI 整理结果工具是显式查看能力。它可能返回当前登录用户�
 
 ## CLI 命令
 
-安装和登录：
+浏览器 MCP 登录和本地 MCP 服务：
 
 ```sh
 patchxnote version
+patchxnote mcp login
+patchxnote mcp status
+patchxnote mcp config
+patchxnote setup --client cursor
+patchxnote mcp serve
+patchxnote mcp logout
+```
+
+CLI 终端登录：
+
+```sh
 patchxnote login
 patchxnote auth status
-patchxnote setup --client cursor
 patchxnote logout
-patchxnote mcp serve
 ```
 
 查看 AI 整理记录和导出结果：
@@ -323,8 +347,11 @@ patchxnote webhook remove "产品群 飞书"
 npm 包本身是轻量安装/启动壳：
 
 ```sh
+npx -y patchxnote-agent@latest mcp login
+npx -y patchxnote-agent@latest mcp status
 npx -y patchxnote-agent@latest mcp config
 npx -y patchxnote-agent@latest mcp serve
+npx -y patchxnote-agent@latest mcp logout --local-only
 npx -y patchxnote-agent@latest login
 npx -y patchxnote-agent@latest setup --client cursor
 npx -y patchxnote-agent@latest install
