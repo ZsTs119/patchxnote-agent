@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-08-27",
+  "reviewed_at": "2026-08-28",
   "default_server": {
     "name": "patchxnote",
     "command": "npx",
@@ -31,7 +31,7 @@
       "card_group": "global-local",
       "support_status": "supported",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -75,7 +75,7 @@
       "card_group": "global-local",
       "support_status": "supported",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -120,7 +120,7 @@
       "card_group": "global-local",
       "support_status": "supported",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -149,7 +149,9 @@
         "cli_command": "codex mcp add patchxnote -- npx -y patchxnote-agent@latest mcp serve"
       },
       "references": [
-        "https://learn.chatgpt.com/docs/extend/mcp"
+        "https://developers.openai.com/codex/mcp",
+        "https://developers.openai.com/codex/config-reference",
+        "https://developers.openai.com/codex/config-basic"
       ]
     },
     {
@@ -163,7 +165,7 @@
       "card_group": "global-local",
       "support_status": "manual",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -191,7 +193,7 @@
         "cli_command": "claude mcp add patchxnote -- npx -y patchxnote-agent@latest mcp serve"
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/claude-code/mcp"
+        "https://code.claude.com/docs/en/mcp"
       ]
     },
     {
@@ -205,7 +207,7 @@
       "card_group": "global-local",
       "support_status": "supported",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -232,8 +234,9 @@
         ]
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/claude-code/desktop",
-        "https://docs.anthropic.com/en/docs/claude-code/mcp"
+        "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-local-servers",
+        "https://www.anthropic.com/engineering/desktop-extensions",
+        "https://code.claude.com/docs/en/mcp"
       ]
     },
     {
@@ -247,7 +250,7 @@
       "card_group": "global-local",
       "support_status": "supported",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -289,7 +292,7 @@
       "card_group": "domestic-local",
       "support_status": "manual",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -333,7 +336,7 @@
       "card_group": "global-local",
       "support_status": "manual",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -364,7 +367,8 @@
       },
       "references": [
         "https://docs.qoder.com/user-guide/deeplink",
-        "https://docs.qoder.com/user-guide/chat/model-context-protocol"
+        "https://docs.qoder.com/user-guide/chat/model-context-protocol",
+        "https://docs.qoder.com/troubleshooting/mcp-common-issue"
       ]
     },
     {
@@ -378,7 +382,7 @@
       "card_group": "domestic-local",
       "support_status": "manual",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -422,7 +426,7 @@
       "card_group": "domestic-platform",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": false,
         "streamable_http": true,
@@ -450,7 +454,8 @@
       },
       "references": [
         "https://www.feishu.cn/content/article/7576921890476788922",
-        "https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/mcp_integration/mcp_introduction?lang=zh-CN"
+        "https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/mcp_integration/mcp_introduction?lang=zh-CN",
+        "https://open.feishu.cn/document/mcp_open_tools/developers-call-remote-mcp-server?lang=zh-CN"
       ]
     },
     {
@@ -464,7 +469,7 @@
       "card_group": "domestic-platform",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": false,
         "streamable_http": true,
@@ -491,7 +496,9 @@
         ]
       },
       "references": [
-        "https://cloud.tencent.com/document/product/1759/117855"
+        "https://cloud.tencent.com/document/product/1759/117855",
+        "https://intl.cloud.tencent.com/document/product/1254/69956",
+        "https://github.com/TencentCloudADP"
       ]
     },
     {
@@ -505,7 +512,7 @@
       "card_group": "global-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -532,6 +539,7 @@
         ]
       },
       "references": [
+        "https://www.jetbrains.com/help/ai-assistant/settings-reference-mcp.html",
         "https://www.jetbrains.com/help/ai-assistant/mcp.html"
       ]
     },
@@ -546,7 +554,7 @@
       "card_group": "global-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": false,
@@ -586,7 +594,7 @@
       "card_group": "global-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": false,
@@ -627,7 +635,7 @@
       "card_group": "domestic-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": false,
@@ -653,7 +661,8 @@
         ]
       },
       "references": [
-        "https://qwenlm.github.io/qwen-code-docs/en/developers/tools/mcp-server/"
+        "https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/mcp.md",
+        "https://qwenlm.github.io/qwen-code-docs/en/users/overview/"
       ]
     },
     {
@@ -668,7 +677,7 @@
       "card_group": "domestic-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -694,7 +703,8 @@
         ]
       },
       "references": [
-        "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html"
+        "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html",
+        "https://moonshotai.github.io/kimi-cli/en/customization/mcp.html"
       ]
     },
     {
@@ -708,7 +718,7 @@
       "card_group": "global-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": false,
@@ -734,7 +744,9 @@
         ]
       },
       "references": [
-        "https://opencode.ai/docs/tools/"
+        "https://opencode.ai/docs/tools/",
+        "https://opencode.ai/docs/config/",
+        "https://opencode.ai/docs/cli/"
       ]
     },
     {
@@ -748,7 +760,7 @@
       "card_group": "global-local",
       "support_status": "planned",
       "evidence_state": "researched",
-      "reviewed_at": "2026-08-27",
+      "reviewed_at": "2026-08-28",
       "transports": {
         "stdio": true,
         "streamable_http": true,
@@ -775,7 +787,10 @@
         ]
       },
       "references": [
-        "https://code.visualstudio.com/docs/agent-customization/mcp-servers"
+        "https://docs.cline.bot/mcp/mcp-overview",
+        "https://docs.continue.dev/customize/mcp-tools",
+        "https://docs.continue.dev/customize/deep-dives/mcp",
+        "https://roocodeinc.github.io/Roo-Code/features/mcp/using-mcp-in-roo/"
       ]
     }
   ]

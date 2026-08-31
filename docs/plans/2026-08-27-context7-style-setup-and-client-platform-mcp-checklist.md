@@ -506,7 +506,8 @@ Files:
 
 - Create or modify in the website repo once confirmed.
 - If website source is not yet chosen, create interim specs:
-  - `docs/mcp-clients/website-page-spec.zh-CN.md`
+  - `docs/mcp-clients/website/README.zh-CN.md`
+  - `docs/mcp-clients/website/01-information-architecture.zh-CN.md`
   - `docs/mcp-clients/client-detail-copy.zh-CN.md`
 
 Checklist:
