@@ -60,7 +60,7 @@ PatchXNote MCP 是 Hybrid MCP distribution：本地用 npm stdio launcher + brow
 当前状态：
 
 - `patchnote-agent` 已产品化正式 `mcp login/status/logout`，替代临时 Node 验收脚本。
-- `patchxnote-agent@0.2.8` 已发布到 npm 和 GitHub Releases。
+- `patchxnote-agent@0.2.9` 已发布到 npm 和 GitHub Releases。
 - Windows 已验证旧可用 profile 下的发布包 install/config/status/serve 和远程 `/mcp` 代理调用。
 - Fresh registry 包浏览器登录仍需重测：之前一次因为用户未在 10 分钟窗口内完成，另一次疑似使用旧授权 tab 或旧 callback 端口，未保存到 clean profile。
 
@@ -68,8 +68,8 @@ PatchXNote MCP 是 Hybrid MCP distribution：本地用 npm stdio launcher + brow
 
 - `README.md`
 - `README.zh-CN.md`
-- `docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md`
-- `docs/evidence/2026-08-27-release-0.2.8.zh-CN.md`
+- `docs/evidence/2026-09-01-mcp-oauth-local-acceptance.zh-CN.md`
+- `docs/evidence/2026-09-01-release-0.2.9.zh-CN.md`
 - `docs/plans/2026-08-27-mcp-browser-oauth-login-productization-checklist.md`
 
 ## 远程 MCP 事实
@@ -227,7 +227,7 @@ https://mcp.patchxnote.com/mcp
 ## 后续需要做到什么
 
 - [ ] 官网上线前：GoServer `web/` 提供产品化客户端选择页和详情页。
-- [ ] Fresh published package OAuth：用 `patchxnote-agent@0.2.8` clean profile 完成浏览器登录、callback 成功页、`mcp status --verify`、`mcp serve` 工具调用。
+- [ ] Fresh published package OAuth：用 `patchxnote-agent@0.2.9` clean profile 完成浏览器登录、callback 成功页、`mcp status --verify`、`mcp serve` 工具调用。
 - [ ] VS Code：验证 `setup --client vscode`、manual `.vscode/mcp.json`、用户 profile config、`code --add-mcp` 至少一种真实路径。
 - [ ] Cursor：验证 setup command 和 deeplink 两条路径。
 - [ ] Codex：验证 `codex mcp add` / `~/.codex/config.toml`，后续评估 plugin 发现入口。

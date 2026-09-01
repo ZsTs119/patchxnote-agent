@@ -20,10 +20,10 @@
 - GitHub Release workflow：`.github/workflows/release.yml`
 - macOS 安装冒烟 workflow：`.github/workflows/macos-install-smoke.yml`
 - 当前公测服务端：PatchXNote 公测 API，具体默认值以 `internal/config/config.go` 为准
-- 当前已发布版本：`0.2.8`
-- 当前 `0.2.8` 能力：`mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client`。
-- 当前 `0.2.8` 发布证据：见 `docs/evidence/2026-08-27-release-0.2.8.zh-CN.md`。
-- 当前 `0.2.8` 本地候选验收事实：见 `docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md`。这只代表发布前本地候选验收通过，不代表单个编辑器 UI 或平台型客户端已经验收。
+- 当前已发布版本：`0.2.9`
+- 当前 `0.2.9` 能力：`mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client`，以及浏览器 loopback 登录结果页优化。
+- 当前 `0.2.9` 发布证据：见 `docs/evidence/2026-09-01-release-0.2.9.zh-CN.md`。
+- 当前 `0.2.9` 本地候选验收事实：见 `docs/evidence/2026-09-01-mcp-oauth-local-acceptance.zh-CN.md`。这只代表发布前本地候选验收通过，不代表单个编辑器 UI 或平台型客户端已经验收。
 
 历史兼容事实：
 
