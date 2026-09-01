@@ -21,7 +21,7 @@ PatchXNote 服务端数据访问仍是只读的。Agent 不操作硬件绑定、
 将以下一句话发送给支持本地命令执行的 AI 助手即可：
 
 ```text
-请在当前本地 MCP 客户端所在的同一个运行时帮我安装 PatchXNote Agent：执行 npx -y patchxnote-agent@latest setup --client <我的客户端>，引导我在浏览器完成登录授权，并保持 MCP 配置无密钥；如果 setup 不能自动写入配置，就执行 npx -y patchxnote-agent@latest mcp config 并使用打印出的通用 stdio 配置；过程中不要让我把验证码、OAuth code、access token、refresh token 或 webhook secret 粘贴到对话里。参考资料：https://github.com/ZsTs119/patchxnote-agent 和 https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd。
+请帮我接入 PatchXNote MCP。请识别你所在的客户端，如果是 Codex、Cursor、VS Code、Claude Desktop、Windsurf 等本地 MCP 客户端，请在当前本机、并且在后续会启动 MCP 服务的同一个运行时执行 npx -y patchxnote-agent@latest setup --client <client-id>；如果不确定客户端 ID，就先执行 npx -y patchxnote-agent@latest mcp config 并使用打印出的通用 stdio 配置。登录时请打开浏览器让我完成 PatchXNote 手机号验证码授权，不要让我把验证码、OAuth code、授权码、access token、refresh token 或 webhook secret 粘贴到聊天里。完成后请调用 patchxnote_get_current_user 和 patchxnote_list_memories，参数 {"platform":"mobile","limit":5} 验证可用。参考资料：https://github.com/ZsTs119/patchxnote-agent 和 https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd。
 ```
 
 支持的客户端可以直接运行 setup：

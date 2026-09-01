@@ -21,7 +21,7 @@ PatchXNote server data access remains read-only. Agent does not operate hardware
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
-Install PatchXNote Agent for this local MCP client: run npx -y patchxnote-agent@latest setup --client <my-client> in the same OS/runtime that will launch the MCP server, guide me through browser login there, and keep MCP config secret-free. If setup cannot write config, run npx -y patchxnote-agent@latest mcp config and use the printed stdio config. Do not ask me to paste OTP codes, OAuth codes, access tokens, refresh tokens, or webhook secrets into chat. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
+Help me connect PatchXNote MCP. Identify the MCP client you are running in; if this is a local MCP client such as Codex, Cursor, VS Code, Claude Desktop, or Windsurf, run npx -y patchxnote-agent@latest setup --client <client-id> on this machine in the same OS/runtime that will later launch the MCP server. If you are not sure which client ID to use, first run npx -y patchxnote-agent@latest mcp config and use the printed generic stdio config. For login, open the browser and let me complete PatchXNote phone-code authorization there; do not ask me to paste OTP codes, OAuth codes, authorization codes, access tokens, refresh tokens, or webhook secrets into chat. After setup, call patchxnote_get_current_user and patchxnote_list_memories with {"platform":"mobile","limit":5} to verify it works. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
 ```
 
 For a supported client, start with setup:
