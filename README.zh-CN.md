@@ -48,11 +48,11 @@ npx -y patchxnote-agent@latest mcp config
 | 数据访问 | 查看账号、录音卡、额度、记录列表、AI 整理结果。 |
 | Webhook | 本地配置别名，手动发送到飞书、钉钉或其他 webhook。 |
 | 安全边界 | 服务端数据只读；原始音频、硬件、支付和 Admin API 不开放。 |
-| 包状态 | 当前公测版本 `0.2.8`，默认连接 PatchXNote 公测 API。 |
+| 包状态 | 当前公测版本 `0.2.9`，默认连接 PatchXNote 公测 API。 |
 
 ## 功能
 
-| 能力 | `0.2.8` 是否支持 | 说明 |
+| 能力 | `0.2.9` 是否支持 | 说明 |
 | --- | --- | --- |
 | 浏览器 OAuth MCP 登录 | 支持 | `patchxnote mcp login` 打开 PatchXNote 授权页，在 GoServer 页面完成手机号验证码登录，并把 MCP 凭据保存到本机。 |
 | 终端手机号验证码 Agent 登录 | 支持 | `patchxnote login` 保留给 CLI 优先用户和 fallback 环境。 |
@@ -80,7 +80,7 @@ npx -y patchxnote-agent@latest mcp config
 - 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
 
-> `0.2.8` 是当前公测版本。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
+> `0.2.9` 是当前公测版本。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
 
 ## 登录和 MCP 形态
 
@@ -144,7 +144,7 @@ npx -y patchxnote-agent@latest install --print-config
 如果需要固定当前已发布公测版本用于排障或回滚：
 
 ```sh
-npx -y patchxnote-agent@0.2.8 install --print-config
+npx -y patchxnote-agent@0.2.9 install --print-config
 ```
 
 公测版本默认连接 PatchXNote 公测 API：
@@ -240,7 +240,7 @@ MCP 配置中不会保存 access token、refresh token、验证码、手机号�
 
 ![PatchXNote Agent 工具能力](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.8` 暴露和当前本地服务一致的 **19 个本地 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
+PatchXNote Agent `0.2.9` 暴露和当前本地服务一致的 **19 个本地 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
 
 ### 账号和记录查询
 
@@ -388,7 +388,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 ## 当前限制
 
-`0.2.8` 是当前公测版本。
+`0.2.9` 是当前公测版本。
 
 - 默认服务端指向 PatchXNote 公测 API，不代表生产 SLA。
 - `mcp serve` 在编辑器启动时不会自动弹浏览器。请先运行 `mcp login`，或让 `setup --client <id>` 复用同一套 OAuth 流程。
@@ -428,6 +428,12 @@ patchxnote version
 ```
 
 发布二进制应报告 npm 包版本，commit 应为对应 GitHub Release tag 的提交。
+
+## 0.2.9 更新重点
+
+- 优化 `patchxnote mcp login` 完成后的浏览器成功页和失败页。
+- 登录结果页只保留用户能理解的普通提示，不展示 OAuth code、state 或 token 形态信息。
+- 增加 callback 页面回归测试，避免后续改动把敏感或技术信息重新展示到页面上。
 
 ## 0.2.8 更新重点
 
@@ -472,7 +478,7 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，检查 npm 通用 MCP 启动
 
 1. 确认目标 PatchXNote GoServer 已暴露所需 `/v1/agent/**` 路由。
 2. 确认 `packages/npm/package.json` 版本与 release tag 一致，tag 不带前缀 `v` 时要匹配包版本。
-3. 推送干净 tag，例如 `v0.2.8`。
+3. 推送干净 tag，例如 `v0.2.9`。
 4. 等待 GitHub Release 产物：`checksums.txt`，以及 Linux/macOS/Windows 的 amd64 和 arm64 二进制。
 5. npm publish 前确认 npm Trusted Publishing 已配置：
    - owner/user：`ZsTs119`
