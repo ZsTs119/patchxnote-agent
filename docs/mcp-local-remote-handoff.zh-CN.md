@@ -1,6 +1,6 @@
 # PatchXNote 本地 MCP 与远程 MCP 交接文档
 
-**日期：** 2026-08-27
+**日期：** 2026-09-01
 
 **定位：** 给后续官网、安装入口、平台联调会话使用的事实入口。本文只沉淀当前边界和待办，不替代具体实现计划。
 
@@ -59,10 +59,11 @@ PatchXNote MCP 是 Hybrid MCP distribution：本地用 npm stdio launcher + brow
 
 当前状态：
 
-- `patchnote-agent` 已产品化正式 `mcp login/status/logout`，替代临时 Node 验收脚本。
+- `patchxnote-agent` 已产品化正式 `mcp login/status/logout`，替代临时 Node 验收脚本。
 - `patchxnote-agent@0.2.9` 已发布到 npm 和 GitHub Releases。
-- Windows 已验证旧可用 profile 下的发布包 install/config/status/serve 和远程 `/mcp` 代理调用。
-- Fresh registry 包浏览器登录仍需重测：之前一次因为用户未在 10 分钟窗口内完成，另一次疑似使用旧授权 tab 或旧 callback 端口，未保存到 clean profile。
+- 发布包 install、`mcp config`、clean-profile `mcp status`、`setup --client cursor --dry-run --print-config`、Windows 安装、Linux checksum、macOS 安装/MCP smoke 均已通过。
+- `0.2.9` 本地源码候选已完成真实浏览器 OAuth 登录、latest OTP request 生效、loopback callback、`mcp status --verify` 和远程 MCP 读工具验证。
+- Fresh registry 包浏览器 OAuth 登录仍需单独重测：发布后的 clean-profile OTP 登录没有在本次 npm closeout 中重复完成。
 
 相关文件：
 
@@ -254,7 +255,8 @@ docs/mcp-clients/website/05-reference-skill-research.zh-CN.md
 docs/mcp-clients/website/06-implementation-readiness.zh-CN.md
 docs/mcp-clients/website/07-acceptance-checklist.zh-CN.md
 docs/mcp-clients/client-detail-copy.zh-CN.md
-docs/evidence/2026-08-27-release-0.2.8.zh-CN.md
+docs/evidence/2026-09-01-release-0.2.9.zh-CN.md
+docs/evidence/2026-09-01-mcp-oauth-local-acceptance.zh-CN.md
 ../patchxNoteGoServer/docs/requirements/cloud-config-center/new_current
 ```
 

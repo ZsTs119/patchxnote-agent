@@ -21,7 +21,7 @@ PatchXNote server data access remains read-only. Agent does not operate hardware
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
-Connect PatchXNote Agent by following the public guide at https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd: run npx -y patchxnote-agent@latest setup --client <my-client>, keep MCP config secret-free, and guide me through login in the same runtime that will launch the MCP server. Do not ask me to paste OTP codes, access tokens, or refresh tokens into chat. GitHub repository: https://github.com/ZsTs119/patchxnote-agent
+Install PatchXNote Agent for this local MCP client: run npx -y patchxnote-agent@latest setup --client <my-client> in the same OS/runtime that will launch the MCP server, guide me through browser login there, and keep MCP config secret-free. If setup cannot write config, run npx -y patchxnote-agent@latest mcp config and use the printed stdio config. Do not ask me to paste OTP codes, OAuth codes, access tokens, refresh tokens, or webhook secrets into chat. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
 ```
 
 For a supported client, start with setup:
