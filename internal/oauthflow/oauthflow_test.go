@@ -92,6 +92,30 @@ func TestCallbackServerSuccessAndFailurePagesDoNotLeakQuery(t *testing.T) {
 			t.Fatalf("expected callback header %s", header)
 		}
 	}
+	var successBody bytes.Buffer
+	if _, err := successBody.ReadFrom(response.Body); err != nil {
+		t.Fatalf("read success body: %v", err)
+	}
+	for _, expected := range []string{
+		"登录已完成",
+		"可以回到编辑器继续使用。",
+		"此页面可以关闭。",
+		"PatchXNote",
+	} {
+		if !strings.Contains(successBody.String(), expected) {
+			t.Fatalf("success page missing %q", expected)
+		}
+	}
+	for _, forbidden := range []string{
+		"MCP",
+		"OAuth",
+		"code_fixture",
+		"expected_state",
+	} {
+		if strings.Contains(successBody.String(), forbidden) {
+			t.Fatalf("success page leaked or exposed technical content %q", forbidden)
+		}
+	}
 	result, err := callback.Wait(context.Background())
 	if err != nil {
 		t.Fatalf("wait callback: %v", err)
@@ -117,8 +141,26 @@ func TestCallbackServerSuccessAndFailurePagesDoNotLeakQuery(t *testing.T) {
 	if failed.StatusCode != http.StatusBadRequest {
 		t.Fatalf("unexpected failed callback status: %d", failed.StatusCode)
 	}
-	if strings.Contains(body.String(), "code_fixture") || strings.Contains(body.String(), "wrong_state") {
-		t.Fatalf("failure page leaked query values: %s", body.String())
+	for _, expected := range []string{
+		"登录未完成",
+		"请回到应用重新打开登录。",
+		"没有保存新的登录信息。",
+		"PatchXNote",
+	} {
+		if !strings.Contains(body.String(), expected) {
+			t.Fatalf("failure page missing %q", expected)
+		}
+	}
+	for _, forbidden := range []string{
+		"MCP",
+		"OAuth",
+		"code_fixture",
+		"wrong_state",
+		"expected_state",
+	} {
+		if strings.Contains(body.String(), forbidden) {
+			t.Fatalf("failure page leaked or exposed technical content %q: %s", forbidden, body.String())
+		}
 	}
 	_, err = callback2.Wait(context.Background())
 	if !errors.Is(err, ErrCallbackDenied) {
