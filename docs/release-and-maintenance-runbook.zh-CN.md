@@ -257,6 +257,35 @@ PY
 
 ## 发包流程
 
+### 0. 本机 CLI 凭据预检与恢复
+
+本仓库常在 Windows + WSL 主机上发布。仓库 checkout 位于 WSL 时，优先使用 WSL 里的 GitHub CLI 触发 workflow；PowerShell 里 `where gh` 找不到不等于发布 CLI 凭据不可用。
+
+预检：
+
+```sh
+gh auth status
+gh run list --repo ZsTs119/patchxnote-agent --workflow publish-npm.yml --limit 1
+gh workflow view publish-npm.yml --repo ZsTs119/patchxnote-agent --yaml >/dev/null
+```
+
+在 Windows PowerShell 调 WSL 预检：
+
+```powershell
+wsl.exe -d Ubuntu-22.04 --cd /home/zsts_119/patchnote-agent bash -lc 'gh auth status && gh run list --repo ZsTs119/patchxnote-agent --workflow publish-npm.yml --limit 1'
+```
+
+如果 `gh auth status` 未登录、scope 缺少 `repo` 或 `workflow`，用浏览器恢复 GitHub CLI 登录态：
+
+```sh
+gh auth login --hostname github.com --web --git-protocol https --scopes repo,workflow
+gh auth refresh --hostname github.com --scopes repo,workflow
+```
+
+授权必须在浏览器或 GitHub CLI 自己的交互流程里完成。不要把 GitHub token、OAuth code、device code、npm token、OTP 或任何私密凭据粘贴到 AI 聊天里。
+
+npm 本机登录不是本包的常规发布前置条件。`npm whoami --registry https://registry.npmjs.org` 返回 `ENEEDAUTH` 可以接受，因为 `patchxnote-agent` 使用 GitHub Actions OIDC / npm Trusted Publishing。除非是在首次 bootstrap 一个全新 npm 包并有明确批准，否则不要用本机 `npm login` 或长期 npm token 发布。
+
 ### 1. 发布前检查
 
 确认：
