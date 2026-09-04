@@ -8,13 +8,18 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const {
   createInstallPlan,
+  createSkillInstallPlan,
+  inspectSkillTarget,
   inspectInstalledBinary,
   isInstallDirOnPath,
   joinInstallPath,
   parseArgs,
   parseLauncherOptions,
+  parseSkillInstallOptions,
   pathHint,
   resolveRedirectURL,
+  resolveSkillAgents,
+  resolveSkillTargetPath,
   resolveTarget,
   universalMCPConfig,
   verifyChecksum
@@ -49,6 +54,17 @@ assert.deepStrictEqual(parseArgs(["mcp", "config"]), {
   options: {},
   passthroughArgs: []
 });
+assert.deepStrictEqual(parseArgs(["skill", "install", "--dry-run", "--json", "--agent", "universal", "--home", "/tmp/px-skills", "--force"]), {
+  command: "skill",
+  subcommand: "install",
+  options: { agents: ["universal"], dryRun: true, json: true, home: "/tmp/px-skills", force: true },
+  passthroughArgs: []
+});
+assert.deepStrictEqual(parseSkillInstallOptions(["-g", "--copy"]), { agents: [], copy: true });
+assert.deepStrictEqual(resolveSkillAgents(["universal", "universal"]), ["universal"]);
+assert.deepStrictEqual(resolveSkillAgents(["all"]), ["universal", "codex", "cursor", "claude-code", "gemini-cli", "github-copilot"]);
+assert.throws(() => parseArgs(["skill"]), /usage: patchxnote-agent skill/);
+assert.throws(() => parseArgs(["skill", "install", "--agent", "unknown"]), /unsupported skill agent/);
 assert.deepStrictEqual(parseArgs(["mcp", "serve", "--install-dir", "/tmp/px", "--", "--profile", "work"]), {
   command: "mcp",
   subcommand: "serve",
@@ -190,6 +206,84 @@ assert.strictEqual(universalConfigResult.stderr, "");
 assert.doesNotMatch(universalConfigResult.stdout, /MCP config:|access_token|refresh_token|otp|sk_|protocol_mac/i);
 
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "patchxnote-agent-test-"));
+const skillHome = path.join(fixtureRoot, "skill-home");
+const skillTarget = resolveSkillTargetPath(skillHome, "universal");
+const skillPlan = createSkillInstallPlan({ home: skillHome, agents: ["universal"], dryRun: true });
+assert.strictEqual(skillPlan.package_version, packageVersion);
+assert.strictEqual(skillPlan.skill, "patchxnote-mcp");
+assert.strictEqual(skillPlan.targets.length, 1);
+assert.strictEqual(skillPlan.targets[0].path, skillTarget);
+assert.strictEqual(skillPlan.targets[0].status, "missing");
+
+const skillDryRun = runWrapper([
+  "skill",
+  "install",
+  "--home",
+  skillHome,
+  "--dry-run",
+  "--json"
+]);
+assert.strictEqual(skillDryRun.status, 0, skillDryRun.stderr);
+const skillDryRunJSON = JSON.parse(skillDryRun.stdout);
+assert.strictEqual(skillDryRunJSON.dry_run, true);
+assert.strictEqual(skillDryRunJSON.skill, "patchxnote-mcp");
+assert.strictEqual(skillDryRunJSON.targets[0].status, "missing");
+assert.doesNotMatch(skillDryRun.stdout + skillDryRun.stderr, /access_token|refresh_token|otp|sk_|protocol_mac/i);
+
+const skillInstall = runWrapper([
+  "skill",
+  "install",
+  "--home",
+  skillHome,
+  "--json"
+]);
+assert.strictEqual(skillInstall.status, 0, skillInstall.stderr);
+const skillInstallJSON = JSON.parse(skillInstall.stdout);
+assert.strictEqual(skillInstallJSON.targets[0].status, "installed");
+assert.strictEqual(fs.existsSync(path.join(skillTarget, "SKILL.md")), true);
+assert.strictEqual(fs.existsSync(path.join(skillTarget, "references", "onboarding.md")), true);
+const installedMarker = JSON.parse(fs.readFileSync(path.join(skillTarget, ".patchxnote-agent-skill.json"), "utf8"));
+assert.strictEqual(installedMarker.managed_by, "patchxnote-agent");
+assert.strictEqual(installedMarker.package_version, packageVersion);
+assert.match(installedMarker.source_hash, /^sha256:[a-f0-9]{64}$/);
+assert.strictEqual(inspectSkillTarget(path.resolve(__dirname, "..", "skills", "patchxnote-mcp"), skillTarget).status, "current");
+
+const skillAgain = runWrapper([
+  "skill",
+  "install",
+  "--home",
+  skillHome,
+  "--json"
+]);
+assert.strictEqual(skillAgain.status, 0, skillAgain.stderr);
+assert.strictEqual(JSON.parse(skillAgain.stdout).targets[0].status, "unchanged");
+
+const conflictHome = path.join(fixtureRoot, "conflict-home");
+const conflictTarget = resolveSkillTargetPath(conflictHome, "universal");
+fs.mkdirSync(conflictTarget, { recursive: true });
+fs.writeFileSync(path.join(conflictTarget, "SKILL.md"), "# custom skill\n");
+const skillConflict = runWrapper([
+  "skill",
+  "install",
+  "--home",
+  conflictHome
+]);
+assert.notStrictEqual(skillConflict.status, 0);
+assert.match(skillConflict.stderr, /already exists and differs/);
+assert.strictEqual(fs.readFileSync(path.join(conflictTarget, "SKILL.md"), "utf8"), "# custom skill\n");
+
+const skillForce = runWrapper([
+  "skill",
+  "install",
+  "--home",
+  conflictHome,
+  "--force",
+  "--json"
+]);
+assert.strictEqual(skillForce.status, 0, skillForce.stderr);
+assert.strictEqual(JSON.parse(skillForce.stdout).targets[0].status, "replaced");
+assert.match(fs.readFileSync(path.join(conflictTarget, "SKILL.md"), "utf8"), /# PatchXNote MCP/);
+
 const goodBinary = buildFakePatchXNote(fixtureRoot, packageVersion, "good");
 const oldBinary = buildFakePatchXNote(fixtureRoot, "0.0.1", "old");
 const badVersionBinary = buildFakePatchXNote(fixtureRoot, packageVersion, "badversion");

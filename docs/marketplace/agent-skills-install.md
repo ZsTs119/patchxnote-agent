@@ -1,6 +1,6 @@
 # PatchXNote MCP Skill Install Notes
 
-Updated: 2026-09-03
+Updated: 2026-09-04
 
 PatchXNote MCP Skill is stored at:
 
@@ -10,41 +10,53 @@ skills/patchxnote-mcp/
 
 The skill teaches an AI assistant how to connect and verify PatchXNote MCP, then use PatchXNote summaries, memories, model results, and approved webhook workflows without losing the setup SOP in long or fresh sessions.
 
-## Install With `npx skills`
+## Install With npm
 
-After a commit or tag containing `skills/patchxnote-mcp/` is pushed to GitHub:
-
-```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
-```
-
-Project-level install:
+The npm package bundles a copy of the canonical skill. This is the primary public install path because it uses the same package users already run for PatchXNote MCP setup:
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp
+npx -y patchxnote-agent@latest skill install
 ```
 
-Install for a specific compatible agent after confirming that agent name with current `npx skills --help`:
+Pin a published release for troubleshooting or rollback:
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp --agent cursor
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp --agent claude-code
+npx -y patchxnote-agent@0.2.11 skill install
 ```
 
-For public support docs, prefer a pinned tag once the first skill release is cut:
+Install into an agent-specific local skill directory only after that client path has been verified:
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent@v0.2.10 --skill patchxnote-mcp -g
+npx -y patchxnote-agent@latest skill install --agent codex
+npx -y patchxnote-agent@latest skill install --agent cursor
+npx -y patchxnote-agent@latest skill install --agent claude-code
 ```
 
-Keep `@latest` or `main` examples for development docs only.
+Dry-run the target paths before writing:
+
+```sh
+npx -y patchxnote-agent@latest skill install --dry-run --json
+```
+
+The installer refuses to replace an existing different skill folder unless `--force` is passed. Use `--force` only after confirming the target folder should be replaced.
+
+## Skill Ecosystem Search
+
+Keep `skills/patchxnote-mcp/` in the repository root as the canonical Agent Skills source so discovery tools can still index it from GitHub. Direct `npx skills add ...` remains a candidate ecosystem path, not the primary install command, because remote GitHub clone behavior can be slow or unavailable on some hosts.
+
+When checking discoverability, record the command, date, and result in `docs/marketplace/evidence-log.md`:
+
+```sh
+npx -y skills find patchxnote
+npx -y skills find patchxnote --owner ZsTs119
+```
 
 ## Local Development Smoke
 
 From this repository checkout:
 
 ```sh
-npx skills add . --skill patchxnote-mcp --copy -y
+node packages/npm/bin/patchxnote-agent.js skill install --dry-run --json
 ```
 
 Then start a fresh supported AI session and ask:

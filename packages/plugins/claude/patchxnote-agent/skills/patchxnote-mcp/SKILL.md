@@ -3,9 +3,10 @@ name: patchxnote-mcp
 description: Connect and verify PatchXNote MCP, then use PatchXNote summaries, memories, model results, and approved webhook workflows. Use only for PatchXNote.
 license: UNLICENSED
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   author: PatchXNote
   repository: https://github.com/ZsTs119/patchxnote-agent
+  tags: patchxnote, mcp, agent-skills, recordings, notes, memory
 ---
 
 # PatchXNote MCP
@@ -32,6 +33,14 @@ Do not use this skill for generic summarization, generic MCP server development,
 - For maintained links and platform publishing references, read [references/source-of-truth.md](references/source-of-truth.md).
 
 ## Fast Path
+
+If the user asks to install or refresh this skill itself, prefer the npm-bundled installer:
+
+```sh
+npx -y patchxnote-agent@latest skill install
+```
+
+Use `--agent <id>` only after the target client's local skill directory is known or the user explicitly asks for that agent. Skill installation teaches the AI this SOP; it does not authenticate PatchXNote or configure the MCP server.
 
 For a local MCP client, identify the actual client ID first. Known local IDs include `vscode`, `cursor`, `codex`, `claude-code`, `claude-desktop`, `windsurf`, `trae`, `qoder`, and `workbuddy`.
 

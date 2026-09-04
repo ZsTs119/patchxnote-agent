@@ -21,7 +21,7 @@ PatchXNote server data access remains read-only. Agent does not operate hardware
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
-Help me connect PatchXNote MCP and install the PatchXNote MCP Skill when the client supports Agent Skills. First, if this is a local command-capable environment where the skills CLI can run, execute npx -y skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g on this machine so future or long sessions remember the PatchXNote SOP; if skill installation is not supported, continue with MCP setup directly. Identify the MCP client you are running in; if this is a local MCP client such as Codex, Cursor, VS Code, Claude Desktop, Claude Code, or Windsurf, run npx -y patchxnote-agent@latest setup --client <client-id> on this machine in the same OS/runtime that will later launch the MCP server. If you are not sure which client ID to use, first run npx -y patchxnote-agent@latest mcp config and use the printed generic stdio config. For login, open the browser and let me complete PatchXNote phone-code authorization there; do not ask me to paste OTP codes, OAuth codes, authorization codes, access tokens, refresh tokens, or webhook secrets into chat. After setup, call patchxnote_get_current_user and patchxnote_list_memories with {"platform":"mobile","limit":5} to verify it works. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
+Help me connect PatchXNote MCP and install the PatchXNote MCP Skill when the client supports Agent Skills. First, if this is a local command-capable environment, execute npx -y patchxnote-agent@latest skill install on this machine so future or long sessions remember the PatchXNote SOP; if skill installation is not supported, continue with MCP setup directly. Identify the MCP client you are running in; if this is a local MCP client such as Codex, Cursor, VS Code, Claude Desktop, Claude Code, or Windsurf, run npx -y patchxnote-agent@latest setup --client <client-id> on this machine in the same OS/runtime that will later launch the MCP server. If you are not sure which client ID to use, first run npx -y patchxnote-agent@latest mcp config and use the printed generic stdio config. For login, open the browser and let me complete PatchXNote phone-code authorization there; do not ask me to paste OTP codes, OAuth codes, authorization codes, access tokens, refresh tokens, or webhook secrets into chat. After setup, call patchxnote_get_current_user and patchxnote_list_memories with {"platform":"mobile","limit":5} to verify it works. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
 ```
 
 For a supported client, start with setup:
@@ -40,11 +40,13 @@ npx -y patchxnote-agent@latest mcp config
 
 This repository also includes an Agent Skills package at `skills/patchxnote-mcp/`. It teaches compatible AI clients the PatchXNote setup, browser OAuth, runtime, verification, summary, memory, model-result, webhook, and evidence rules so the workflow survives fresh or long sessions.
 
-`patchxnote-agent` on npm remains the MCP installer/runtime package. The Agent Skill is distributed from this repository and can be installed by Agent Skills-compatible clients after the repository version containing it is available on GitHub:
+`patchxnote-agent` on npm is the MCP installer/runtime package and also bundles the PatchXNote MCP Skill. Install or refresh the skill with:
 
 ```sh
-npx -y skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
+npx -y patchxnote-agent@latest skill install
 ```
+
+Use `--agent <id>` only after that client's local skills directory is verified; the default writes to the portable Agent Skills directory.
 
 The skill does not authenticate PatchXNote or start MCP by itself. It complements the MCP setup command:
 
@@ -52,7 +54,11 @@ The skill does not authenticate PatchXNote or start MCP by itself. It complement
 npx -y patchxnote-agent@latest setup --client <client-id>
 ```
 
-For public release docs, pin the skill install command to the first tag that includes `skills/patchxnote-mcp/`.
+For troubleshooting or rollback after `0.2.11` is published, pin the skill installer:
+
+```sh
+npx -y patchxnote-agent@0.2.11 skill install
+```
 
 ## At A Glance
 
@@ -66,11 +72,11 @@ For public release docs, pin the skill install command to the first tag that inc
 | Data access | Shows account, recorder cards, quota, records, and AI-generated results. |
 | Webhook | Locally configures named targets and manually sends to Feishu, DingTalk, or another webhook. |
 | Safety boundary | Server data is read-only; raw audio, hardware, payment, and Admin APIs are not exposed. |
-| Package status | Current public beta release `0.2.10`, defaulting to the PatchXNote public beta API. |
+| Package status | Current public beta release `0.2.11`, defaulting to the PatchXNote public beta API. |
 
 ## Features
 
-| Capability | Available in `0.2.10` | Notes |
+| Capability | Available in `0.2.11` | Notes |
 | --- | --- | --- |
 | Browser OAuth MCP login | Yes | `patchxnote mcp login` opens the PatchXNote authorization page, completes phone OTP on the GoServer page, then stores MCP credentials locally. |
 | Terminal phone OTP Agent login | Yes | `patchxnote login` keeps the terminal login path for CLI-first users and fallback environments. |
@@ -98,7 +104,7 @@ For public release docs, pin the skill install command to the first tag that inc
 - A PatchXNote account that can receive the phone OTP login code.
 - An MCP host that supports stdio MCP servers, such as Codex, Claude Desktop, Cursor, VS Code, or another compatible desktop agent.
 
-> `0.2.10` is the current public beta release. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
+> `0.2.11` is the current public beta release. The default server is the PatchXNote public beta API. Credentials are stored in the OS-native keychain by default.
 
 ## Login And MCP Modes
 
@@ -162,7 +168,7 @@ npx -y patchxnote-agent@latest install --print-config
 To pin the current published public beta version for troubleshooting or rollback:
 
 ```sh
-npx -y patchxnote-agent@0.2.10 install --print-config
+npx -y patchxnote-agent@0.2.11 install --print-config
 ```
 
 The public beta build defaults to the PatchXNote public beta API:
@@ -258,7 +264,7 @@ MCP config never contains access tokens, refresh tokens, OTP codes, phone number
 
 ![PatchXNote Agent tools](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.10` exposes the same **19 local MCP tools** as the current public local server. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
+PatchXNote Agent `0.2.11` exposes the same **19 local MCP tools** as the current public local server. End users can think of them as three groups; exact tool names are for MCP hosts and AI assistants.
 
 ### Account And Record Lookup
 
@@ -406,7 +412,7 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 
 ## Current Limitations
 
-`0.2.10` is the current public beta release.
+`0.2.11` is the current public beta release.
 
 - The default server points to the PatchXNote public beta API and does not imply a production SLA.
 - `mcp serve` never opens a browser during editor startup. Run `mcp login` first, or let `setup --client <id>` reuse that same OAuth flow.
@@ -446,6 +452,13 @@ patchxnote version
 ```
 
 The release binary should report the npm package version and the commit attached to the matching GitHub Release tag.
+
+## 0.2.11 Highlights
+
+- Bundles the canonical PatchXNote MCP Skill inside the npm package.
+- Adds `npx -y patchxnote-agent@latest skill install` for npm-based skill installation without relying on a separate skills CLI or GitHub clone.
+- Extends skill package sync and validation so OpenAI, Claude, and npm copies stay byte-identical to `skills/patchxnote-mcp/`.
+- Updates the one-line setup prompt and discovery metadata to prefer the npm-bundled skill installer while preserving MCP setup, browser OAuth, and tool verification.
 
 ## 0.2.10 Highlights
 
@@ -503,7 +516,7 @@ The detailed release and documentation maintenance checklist lives in [docs/rele
 
 1. Confirm the target PatchXNote GoServer exposes the required `/v1/agent/**` routes.
 2. Confirm `packages/npm/package.json` version matches the release tag without the leading `v`.
-3. Push a clean tag, for example `v0.2.10`.
+3. Push a clean tag, for example `v0.2.11`.
 4. Wait for GitHub Release assets: `checksums.txt` plus Linux/macOS/Windows amd64 and arm64 binaries.
 5. Configure npm Trusted Publishing for this GitHub Actions workflow before npm publish:
    - owner/user: `ZsTs119`

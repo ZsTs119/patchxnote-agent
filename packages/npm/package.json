@@ -1,8 +1,8 @@
 {
   "name": "patchxnote-agent",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "mcpName": "io.github.zsts119/patchxnote-agent",
-  "description": "Installer wrapper for the PatchXNote Agent CLI and local MCP server.",
+  "description": "Installer wrapper for the PatchXNote Agent CLI, local MCP server, and PatchXNote MCP Skill.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZsTs119/patchxnote-agent.git"
@@ -13,7 +13,18 @@
   },
   "files": [
     "bin",
-    "README.md"
+    "README.md",
+    "skills"
+  ],
+  "keywords": [
+    "patchxnote",
+    "mcp",
+    "mcp-server",
+    "agent-skill",
+    "agent-skills",
+    "codex",
+    "cursor",
+    "claude-code"
   ],
   "scripts": {
     "install:local": "node ./bin/patchxnote-agent.js install",

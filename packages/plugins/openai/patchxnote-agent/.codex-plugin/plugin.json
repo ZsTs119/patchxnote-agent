@@ -1,6 +1,6 @@
 {
   "name": "patchxnote-agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PatchXNote MCP setup and workflow skill package.",
   "author": {
     "name": "PatchXNote",

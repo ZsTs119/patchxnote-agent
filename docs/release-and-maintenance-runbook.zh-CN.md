@@ -10,6 +10,7 @@
 - 用户 MCP 浏览器 OAuth 登录命令：`npx -y patchxnote-agent@latest mcp login`
 - 用户通用 MCP 启动命令：`npx -y patchxnote-agent@latest mcp serve`
 - 用户本地客户端 setup 命令：`npx -y patchxnote-agent@latest setup --client cursor`
+- 用户 Skill 安装命令：`npx -y patchxnote-agent@latest skill install`
 - 用户 fallback 安装命令：`npx -y patchxnote-agent install`
 - 本地二进制：`patchxnote`
 - MCP Server 命令：`patchxnote mcp serve`
@@ -20,10 +21,10 @@
 - GitHub Release workflow：`.github/workflows/release.yml`
 - macOS 安装冒烟 workflow：`.github/workflows/macos-install-smoke.yml`
 - 当前公测服务端：PatchXNote 公测 API，具体默认值以 `internal/config/config.go` 为准
-- 当前已发布版本：`0.2.10`
-- 当前 `0.2.10` 能力：继承 `0.2.9` 的 `mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client` 和浏览器 loopback 登录结果页优化，并新增 PatchXNote MCP Skill、marketplace 草稿包、MCP Registry 元数据和本地发布验证脚本。
-- 当前 `0.2.10` 发布证据：见 `docs/evidence/2026-09-04-release-0.2.10.zh-CN.md`。
-- 当前 `0.2.10` 本地候选验收事实：见 `docs/marketplace/evidence-log.md` 和发布后证据文档。它只代表本地包、stdio MCP 和仓库侧分发资料验收，不代表单个编辑器 UI、平台型客户端或公开 marketplace 已验收。
+- 当前已发布版本：`0.2.11`
+- 当前 `0.2.11` 能力：继承 `0.2.10` 的本地 MCP、浏览器 OAuth、客户端 setup、PatchXNote MCP Skill、marketplace 草稿包和 MCP Registry 元数据，并新增 npm-bundled skill 副本与 `patchxnote-agent skill install`。
+- 当前 `0.2.11` 发布证据：见 `docs/evidence/2026-09-04-release-0.2.11.zh-CN.md`。
+- 当前 `0.2.11` 本地候选验收事实：见 `docs/marketplace/evidence-log.md` 和发布后证据文档。它只代表本地包、stdio MCP、npm skill install 和仓库侧分发资料验收，不代表单个编辑器 UI、平台型客户端或公开 marketplace 已验收。
 
 历史兼容事实：
 
@@ -465,12 +466,13 @@ docs/assets/
 2. `skills/patchxnote-mcp/references/*.md`，承载较长 SOP、排障、安全和事实源
 3. `packages/plugins/openai/patchxnote-agent/.codex-plugin/plugin.json`
 4. `packages/plugins/claude/patchxnote-agent/.claude-plugin/plugin.json`
-5. `.agents/plugins/marketplace.json`
-6. `.claude-plugin/marketplace.json`
-7. `server.json`
-8. `smithery.yaml`
-9. `docs/marketplace/*.md`
-10. README 的一句话安装文案和 Skill 安装说明
+5. `packages/npm/skills/patchxnote-mcp/...`
+6. `.agents/plugins/marketplace.json`
+7. `.claude-plugin/marketplace.json`
+8. `server.json`
+9. `smithery.yaml`
+10. `docs/marketplace/*.md`
+11. README 的一句话安装文案和 Skill 安装说明
 
 同步原则：
 
@@ -486,6 +488,8 @@ docs/assets/
 ```sh
 node scripts/sync-patchxnote-skill-packages.mjs --check
 node scripts/validate-patchxnote-skill-packages.mjs
+node packages/npm/test/install.test.js
+node packages/npm/bin/patchxnote-agent.js skill install --dry-run --json
 node scripts/smoke-mcp-stdio.mjs
 python3 /mnt/c/Users/11979/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/patchxnote-mcp
 python3 /mnt/c/Users/11979/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py packages/plugins/openai/patchxnote-agent
@@ -498,7 +502,7 @@ git diff --check
 
 - OpenAI / Codex：按 `docs/marketplace/openai-submission.zh-CN.md` 准备 listing、支持/隐私/条款 URL 和审核资料。
 - Claude Code：按 `docs/marketplace/claude-code-marketplace.zh-CN.md` 验证 marketplace 与 plugin manifest。
-- Agent Skills：按 `docs/marketplace/agent-skills-install.md` 验证 `npx skills add` 的安装路径和触发效果。
+- Agent Skills：按 `docs/marketplace/agent-skills-install.md` 优先验证 `npx -y patchxnote-agent@latest skill install` 的 npm 安装路径和触发效果；`npx skills add` 只作为生态搜索/目录候选另行记录。
 - MCP Registry：按 `docs/marketplace/mcp-registry.zh-CN.md` 使用 `mcp-publisher validate` / `publish`，并先确认 npm package 已发布且 `package.json#mcpName` 与 `server.json#name` 一致。
 - Smithery：按 `docs/marketplace/platform-matrix.zh-CN.md` 决定是保留 stdio 草稿，还是补 Streamable HTTP / OAuth 后发布远程入口。
 

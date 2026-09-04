@@ -215,6 +215,15 @@ function validateRegistryMetadata() {
   if (packageJson.mcpName !== "io.github.zsts119/patchxnote-agent") {
     fail("packages/npm/package.json: mcpName must be io.github.zsts119/patchxnote-agent");
   }
+  if (!Array.isArray(packageJson.files) || !packageJson.files.includes("skills")) {
+    fail("packages/npm/package.json: files must include skills");
+  }
+  const keywords = new Set(Array.isArray(packageJson.keywords) ? packageJson.keywords : []);
+  for (const keyword of ["patchxnote", "mcp", "agent-skills"]) {
+    if (!keywords.has(keyword)) {
+      fail(`packages/npm/package.json: missing keyword ${keyword}`);
+    }
+  }
   if (serverJson.name !== packageJson.mcpName) {
     fail("server.json: name must match packages/npm/package.json mcpName");
   }
@@ -243,6 +252,7 @@ function validateRegistryMetadata() {
 function validateSecretScan() {
   const roots = [
     "skills/patchxnote-mcp",
+    "packages/npm/skills/patchxnote-mcp",
     "packages/plugins/openai/patchxnote-agent",
     "packages/plugins/claude/patchxnote-agent",
     "docs/marketplace",
@@ -319,6 +329,7 @@ for (const relativePath of [
 
 compareSkillCopy("packages/plugins/openai/patchxnote-agent/skills/patchxnote-mcp");
 compareSkillCopy("packages/plugins/claude/patchxnote-agent/skills/patchxnote-mcp");
+compareSkillCopy("packages/npm/skills/patchxnote-mcp");
 validateOpenAiPlugin();
 validateMarketplace(".agents/plugins/marketplace.json", "./packages/plugins/openai/patchxnote-agent");
 validateMarketplace(".claude-plugin/marketplace.json", "./packages/plugins/claude/patchxnote-agent");

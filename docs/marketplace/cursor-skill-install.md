@@ -1,6 +1,6 @@
 # Cursor Skill Install Notes
 
-Updated: 2026-09-03
+Updated: 2026-09-04
 
 Cursor documents Skills as portable Agent Skills packages that can live in a repository or be installed from GitHub links. PatchXNote MCP Skill should remain standard Agent Skills format:
 
@@ -11,16 +11,16 @@ skills/patchxnote-mcp/references/
 
 ## Install Candidate
 
-After the skill is pushed to GitHub:
+npm-bundled install:
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp --agent cursor
+npx -y patchxnote-agent@latest skill install
 ```
 
-Fallback global install:
+Cursor-specific target only after Cursor's current local skills directory is verified:
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
+npx -y patchxnote-agent@latest skill install --agent cursor
 ```
 
 ## Cursor MCP Setup Still Required

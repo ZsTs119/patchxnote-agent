@@ -9,6 +9,7 @@ const sourceRoot = path.join(repoRoot, "skills", "patchxnote-mcp");
 const destinations = [
   path.join(repoRoot, "packages", "plugins", "openai", "patchxnote-agent", "skills", "patchxnote-mcp"),
   path.join(repoRoot, "packages", "plugins", "claude", "patchxnote-agent", "skills", "patchxnote-mcp"),
+  path.join(repoRoot, "packages", "npm", "skills", "patchxnote-mcp"),
 ];
 const ignoredNames = new Set([".DS_Store", "Thumbs.db"]);
 const checkOnly = process.argv.includes("--check");

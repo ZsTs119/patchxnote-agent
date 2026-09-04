@@ -16,10 +16,10 @@ PatchXNote 服务端数据访问是只读、按平台隔离的。本地 webhook 
 
 ## 安装
 
-GitHub 发布包含 skill 后：
+Agent Skill：
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
+npx -y patchxnote-agent@latest skill install
 ```
 
 MCP server setup：

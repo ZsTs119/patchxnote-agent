@@ -21,7 +21,7 @@ PatchXNote 服务端数据访问仍是只读的。Agent 不操作硬件绑定、
 将以下一句话发送给支持本地命令执行的 AI 助手即可：
 
 ```text
-请帮我接入 PatchXNote MCP，并在客户端支持 Agent Skills 时安装 PatchXNote MCP Skill。首先，如果当前是支持本地命令执行、并且可以运行 skills CLI 的环境，请在本机执行 npx -y skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g，让后续新会话或长上下文能记住 PatchXNote SOP；如果当前客户端不支持 Skill 安装，就直接继续 MCP setup。请识别你所在的 MCP 客户端，如果是 Codex、Cursor、VS Code、Claude Desktop、Claude Code、Windsurf 等本地 MCP 客户端，请在当前本机、并且在后续会启动 MCP 服务的同一个运行时执行 npx -y patchxnote-agent@latest setup --client <client-id>；如果不确定客户端 ID，就先执行 npx -y patchxnote-agent@latest mcp config 并使用打印出的通用 stdio 配置。登录时请打开浏览器让我完成 PatchXNote 手机号验证码授权，不要让我把验证码、OAuth code、授权码、access token、refresh token 或 webhook secret 粘贴到聊天里。完成后请调用 patchxnote_get_current_user 和 patchxnote_list_memories，参数 {"platform":"mobile","limit":5} 验证可用。参考资料：https://github.com/ZsTs119/patchxnote-agent 和 https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd。
+请帮我接入 PatchXNote MCP，并在客户端支持 Agent Skills 时安装 PatchXNote MCP Skill。首先，如果当前是支持本地命令执行的环境，请在本机执行 npx -y patchxnote-agent@latest skill install，让后续新会话或长上下文能记住 PatchXNote SOP；如果当前客户端不支持 Skill 安装，就直接继续 MCP setup。请识别你所在的 MCP 客户端，如果是 Codex、Cursor、VS Code、Claude Desktop、Claude Code、Windsurf 等本地 MCP 客户端，请在当前本机、并且在后续会启动 MCP 服务的同一个运行时执行 npx -y patchxnote-agent@latest setup --client <client-id>；如果不确定客户端 ID，就先执行 npx -y patchxnote-agent@latest mcp config 并使用打印出的通用 stdio 配置。登录时请打开浏览器让我完成 PatchXNote 手机号验证码授权，不要让我把验证码、OAuth code、授权码、access token、refresh token 或 webhook secret 粘贴到聊天里。完成后请调用 patchxnote_get_current_user 和 patchxnote_list_memories，参数 {"platform":"mobile","limit":5} 验证可用。参考资料：https://github.com/ZsTs119/patchxnote-agent 和 https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd。
 ```
 
 支持的客户端可以直接运行 setup：
@@ -40,11 +40,13 @@ npx -y patchxnote-agent@latest mcp config
 
 本仓库同时包含 Agent Skills 包：`skills/patchxnote-mcp/`。它会让兼容的 AI 客户端记住 PatchXNote 的 setup、浏览器 OAuth、运行时、验证、总结、记忆、模型结果、webhook 和证据口径，避免新会话或长上下文里把流程忘掉。
 
-npm 上的 `patchxnote-agent` 仍然是 MCP installer/runtime 包。Agent Skill 从本仓库分发，仓库版本发布到 GitHub 后，兼容 Agent Skills 的客户端可以这样安装：
+npm 上的 `patchxnote-agent` 是 MCP installer/runtime 包，并且已经打包 PatchXNote MCP Skill。安装或刷新 skill：
 
 ```sh
-npx -y skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
+npx -y patchxnote-agent@latest skill install
 ```
+
+只有在确认目标客户端的本地 skills 目录后，再使用 `--agent <id>`；默认会写入可移植的 Agent Skills 目录。
 
 Skill 不会自己完成 PatchXNote 登录，也不会自己启动 MCP server。它是 MCP setup 的流程说明和安全边界补充，仍然需要执行：
 
@@ -52,7 +54,11 @@ Skill 不会自己完成 PatchXNote 登录，也不会自己启动 MCP server。
 npx -y patchxnote-agent@latest setup --client <client-id>
 ```
 
-公开发版文档建议固定到第一个包含 `skills/patchxnote-mcp/` 的 tag。
+排查或回滚时，在 `0.2.11` 发布后可以固定 skill installer：
+
+```sh
+npx -y patchxnote-agent@0.2.11 skill install
+```
 
 ## 快速了解
 
@@ -66,11 +72,11 @@ npx -y patchxnote-agent@latest setup --client <client-id>
 | 数据访问 | 查看账号、录音卡、额度、记录列表、AI 整理结果。 |
 | Webhook | 本地配置别名，手动发送到飞书、钉钉或其他 webhook。 |
 | 安全边界 | 服务端数据只读；原始音频、硬件、支付和 Admin API 不开放。 |
-| 包状态 | 当前公测版本 `0.2.10`，默认连接 PatchXNote 公测 API。 |
+| 包状态 | 当前公测版本 `0.2.11`，默认连接 PatchXNote 公测 API。 |
 
 ## 功能
 
-| 能力 | `0.2.10` 是否支持 | 说明 |
+| 能力 | `0.2.11` 是否支持 | 说明 |
 | --- | --- | --- |
 | 浏览器 OAuth MCP 登录 | 支持 | `patchxnote mcp login` 打开 PatchXNote 授权页，在 GoServer 页面完成手机号验证码登录，并把 MCP 凭据保存到本机。 |
 | 终端手机号验证码 Agent 登录 | 支持 | `patchxnote login` 保留给 CLI 优先用户和 fallback 环境。 |
@@ -98,7 +104,7 @@ npx -y patchxnote-agent@latest setup --client <client-id>
 - 可以接收手机验证码的 PatchXNote 账号。
 - 支持 stdio MCP server 的 MCP Host，例如 Codex、Claude Desktop、Cursor、VS Code 或其他兼容桌面 Agent。
 
-> `0.2.10` 是当前公测版本。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
+> `0.2.11` 是当前公测版本。默认服务端是 PatchXNote 公测 API，凭据默认写入系统原生安全钥匙串。
 
 ## 登录和 MCP 形态
 
@@ -162,7 +168,7 @@ npx -y patchxnote-agent@latest install --print-config
 如果需要固定当前已发布公测版本用于排障或回滚：
 
 ```sh
-npx -y patchxnote-agent@0.2.10 install --print-config
+npx -y patchxnote-agent@0.2.11 install --print-config
 ```
 
 公测版本默认连接 PatchXNote 公测 API：
@@ -258,7 +264,7 @@ MCP 配置中不会保存 access token、refresh token、验证码、手机号�
 
 ![PatchXNote Agent 工具能力](./docs/assets/patchxnote-agent-tools.png)
 
-PatchXNote Agent `0.2.10` 暴露和当前本地服务一致的 **19 个本地 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
+PatchXNote Agent `0.2.11` 暴露和当前本地服务一致的 **19 个本地 MCP 工具**。普通用户可以先理解成三类能力，下面的英文工具名是给 MCP Host 和 AI 助手调用用的。
 
 ### 账号和记录查询
 
@@ -406,7 +412,7 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 
 ## 当前限制
 
-`0.2.10` 是当前公测版本。
+`0.2.11` 是当前公测版本。
 
 - 默认服务端指向 PatchXNote 公测 API，不代表生产 SLA。
 - `mcp serve` 在编辑器启动时不会自动弹浏览器。请先运行 `mcp login`，或让 `setup --client <id>` 复用同一套 OAuth 流程。
@@ -446,6 +452,13 @@ patchxnote version
 ```
 
 发布二进制应报告 npm 包版本，commit 应为对应 GitHub Release tag 的提交。
+
+## 0.2.11 更新重点
+
+- 将 canonical PatchXNote MCP Skill 打包进 npm package。
+- 新增 `npx -y patchxnote-agent@latest skill install`，可以通过 npm 安装 skill，不再依赖单独的 skills CLI 或 GitHub clone。
+- 扩展 skill 包同步和校验，让 OpenAI、Claude、npm 三份副本和 `skills/patchxnote-mcp/` 保持字节一致。
+- 更新一句话 setup prompt 和搜索元数据：优先使用 npm-bundled skill installer，同时保留 MCP setup、浏览器 OAuth 和工具验证流程。
 
 ## 0.2.10 更新重点
 
@@ -503,7 +516,7 @@ MVP smoke 会构建 CLI，执行安装器 dry-run，检查 npm 通用 MCP 启动
 
 1. 确认目标 PatchXNote GoServer 已暴露所需 `/v1/agent/**` 路由。
 2. 确认 `packages/npm/package.json` 版本与 release tag 一致，tag 不带前缀 `v` 时要匹配包版本。
-3. 推送干净 tag，例如 `v0.2.10`。
+3. 推送干净 tag，例如 `v0.2.11`。
 4. 等待 GitHub Release 产物：`checksums.txt`，以及 Linux/macOS/Windows 的 amd64 和 arm64 二进制。
 5. npm publish 前确认 npm Trusted Publishing 已配置：
    - owner/user：`ZsTs119`

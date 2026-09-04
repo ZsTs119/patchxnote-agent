@@ -13,6 +13,18 @@ const packageJSON = require(path.join(packageRoot, "package.json"));
 const repo = "ZsTs119/patchxnote-agent";
 const lockTimeoutMs = 10000;
 const staleLockMs = 10 * 60 * 1000;
+const skillName = "patchxnote-mcp";
+const packagedSkillRoot = path.join(packageRoot, "skills", skillName);
+const managedSkillMarker = ".patchxnote-agent-skill.json";
+const ignoredSkillFileNames = new Set([".DS_Store", "Thumbs.db"]);
+const skillAgentTargets = new Map([
+  ["universal", [".agents", "skills", skillName]],
+  ["codex", [".codex", "skills", skillName]],
+  ["cursor", [".cursor", "skills", skillName]],
+  ["claude-code", [".claude", "skills", skillName]],
+  ["gemini-cli", [".gemini", "skills", skillName]],
+  ["github-copilot", [".github-copilot", "skills", skillName]]
+]);
 
 async function main(argv) {
   const parsed = parseArgs(argv);
@@ -23,6 +35,10 @@ async function main(argv) {
   }
   if (parsed.command === "uninstall") {
     await runUninstall(parsed);
+    return;
+  }
+  if (parsed.command === "skill" && parsed.subcommand === "install") {
+    await runSkillInstall(parsed);
     return;
   }
   if (parsed.command === "login") {
@@ -72,6 +88,16 @@ async function runInstall(parsed) {
 async function runUninstall(parsed) {
   const plan = createInstallPlan(parsed.command, parsed.options);
   await uninstall(plan, parsed.options);
+}
+
+async function runSkillInstall(parsed) {
+  const plan = createSkillInstallPlan(parsed.options);
+  if (parsed.options.dryRun) {
+    printSkillPlan(plan, parsed.options);
+    return;
+  }
+  const result = await installPackagedSkill(plan, parsed.options);
+  printSkillResult(result, parsed.options);
 }
 
 async function runLogin(parsed) {
@@ -135,6 +161,311 @@ function createInstallPlan(command, options = {}) {
     dry_run: Boolean(options.dryRun)
   };
   return plan;
+}
+
+function createSkillInstallPlan(options = {}) {
+  const source = path.resolve(options.sourceRoot || packagedSkillRoot);
+  assertPackagedSkillSource(source);
+  const home = path.resolve(options.home || process.env.PATCHXNOTE_AGENT_SKILL_HOME || os.homedir());
+  const agents = resolveSkillAgents(options.agents);
+  const sourceHash = hashSkillTree(source);
+  const targets = agents.map(agent => {
+    const targetPath = resolveSkillTargetPath(home, agent);
+    const inspection = inspectSkillTarget(source, targetPath);
+    return {
+      agent,
+      path: targetPath,
+      exists: inspection.exists,
+      managed: inspection.managed,
+      same_content: inspection.sameContent,
+      status: inspection.status,
+      reason: inspection.reason
+    };
+  });
+  return {
+    action: "skill_install",
+    dry_run: Boolean(options.dryRun),
+    package: packageJSON.name,
+    package_version: packageJSON.version,
+    skill: skillName,
+    source,
+    source_hash: `sha256:${sourceHash}`,
+    home,
+    force: Boolean(options.force),
+    targets
+  };
+}
+
+function assertPackagedSkillSource(source) {
+  const entry = path.join(source, "SKILL.md");
+  if (!fs.existsSync(entry)) {
+    throw new Error(`packaged PatchXNote MCP skill not found: ${entry}`);
+  }
+}
+
+function resolveSkillAgents(agents) {
+  const requested = Array.isArray(agents) && agents.length > 0 ? agents : ["universal"];
+  const expanded = [];
+  for (const agent of requested) {
+    if (agent === "all") {
+      expanded.push(...skillAgentTargets.keys());
+      continue;
+    }
+    if (!skillAgentTargets.has(agent)) {
+      throw new Error(`unsupported skill agent ${agent}; expected one of ${[...skillAgentTargets.keys(), "all"].join(", ")}`);
+    }
+    expanded.push(agent);
+  }
+  return [...new Set(expanded)];
+}
+
+function resolveSkillTargetPath(home, agent) {
+  const segments = skillAgentTargets.get(agent);
+  if (!segments) {
+    throw new Error(`unsupported skill agent ${agent}`);
+  }
+  return path.join(home, ...segments);
+}
+
+function inspectSkillTarget(source, targetPath) {
+  if (!fs.existsSync(targetPath)) {
+    return {
+      exists: false,
+      managed: false,
+      sameContent: false,
+      status: "missing",
+      reason: ""
+    };
+  }
+  const targetStat = fs.lstatSync(targetPath);
+  if (!targetStat.isDirectory()) {
+    return {
+      exists: true,
+      managed: false,
+      sameContent: false,
+      status: "conflict",
+      reason: "target path is not a directory"
+    };
+  }
+  const marker = readSkillMarker(targetPath);
+  const managed = isManagedSkillMarker(marker);
+  const comparison = compareSkillTrees(source, targetPath);
+  if (comparison.same) {
+    return {
+      exists: true,
+      managed,
+      sameContent: true,
+      status: managed ? "current" : "adoptable",
+      reason: managed ? "" : "same content without PatchXNote Agent marker"
+    };
+  }
+  return {
+    exists: true,
+    managed,
+    sameContent: false,
+    status: managed ? "managed_update" : "conflict",
+    reason: comparison.reason
+  };
+}
+
+function readSkillMarker(targetPath) {
+  const markerPath = path.join(targetPath, managedSkillMarker);
+  if (!fs.existsSync(markerPath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(markerPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function isManagedSkillMarker(marker) {
+  return Boolean(marker
+    && marker.managed_by === "patchxnote-agent"
+    && marker.skill === skillName);
+}
+
+function compareSkillTrees(source, targetPath) {
+  const sourceEntries = listSkillTree(source, { includeMarker: false });
+  const targetEntries = listSkillTree(targetPath, { includeMarker: false });
+  if (sourceEntries.unsupported.length > 0) {
+    throw new Error(`unsupported packaged skill entries: ${sourceEntries.unsupported.join(", ")}`);
+  }
+  if (targetEntries.unsupported.length > 0) {
+    return { same: false, reason: `unsupported target entries: ${targetEntries.unsupported.join(", ")}` };
+  }
+  const sourceFiles = sourceEntries.files;
+  const targetFiles = targetEntries.files;
+  const sourceSet = new Set(sourceFiles);
+  const targetSet = new Set(targetFiles);
+  for (const file of sourceFiles) {
+    if (!targetSet.has(file)) {
+      return { same: false, reason: `missing ${file}` };
+    }
+    const sourceBytes = fs.readFileSync(path.join(source, file));
+    const targetBytes = fs.readFileSync(path.join(targetPath, file));
+    if (!sourceBytes.equals(targetBytes)) {
+      return { same: false, reason: `changed ${file}` };
+    }
+  }
+  for (const file of targetFiles) {
+    if (!sourceSet.has(file)) {
+      return { same: false, reason: `extra ${file}` };
+    }
+  }
+  return { same: true, reason: "" };
+}
+
+function hashSkillTree(source) {
+  const entries = listSkillTree(source, { includeMarker: false });
+  if (entries.unsupported.length > 0) {
+    throw new Error(`unsupported packaged skill entries: ${entries.unsupported.join(", ")}`);
+  }
+  const hash = crypto.createHash("sha256");
+  for (const file of entries.files) {
+    hash.update(file);
+    hash.update("\0");
+    hash.update(fs.readFileSync(path.join(source, file)));
+    hash.update("\0");
+  }
+  return hash.digest("hex");
+}
+
+function listSkillTree(root, options = {}) {
+  const files = [];
+  const unsupported = [];
+
+  function walk(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      if (ignoredSkillFileNames.has(entry.name)) {
+        continue;
+      }
+      if (!options.includeMarker && entry.name === managedSkillMarker) {
+        continue;
+      }
+      const absolute = path.join(dir, entry.name);
+      const relative = path.relative(root, absolute).split(path.sep).join("/");
+      if (entry.isDirectory()) {
+        walk(absolute);
+        continue;
+      }
+      if (entry.isFile()) {
+        files.push(relative);
+        continue;
+      }
+      unsupported.push(relative);
+    }
+  }
+
+  walk(root);
+  return { files, unsupported };
+}
+
+async function installPackagedSkill(plan, options = {}) {
+  const targets = [];
+  for (const target of plan.targets) {
+    const status = installActionForSkillTarget(target, options.force);
+    if (status === "blocked") {
+      throw new Error(`skill target already exists and differs: ${target.path}; rerun with --force only if you want PatchXNote Agent to replace that folder`);
+    }
+    if (status === "unchanged") {
+      targets.push({ agent: target.agent, path: target.path, status });
+      continue;
+    }
+    await copySkillTreeAtomic(plan.source, target.path, createSkillMarker(plan));
+    targets.push({ agent: target.agent, path: target.path, status });
+  }
+  return {
+    action: plan.action,
+    dry_run: false,
+    package: plan.package,
+    package_version: plan.package_version,
+    skill: plan.skill,
+    source_hash: plan.source_hash,
+    targets
+  };
+}
+
+function installActionForSkillTarget(target, force) {
+  switch (target.status) {
+    case "missing":
+      return "installed";
+    case "current":
+      return "unchanged";
+    case "adoptable":
+      return "adopted";
+    case "managed_update":
+      return "updated";
+    case "conflict":
+      return force ? "replaced" : "blocked";
+    default:
+      return "blocked";
+  }
+}
+
+function createSkillMarker(plan) {
+  return {
+    managed_by: "patchxnote-agent",
+    package: plan.package,
+    package_version: plan.package_version,
+    skill: plan.skill,
+    source: "npm",
+    source_hash: plan.source_hash,
+    installed_at: new Date().toISOString()
+  };
+}
+
+async function copySkillTreeAtomic(source, targetPath, marker) {
+  const parent = path.dirname(targetPath);
+  await fs.promises.mkdir(parent, { recursive: true });
+  const unique = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const tempPath = path.join(parent, `.${path.basename(targetPath)}.tmp-${unique}`);
+  const backupPath = path.join(parent, `.${path.basename(targetPath)}.bak-${unique}`);
+  let hasBackup = false;
+  try {
+    await fs.promises.rm(tempPath, { recursive: true, force: true });
+    await fs.promises.mkdir(tempPath, { recursive: true });
+    for (const file of listSkillTree(source, { includeMarker: false }).files) {
+      const sourceFile = path.join(source, file);
+      const targetFile = path.join(tempPath, file);
+      await fs.promises.mkdir(path.dirname(targetFile), { recursive: true });
+      await fs.promises.copyFile(sourceFile, targetFile);
+    }
+    await fs.promises.writeFile(
+      path.join(tempPath, managedSkillMarker),
+      `${JSON.stringify(marker, null, 2)}\n`,
+      "utf8"
+    );
+
+    try {
+      await fs.promises.rename(targetPath, backupPath);
+      hasBackup = true;
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
+    }
+
+    try {
+      await fs.promises.rename(tempPath, targetPath);
+    } catch (error) {
+      if (hasBackup) {
+        await fs.promises.rename(backupPath, targetPath).catch(() => {});
+      }
+      throw error;
+    }
+
+    if (hasBackup) {
+      await fs.promises.rm(backupPath, { recursive: true, force: true }).catch(() => {});
+    }
+  } finally {
+    await fs.promises.rm(tempPath, { recursive: true, force: true }).catch(() => {});
+    if (!fs.existsSync(targetPath)) {
+      await fs.promises.rm(backupPath, { recursive: true, force: true }).catch(() => {});
+    }
+  }
 }
 
 async function installBinary(plan, options = {}) {
@@ -391,6 +722,13 @@ function parseArgs(argv) {
   if (["install", "update", "uninstall"].includes(command)) {
     return { command, options: parseInstallOptions(command, rest), passthroughArgs: [] };
   }
+  if (command === "skill") {
+    const [subcommand, ...subcommandArgs] = rest;
+    if (subcommand !== "install") {
+      throw new Error(skillUsage());
+    }
+    return { command, subcommand, options: parseSkillInstallOptions(subcommandArgs), passthroughArgs: [] };
+  }
   if (command === "login") {
     const launcher = parseLauncherOptions(rest, { allowPassthrough: true, rejectPrintConfig: true });
     return { command, options: launcher.options, passthroughArgs: launcher.passthroughArgs };
@@ -442,6 +780,43 @@ function parseInstallOptions(command, rest) {
         break;
       case "--arch":
         options.arch = requireValue(rest, ++index, arg);
+        break;
+      default:
+        throw new Error(`unknown option ${arg}`);
+    }
+  }
+  return options;
+}
+
+function parseSkillInstallOptions(rest) {
+  const options = { agents: [] };
+  for (let index = 0; index < rest.length; index += 1) {
+    const arg = rest[index];
+    switch (arg) {
+      case "--dry-run":
+        options.dryRun = true;
+        break;
+      case "--json":
+        options.json = true;
+        break;
+      case "--force":
+        options.force = true;
+        break;
+      case "--copy":
+      case "-g":
+        options.copy = true;
+        break;
+      case "--agent":
+        {
+          const agent = requireValue(rest, ++index, arg);
+          if (agent !== "all" && !skillAgentTargets.has(agent)) {
+            throw new Error(`unsupported skill agent ${agent}; expected one of ${[...skillAgentTargets.keys(), "all"].join(", ")}`);
+          }
+          options.agents.push(agent);
+        }
+        break;
+      case "--home":
+        options.home = requireValue(rest, ++index, arg);
         break;
       default:
         throw new Error(`unknown option ${arg}`);
@@ -550,6 +925,31 @@ function joinInstallPath(installDir, binaryName, targetPlatform) {
 function printPlan(plan) {
   console.log(`PatchXNote Agent ${plan.action} dry run:`);
   console.log(JSON.stringify(plan, null, 2));
+}
+
+function printSkillPlan(plan, options = {}) {
+  if (options.json) {
+    console.log(JSON.stringify(plan, null, 2));
+    return;
+  }
+  console.log("PatchXNote MCP Skill install dry run:");
+  console.log(`Package: ${plan.package}@${plan.package_version}`);
+  console.log(`Source: ${plan.source}`);
+  console.log(`Source hash: ${plan.source_hash}`);
+  for (const target of plan.targets) {
+    console.log(`- ${target.agent}: ${target.path} (${target.status}${target.reason ? `: ${target.reason}` : ""})`);
+  }
+}
+
+function printSkillResult(result, options = {}) {
+  if (options.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  for (const target of result.targets) {
+    console.log(`PatchXNote MCP Skill ${target.status} for ${target.agent}: ${target.path}`);
+  }
+  console.log("Next: ask your AI assistant to use the PatchXNote MCP Skill, then run PatchXNote MCP setup if needed.");
 }
 
 function printMCPConfig(commandPath) {
@@ -669,11 +1069,15 @@ function verifyChecksum(binary, assetName, checksumsText) {
 }
 
 function usage() {
-  return "usage: patchxnote-agent <install|update|uninstall|login|setup|mcp> [options]";
+  return "usage: patchxnote-agent <install|update|uninstall|skill|login|setup|mcp> [options]";
 }
 
 function mcpUsage() {
   return "usage: patchxnote-agent mcp <serve|config|login|status|logout> [options]";
+}
+
+function skillUsage() {
+  return "usage: patchxnote-agent skill install [--agent universal|codex|cursor|claude-code|gemini-cli|github-copilot|all] [--home <path>] [--dry-run] [--json] [--force]";
 }
 
 if (require.main === module) {
@@ -684,12 +1088,18 @@ if (require.main === module) {
 }
 
 module.exports = {
+  createSkillInstallPlan,
+  installActionForSkillTarget,
   createInstallPlan,
   defaultInstallDir,
+  inspectSkillTarget,
   inspectInstalledBinary,
   parseLauncherOptions,
   parseArgs,
+  parseSkillInstallOptions,
   resolveTarget,
+  resolveSkillAgents,
+  resolveSkillTargetPath,
   joinInstallPath,
   isInstallDirOnPath,
   pathHint,

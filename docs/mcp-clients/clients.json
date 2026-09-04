@@ -10,9 +10,9 @@
       "mcp",
       "serve"
     ],
-    "candidate_version": "0.2.10",
-    "candidate_evidence_state": "published_smoked",
-    "candidate_evidence": "docs/evidence/2026-09-04-release-0.2.10.zh-CN.md"
+    "candidate_version": "0.2.11",
+    "candidate_evidence_state": "locally_smoked",
+    "candidate_evidence": "docs/evidence/2026-09-04-release-0.2.11.zh-CN.md"
   },
   "remote_gateway": {
     "planned_url": "https://ws-lab.patch-x.cn/patchnote-test-api/mcp",

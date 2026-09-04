@@ -16,10 +16,10 @@ PatchXNote server-backed data access is read-only and platform-scoped. The local
 
 ## Install
 
-Skill package after GitHub release:
+Agent Skill:
 
 ```sh
-npx skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
+npx -y patchxnote-agent@latest skill install
 ```
 
 MCP server setup:
