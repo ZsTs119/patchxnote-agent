@@ -11,7 +11,7 @@
       "serve"
     ],
     "candidate_version": "0.2.11",
-    "candidate_evidence_state": "locally_smoked",
+    "candidate_evidence_state": "published_smoked",
     "candidate_evidence": "docs/evidence/2026-09-04-release-0.2.11.zh-CN.md"
   },
   "remote_gateway": {

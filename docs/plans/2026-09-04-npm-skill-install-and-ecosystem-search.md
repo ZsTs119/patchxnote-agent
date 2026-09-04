@@ -18,13 +18,13 @@
 | Task 1: Add The Npm-Packaged Skill Copy | `done_local` | Sync script now writes `packages/npm/skills/patchxnote-mcp/`; `npm pack --dry-run --json` listed the skill and references. |
 | Task 2: Implement `patchxnote-agent skill install` | `done_local` | npm wrapper supports `skill install`, `--dry-run`, `--json`, `--agent`, `--home`, `--force`, and `--copy`; `node packages/npm/test/install.test.js` passed. |
 | Task 3: Update User-Facing One-Liners | `done_local` | English, Chinese, npm README, starter prompts, and onboarding reference use `npx -y patchxnote-agent@latest skill install` before MCP setup. |
-| Task 4: Improve GitHub And Skill Search Metadata | `partial_done` | npm keywords and skill metadata were updated; `npx skills find patchxnote` and owner-filtered search returned no results, so search indexing is still separate. |
-| Task 5: Decide Whether A Lightweight Skill Mirror Is Needed | `deferred` | Existing repo remains canonical; no mirror was created because npm-bundled install is now the primary path and search indexing has not been accepted. |
+| Task 4: Improve GitHub And Skill Search Metadata | `done_with_search_pending` | npm keywords, skill metadata, README discoverability copy, and GitHub topics were updated; `npx skills find` still does not index PatchXNote, so search acceptance remains separate. |
+| Task 5: Decide Whether A Lightweight Skill Mirror Is Needed | `deferred_by_design` | Existing repo remains canonical; no mirror was created because npm-bundled install is now the primary path and search indexing has not been accepted. |
 | Task 6: Local Validation | `done_local_with_go_note` | sync/validate, skill validator, plugin validator, client registry validator, npm wrapper tests, temp-package install, npm pack dry-run, and `git diff --check` passed; full WSL `go test ./...` is blocked by Go 1.18, while a Windows Go temp-copy package subset passed except Windows-only keychain POSIX mode coverage. |
-| Task 7: Release `0.2.11` | `pending` | Version metadata is prepared; GitHub tag/release and npm publish are not completed yet. |
-| Task 8: Published MCP Smoke | `pending` | Must run after npm latest resolves to `0.2.11`. |
-| Task 9: Search/Discovery Acceptance | `not_indexed` | `npx -y skills find patchxnote` and `npx -y skills find patchxnote --owner ZsTs119` returned no results on 2026-09-04. |
-| Task 10: Evidence/Rollback | `partial_done` | Evidence log and `docs/evidence/2026-09-04-release-0.2.11.zh-CN.md` record local candidate evidence; publish evidence is pending. |
+| Task 7: Release `0.2.11` | `done` | Commit `d95ddf507676a263b503543589d52c003e402050`, tag `v0.2.11`, GitHub Release workflow `33853658844`, and npm Trusted Publishing workflow `33854304659` all completed successfully. |
+| Task 8: Published MCP Smoke | `done` | npm latest resolves to `0.2.11`; published-package skill install, `mcp config`, Windows binary install, and stdio MCP smoke passed. |
+| Task 9: Search/Discovery Acceptance | `indexed_pending` | `npx -y skills find patchxnote` and owner-filtered search returned no results; `"patchxnote mcp"` returned generic MCP skills but not PatchXNote on 2026-09-04. |
+| Task 10: Evidence/Rollback | `done` | Evidence log and `docs/evidence/2026-09-04-release-0.2.11.zh-CN.md` now record release, npm registry, published-package smoke, GitHub topics, and search indexing status. |
 
 ---
 
