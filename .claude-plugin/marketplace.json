@@ -1,0 +1,13 @@
+{
+  "name": "patchxnote-agent",
+  "owner": {
+    "name": "PatchXNote"
+  },
+  "plugins": [
+    {
+      "name": "patchxnote-agent",
+      "source": "./packages/plugins/claude/patchxnote-agent",
+      "description": "Adds the patchxnote-mcp skill for connecting and using PatchXNote MCP safely."
+    }
+  ]
+}

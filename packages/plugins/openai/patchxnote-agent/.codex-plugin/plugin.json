@@ -1,0 +1,39 @@
+{
+  "name": "patchxnote-agent",
+  "version": "0.1.0",
+  "description": "PatchXNote MCP setup and workflow skill package.",
+  "author": {
+    "name": "PatchXNote",
+    "url": "https://github.com/ZsTs119"
+  },
+  "homepage": "https://github.com/ZsTs119/patchxnote-agent#readme",
+  "repository": "https://github.com/ZsTs119/patchxnote-agent",
+  "license": "UNLICENSED",
+  "keywords": [
+    "patchxnote",
+    "mcp",
+    "agent-skills",
+    "recordings",
+    "notes",
+    "memory"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "PatchXNote Agent",
+    "shortDescription": "Set up PatchXNote MCP and use summaries safely.",
+    "longDescription": "Helps local AI clients install, verify, and use PatchXNote MCP workflows while preserving OAuth, runtime, and evidence boundaries.",
+    "developerName": "PatchXNote",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Workflow"
+    ],
+    "websiteURL": "https://github.com/ZsTs119/patchxnote-agent",
+    "brandColor": "#1F7A68",
+    "defaultPrompt": [
+      "Help me connect PatchXNote MCP.",
+      "List my latest 5 PatchXNote mobile summaries.",
+      "Check my PatchXNote MCP tools."
+    ]
+  }
+}

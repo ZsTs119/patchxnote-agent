@@ -1,0 +1,9 @@
+{
+  "name": "patchxnote-agent",
+  "description": "Adds the patchxnote-mcp skill for connecting and using PatchXNote MCP safely.",
+  "version": "0.1.0",
+  "author": {
+    "name": "PatchXNote",
+    "url": "https://github.com/ZsTs119"
+  }
+}

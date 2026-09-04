@@ -9,8 +9,16 @@ PatchXNote Agent is the local AI assistant connector for PatchXNote. It lets an 
 Give this one-line prompt to a local-command-capable AI assistant:
 
 ```text
-Help me connect PatchXNote MCP. Identify the MCP client you are running in; if this is a local MCP client such as Codex, Cursor, VS Code, Claude Desktop, or Windsurf, run npx -y patchxnote-agent@latest setup --client <client-id> on this machine in the same OS/runtime that will later launch the MCP server. If you are not sure which client ID to use, first run npx -y patchxnote-agent@latest mcp config and use the printed generic stdio config. For login, open the browser and let me complete PatchXNote phone-code authorization there; do not ask me to paste OTP codes, OAuth codes, authorization codes, access tokens, refresh tokens, or webhook secrets into chat. After setup, call patchxnote_get_current_user and patchxnote_list_memories with {"platform":"mobile","limit":5} to verify it works. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
+Help me connect PatchXNote MCP and install the PatchXNote MCP Skill when the client supports Agent Skills. First, if this is a local command-capable environment where the skills CLI can run, execute npx -y skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g on this machine so future or long sessions remember the PatchXNote SOP; if skill installation is not supported, continue with MCP setup directly. Identify the MCP client you are running in; if this is a local MCP client such as Codex, Cursor, VS Code, Claude Desktop, Claude Code, or Windsurf, run npx -y patchxnote-agent@latest setup --client <client-id> on this machine in the same OS/runtime that will later launch the MCP server. If you are not sure which client ID to use, first run npx -y patchxnote-agent@latest mcp config and use the printed generic stdio config. For login, open the browser and let me complete PatchXNote phone-code authorization there; do not ask me to paste OTP codes, OAuth codes, authorization codes, access tokens, refresh tokens, or webhook secrets into chat. After setup, call patchxnote_get_current_user and patchxnote_list_memories with {"platform":"mobile","limit":5} to verify it works. References: https://github.com/ZsTs119/patchxnote-agent and https://patchx2025.feishu.cn/wiki/PnVRwYT7IirFPckairGcWPnHnCd
 ```
+
+The repository includes an Agent Skills package at `skills/patchxnote-mcp/`. After the repository version containing it is available on GitHub, compatible agents can install it with:
+
+```sh
+npx -y skills add ZsTs119/patchxnote-agent --skill patchxnote-mcp -g
+```
+
+The skill teaches the AI the PatchXNote SOP. MCP setup and browser login still use the commands below.
 
 Run setup for a supported local client:
 

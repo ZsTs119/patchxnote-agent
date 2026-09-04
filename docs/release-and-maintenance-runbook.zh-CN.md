@@ -20,10 +20,10 @@
 - GitHub Release workflow：`.github/workflows/release.yml`
 - macOS 安装冒烟 workflow：`.github/workflows/macos-install-smoke.yml`
 - 当前公测服务端：PatchXNote 公测 API，具体默认值以 `internal/config/config.go` 为准
-- 当前已发布版本：`0.2.9`
-- 当前 `0.2.9` 能力：`mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client`，以及浏览器 loopback 登录结果页优化。
-- 当前 `0.2.9` 发布证据：见 `docs/evidence/2026-09-01-release-0.2.9.zh-CN.md`。
-- 当前 `0.2.9` 本地候选验收事实：见 `docs/evidence/2026-09-01-mcp-oauth-local-acceptance.zh-CN.md`。这只代表发布前本地候选验收通过，不代表单个编辑器 UI 或平台型客户端已经验收。
+- 当前已发布版本：`0.2.10`
+- 当前 `0.2.10` 能力：继承 `0.2.9` 的 `mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client` 和浏览器 loopback 登录结果页优化，并新增 PatchXNote MCP Skill、marketplace 草稿包、MCP Registry 元数据和本地发布验证脚本。
+- 当前 `0.2.10` 发布证据：发布完成后记录到 `docs/evidence/2026-09-04-release-0.2.10.zh-CN.md`。
+- 当前 `0.2.10` 本地候选验收事实：见 `docs/marketplace/evidence-log.md` 和发布后证据文档。它只代表本地包、stdio MCP 和仓库侧分发资料验收，不代表单个编辑器 UI、平台型客户端或公开 marketplace 已验收。
 
 历史兼容事实：
 
@@ -456,6 +456,53 @@ Agent 仓库 README 图片素材位于：
 ```text
 docs/assets/
 ```
+
+## Skill / Marketplace 发布同步流程
+
+每次 MCP 安装流程、工具名、工具参数、平台范围、安全边界、发行版本或公开文案变化后，同步以下文件：
+
+1. `skills/patchxnote-mcp/SKILL.md`，作为所有平台复用的 canonical skill 入口
+2. `skills/patchxnote-mcp/references/*.md`，承载较长 SOP、排障、安全和事实源
+3. `packages/plugins/openai/patchxnote-agent/.codex-plugin/plugin.json`
+4. `packages/plugins/claude/patchxnote-agent/.claude-plugin/plugin.json`
+5. `.agents/plugins/marketplace.json`
+6. `.claude-plugin/marketplace.json`
+7. `server.json`
+8. `smithery.yaml`
+9. `docs/marketplace/*.md`
+10. README 的一句话安装文案和 Skill 安装说明
+
+同步原则：
+
+- 不在 Skill 或 marketplace 文案里硬编码 MCP 工具总数；实际工具数量以运行时 `list_tools` / 客户端工具面板为准。
+- Skill 只保存流程、约束和触发说明，不保存 OTP、OAuth code、access token、refresh token、webhook secret 或任何真实用户数据。
+- 登录必须通过本机浏览器完成，不要求用户把验证码、授权码或 token 粘贴到聊天里。
+- marketplace 对外状态必须分层写清楚：`drafted`、`locally_smoked`、`submitted`、`approved`、`published`，不能把本地校验或草稿说成公开平台已通过。
+- OpenAI / Codex、Claude Code、Agent Skills、MCP Registry、Smithery 等渠道各自有独立规范；一个平台通过不代表其他平台通过。
+- 当前仓库没有开源许可证时，发布文案和 manifest 必须继续标注 `UNLICENSED`，不要写成 MIT/Apache 等许可证。
+
+每次修改后至少执行：
+
+```sh
+node scripts/sync-patchxnote-skill-packages.mjs --check
+node scripts/validate-patchxnote-skill-packages.mjs
+node scripts/smoke-mcp-stdio.mjs
+python3 /mnt/c/Users/11979/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/patchxnote-mcp
+python3 /mnt/c/Users/11979/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py packages/plugins/openai/patchxnote-agent
+git diff --check
+```
+
+如果本机 WSL 没有 Node.js，可以在 Windows 侧从仓库 UNC 目录执行 `node ...`；若出现 UNC 提示，只要命令成功且没有写入错误，可以在证据中记录为已知环境提示。
+
+发布前还应视渠道补充外部验证：
+
+- OpenAI / Codex：按 `docs/marketplace/openai-submission.zh-CN.md` 准备 listing、支持/隐私/条款 URL 和审核资料。
+- Claude Code：按 `docs/marketplace/claude-code-marketplace.zh-CN.md` 验证 marketplace 与 plugin manifest。
+- Agent Skills：按 `docs/marketplace/agent-skills-install.md` 验证 `npx skills add` 的安装路径和触发效果。
+- MCP Registry：按 `docs/marketplace/mcp-registry.zh-CN.md` 使用 `mcp-publisher validate` / `publish`，并先确认 npm package 已发布且 `package.json#mcpName` 与 `server.json#name` 一致。
+- Smithery：按 `docs/marketplace/platform-matrix.zh-CN.md` 决定是保留 stdio 草稿，还是补 Streamable HTTP / OAuth 后发布远程入口。
+
+完成验证后更新 `docs/marketplace/evidence-log.md`。没有真实安装、审核、发布或账号授权证据时，保持对应渠道为待验收。
 
 ## 安全检查清单
 

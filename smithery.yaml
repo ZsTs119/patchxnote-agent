@@ -1,0 +1,15 @@
+# Draft Smithery metadata for PatchXNote Agent.
+# Do not publish from this file until the chosen Smithery path is accepted:
+# hosted Streamable HTTP MCP with OAuth, or a reviewed local MCPB bundle.
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+    additionalProperties: false
+  commandFunction: |-
+    (config) => ({
+      command: 'npx',
+      args: ['-y', 'patchxnote-agent@latest', 'mcp', 'serve']
+    })
+  exampleConfig: {}

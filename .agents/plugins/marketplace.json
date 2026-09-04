@@ -1,0 +1,20 @@
+{
+  "name": "patchxnote-agent",
+  "interface": {
+    "displayName": "PatchXNote Agent"
+  },
+  "plugins": [
+    {
+      "name": "patchxnote-agent",
+      "source": {
+        "source": "local",
+        "path": "./packages/plugins/openai/patchxnote-agent"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
