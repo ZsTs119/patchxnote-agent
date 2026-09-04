@@ -18,7 +18,9 @@ The npm package includes an Agent Skills package at `skills/patchxnote-mcp/`. Co
 npx -y patchxnote-agent@latest skill install
 ```
 
-The skill teaches the AI the PatchXNote SOP. MCP setup and browser login still use the commands below. Use `--agent <id>` only after that client's local skills directory is verified.
+The skill teaches the AI the PatchXNote SOP. MCP setup and browser login still use the commands below. By default, the installer writes under the user's home directory at `.agents/skills/patchxnote-mcp`; use `--agent <id>` only after that client's local skills directory is verified.
+
+Useful skill installer options are `--dry-run --json`, `--home <path>` or `PATCHXNOTE_AGENT_SKILL_HOME=<path>`, `--agent universal|codex|cursor|claude-code|gemini-cli|github-copilot|all`, and `--force`. Existing unmanaged or manually edited `patchxnote-mcp` folders are protected unless `--force` is supplied.
 
 Run setup for a supported local client:
 
@@ -77,11 +79,23 @@ npx -y patchxnote-agent@latest install --print-config
 
 It currently exposes 19 MCP tools grouped around account/record lookup, webhook configuration and sending, and explicit AI result inspection.
 
+Common npm wrapper commands:
+
+```sh
+npx -y patchxnote-agent@latest skill install
+npx -y patchxnote-agent@latest setup --client cursor
+npx -y patchxnote-agent@latest mcp login
+npx -y patchxnote-agent@latest mcp status
+npx -y patchxnote-agent@latest mcp config
+npx -y patchxnote-agent@latest mcp serve
+npx -y patchxnote-agent@latest install --print-config
+```
+
 Common CLI examples:
 
 ```sh
 patchxnote model-io list --platform mobile
-patchxnote model-io packaged-result --memory-id <memory_or_request_id> --platform mobile --out ./packaged-result.json
+patchxnote model-io packaged-result --request-id <request_id> --platform mobile --out ./packaged-result.json
 patchxnote model-io provider-response --request-id <request_id> --platform mobile --out ./provider-response.json
 patchxnote webhook set "Product Feishu" --type feishu --url-stdin
 patchxnote webhook send --target "Product Feishu" --file ./message.md

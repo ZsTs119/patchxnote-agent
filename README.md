@@ -46,7 +46,18 @@ This repository also includes an Agent Skills package at `skills/patchxnote-mcp/
 npx -y patchxnote-agent@latest skill install
 ```
 
-Use `--agent <id>` only after that client's local skills directory is verified; the default writes to the portable Agent Skills directory.
+Use `--agent <id>` only after that client's local skills directory is verified; the default writes under the user's home directory at `.agents/skills/patchxnote-mcp`.
+
+Useful skill installer options:
+
+| Option | Use |
+| --- | --- |
+| `--dry-run --json` | Preview target paths and conflict status without writing files. |
+| `--home <path>` or `PATCHXNOTE_AGENT_SKILL_HOME=<path>` | Install into a test or alternate home directory. |
+| `--agent universal|codex|cursor|claude-code|gemini-cli|github-copilot|all` | Target a known local skill directory family after its location is verified. |
+| `--force` | Replace an existing unmanaged or manually edited `patchxnote-mcp` skill after explicit user intent. |
+
+The installer is idempotent. If an existing `patchxnote-mcp` directory differs and is not managed by this package, it refuses to overwrite it unless `--force` is supplied. Managed installs include `.patchxnote-agent-skill.json` with the package version and source hash.
 
 The skill does not authenticate PatchXNote or start MCP by itself. It complements the MCP setup command:
 
@@ -54,7 +65,7 @@ The skill does not authenticate PatchXNote or start MCP by itself. It complement
 npx -y patchxnote-agent@latest setup --client <client-id>
 ```
 
-For troubleshooting or rollback after `0.2.11` is published, pin the skill installer:
+For troubleshooting or rollback, pin the current published skill installer:
 
 ```sh
 npx -y patchxnote-agent@0.2.11 skill install
@@ -121,7 +132,13 @@ PatchXNote Agent now has two productized login surfaces and two MCP service shap
 
 ![PatchXNote Agent quickstart](./docs/assets/patchxnote-agent-quickstart.png)
 
-Run setup for the client you use:
+For compatible Agent Skills clients, install or refresh the SOP skill first:
+
+```sh
+npx -y patchxnote-agent@latest skill install
+```
+
+Then run setup for the client you use:
 
 ```sh
 npx -y patchxnote-agent@latest setup --client vscode
@@ -376,6 +393,7 @@ npx -y patchxnote-agent@latest mcp status
 npx -y patchxnote-agent@latest mcp config
 npx -y patchxnote-agent@latest mcp serve
 npx -y patchxnote-agent@latest mcp logout --local-only
+npx -y patchxnote-agent@latest skill install
 npx -y patchxnote-agent@latest login
 npx -y patchxnote-agent@latest setup --client cursor
 npx -y patchxnote-agent@latest install
@@ -437,12 +455,14 @@ Do not paste access tokens, refresh tokens, OTP codes, raw phone numbers, full M
 | Record list is empty | Check that you selected the correct `platform`: `mobile` or `desktop`; use `model-io list` for lower-level AI processing runs. |
 | Webhook did not send | Confirm the alias exists, the target is enabled, and check the provider error returned by the command. |
 | Checksum verification fails | Retry later or pin a known version; the installer refuses unchecked binaries. |
+| `skill install` says the target already exists and differs | The target contains an unmanaged or manually edited `patchxnote-mcp` skill. Inspect or back it up first; rerun with `--force` only when you want PatchXNote Agent to replace that skill folder. |
 | Wrong server environment | Set `PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`. |
 
 ## Verify The Install
 
 ```sh
 npm view patchxnote-agent@latest version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest skill install --dry-run --json
 npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp config
 npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp status --output json
 npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp logout --local-only --output json
@@ -457,6 +477,7 @@ The release binary should report the npm package version and the commit attached
 
 - Bundles the canonical PatchXNote MCP Skill inside the npm package.
 - Adds `npx -y patchxnote-agent@latest skill install` for npm-based skill installation without relying on a separate skills CLI or GitHub clone.
+- Makes skill installation idempotent, records a managed marker, and protects manually edited skill folders unless `--force` is explicitly used.
 - Extends skill package sync and validation so OpenAI, Claude, and npm copies stay byte-identical to `skills/patchxnote-mcp/`.
 - Updates the one-line setup prompt and discovery metadata to prefer the npm-bundled skill installer while preserving MCP setup, browser OAuth, and tool verification.
 

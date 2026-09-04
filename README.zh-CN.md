@@ -46,7 +46,18 @@ npm 上的 `patchxnote-agent` 是 MCP installer/runtime 包，并且已经打包
 npx -y patchxnote-agent@latest skill install
 ```
 
-只有在确认目标客户端的本地 skills 目录后，再使用 `--agent <id>`；默认会写入可移植的 Agent Skills 目录。
+只有在确认目标客户端的本地 skills 目录后，再使用 `--agent <id>`；默认会写入用户 home 目录下的 `.agents/skills/patchxnote-mcp`。
+
+常用 skill installer 参数：
+
+| 参数 | 用途 |
+| --- | --- |
+| `--dry-run --json` | 只预览目标路径和冲突状态，不写文件。 |
+| `--home <path>` 或 `PATCHXNOTE_AGENT_SKILL_HOME=<path>` | 安装到测试 home 或自定义 home。 |
+| `--agent universal|codex|cursor|claude-code|gemini-cli|github-copilot|all` | 在确认目标客户端 skills 目录后，写入指定客户端目录族。 |
+| `--force` | 在用户明确同意后，替换已有的非托管或手动修改过的 `patchxnote-mcp` skill。 |
+
+安装器支持重复执行。如果已有 `patchxnote-mcp` 目录内容不同，并且不是本 npm 包托管的目录，它会拒绝覆盖，除非显式传入 `--force`。托管安装会写入 `.patchxnote-agent-skill.json`，记录 npm 包版本和 source hash。
 
 Skill 不会自己完成 PatchXNote 登录，也不会自己启动 MCP server。它是 MCP setup 的流程说明和安全边界补充，仍然需要执行：
 
@@ -54,7 +65,7 @@ Skill 不会自己完成 PatchXNote 登录，也不会自己启动 MCP server。
 npx -y patchxnote-agent@latest setup --client <client-id>
 ```
 
-排查或回滚时，在 `0.2.11` 发布后可以固定 skill installer：
+排查或回滚时，可以固定当前已发布的 skill installer：
 
 ```sh
 npx -y patchxnote-agent@0.2.11 skill install
@@ -121,7 +132,13 @@ PatchXNote Agent 现在有两种正式登录入口、两种 MCP 服务形态：
 
 ![三步接入 PatchXNote Agent](./docs/assets/patchxnote-agent-quickstart.png)
 
-先按你使用的客户端运行 setup：
+对于兼容 Agent Skills 的客户端，建议先安装或刷新 SOP skill：
+
+```sh
+npx -y patchxnote-agent@latest skill install
+```
+
+然后按你使用的客户端运行 setup：
 
 ```sh
 npx -y patchxnote-agent@latest setup --client vscode
@@ -376,6 +393,7 @@ npx -y patchxnote-agent@latest mcp status
 npx -y patchxnote-agent@latest mcp config
 npx -y patchxnote-agent@latest mcp serve
 npx -y patchxnote-agent@latest mcp logout --local-only
+npx -y patchxnote-agent@latest skill install
 npx -y patchxnote-agent@latest login
 npx -y patchxnote-agent@latest setup --client cursor
 npx -y patchxnote-agent@latest install
@@ -437,12 +455,14 @@ PatchXNote Agent 会让 AI Agent 访问当前登录 PatchXNote 用户的账号�
 | 记录列表为空 | 检查是否选择了正确的 `platform`：`mobile` 或 `desktop`；底层 AI 调用记录请用 `model-io list`。 |
 | webhook 没发出去 | 确认别名存在、目标启用，并检查下游平台返回的错误信息。 |
 | checksum 校验失败 | 稍后重试或固定已知版本；安装器会拒绝未校验二进制。 |
+| `skill install` 提示目标已存在且内容不同 | 目标目录里已有非托管或手动修改过的 `patchxnote-mcp` skill。先检查或备份；只有确认要让 PatchXNote Agent 替换该 skill 目录时，再执行 `--force`。 |
 | 连到了错误服务端 | 设置 `PATCHXNOTE_SERVER_BASE_URL=<PatchXNote API base URL>`。 |
 
 ## 验证安装
 
 ```sh
 npm view patchxnote-agent@latest version --registry https://registry.npmjs.org
+npx -y --registry https://registry.npmjs.org patchxnote-agent@latest skill install --dry-run --json
 npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp config
 npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp status --output json
 npx -y --registry https://registry.npmjs.org patchxnote-agent@latest mcp logout --local-only --output json
@@ -457,6 +477,7 @@ patchxnote version
 
 - 将 canonical PatchXNote MCP Skill 打包进 npm package。
 - 新增 `npx -y patchxnote-agent@latest skill install`，可以通过 npm 安装 skill，不再依赖单独的 skills CLI 或 GitHub clone。
+- skill 安装支持重复执行，会写入托管标记；已有手动修改目录时默认保护性拒绝，只有显式 `--force` 才会替换。
 - 扩展 skill 包同步和校验，让 OpenAI、Claude、npm 三份副本和 `skills/patchxnote-mcp/` 保持字节一致。
 - 更新一句话 setup prompt 和搜索元数据：优先使用 npm-bundled skill installer，同时保留 MCP setup、浏览器 OAuth 和工具验证流程。
 
