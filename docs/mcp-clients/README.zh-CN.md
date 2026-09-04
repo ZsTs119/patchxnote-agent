@@ -15,9 +15,9 @@
 
 ## 本地闭环
 
-截至 `2026-09-01`，`patchxnote-agent@0.2.9` 已发布到 npm 和 GitHub Releases，发布包 install、`mcp config`、clean-profile `mcp status`、`setup --client cursor --dry-run --print-config`、Windows 安装、Linux checksum、macOS 安装/MCP smoke 均已通过。`0.2.8` 本地候选曾通过 Windows-native 通用链路验收：浏览器 OAuth 自动打开、GoServer 页面登录、Windows 凭据保存、`mcp status --verify`、stdio `initialize/tools/list/current-user`、mobile 总结记录和 model-IO 字段读取、以及 npm wrapper `--from-local` 候选安装代理。证据见 `docs/evidence/2026-09-01-release-0.2.9.zh-CN.md` 和 `docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md`。
+截至 `2026-09-04`，`patchxnote-agent@0.2.10` 已发布到 npm 和 GitHub Releases，发布包 `mcp config`、clean-profile `mcp status`、`setup --client cursor --dry-run --print-config`、Windows 安装、stdio MCP `tools/list/current-user/mobile memories` smoke 均已通过。`0.2.9` 曾完成发布包 install、`mcp config`、clean-profile `mcp status`、`setup --client cursor --dry-run --print-config`、Windows 安装、Linux checksum、macOS 安装/MCP smoke。`0.2.8` 本地候选曾通过 Windows-native 通用链路验收：浏览器 OAuth 自动打开、GoServer 页面登录、Windows 凭据保存、`mcp status --verify`、stdio `initialize/tools/list/current-user`、mobile 总结记录和 model-IO 字段读取、以及 npm wrapper `--from-local` 候选安装代理。证据见 `docs/evidence/2026-09-04-release-0.2.10.zh-CN.md`、`docs/evidence/2026-09-01-release-0.2.9.zh-CN.md` 和 `docs/evidence/2026-08-27-mcp-oauth-local-acceptance.zh-CN.md`。
 
-Fresh registry 包浏览器 OAuth 登录仍是单独验收项：`0.2.9` 本地源码候选登录闭环已通过，但发布后的 clean-profile OTP 登录没有在本次 npm closeout 中重复完成。不要把“发布包可安装/可启动”写成“每个编辑器或平台都已完成真实授权验收”。
+Fresh registry 包浏览器 OAuth 登录仍是单独验收项：`0.2.10` 本地 stdio MCP smoke 通过，`0.2.9` 本地源码候选登录闭环已通过，但 `0.2.10` 发布后的 clean-profile OTP 登录没有在本次 npm closeout 中重复完成。不要把“发布包可安装/可启动”写成“每个编辑器或平台都已完成真实授权验收”。
 
 这个结论只代表“通用本地 stdio MCP 链路可用”。VS Code、Cursor、Codex、Claude Desktop、Claude Code、Windsurf、Trae、Qoder、WorkBuddy 等每个客户端自己的 UI/配置写入/刷新流程，还需要在发布候选包或 registry 包上分别验收后，才能把对应客户端标记为 `locally_smoked` 或 `published_smoked`。
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-08-28",
+  "reviewed_at": "2026-09-04",
   "default_server": {
     "name": "patchxnote",
     "command": "npx",
@@ -10,9 +10,9 @@
       "mcp",
       "serve"
     ],
-    "candidate_version": "0.2.9",
+    "candidate_version": "0.2.10",
     "candidate_evidence_state": "published_smoked",
-    "candidate_evidence": "docs/evidence/2026-09-01-release-0.2.9.zh-CN.md"
+    "candidate_evidence": "docs/evidence/2026-09-04-release-0.2.10.zh-CN.md"
   },
   "remote_gateway": {
     "planned_url": "https://ws-lab.patch-x.cn/patchnote-test-api/mcp",

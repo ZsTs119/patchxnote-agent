@@ -22,7 +22,7 @@
 - 当前公测服务端：PatchXNote 公测 API，具体默认值以 `internal/config/config.go` 为准
 - 当前已发布版本：`0.2.10`
 - 当前 `0.2.10` 能力：继承 `0.2.9` 的 `mcp login/status/logout`、浏览器 OAuth + PKCE、本机安全存储、远程 `/mcp` stdio 代理、本地客户端 `setup --client` 和浏览器 loopback 登录结果页优化，并新增 PatchXNote MCP Skill、marketplace 草稿包、MCP Registry 元数据和本地发布验证脚本。
-- 当前 `0.2.10` 发布证据：发布完成后记录到 `docs/evidence/2026-09-04-release-0.2.10.zh-CN.md`。
+- 当前 `0.2.10` 发布证据：见 `docs/evidence/2026-09-04-release-0.2.10.zh-CN.md`。
 - 当前 `0.2.10` 本地候选验收事实：见 `docs/marketplace/evidence-log.md` 和发布后证据文档。它只代表本地包、stdio MCP 和仓库侧分发资料验收，不代表单个编辑器 UI、平台型客户端或公开 marketplace 已验收。
 
 历史兼容事实：
